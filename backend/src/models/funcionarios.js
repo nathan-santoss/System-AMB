@@ -42,7 +42,7 @@ const Funcionario = database.define("Funcionario", {
     }
   }, {
     tableName: "tb_funcionarios",
-    timestamps: true,
+    timestamps: false,
     createdAt: "criado_em",
     updatedAt: "atualizado_em",
   }

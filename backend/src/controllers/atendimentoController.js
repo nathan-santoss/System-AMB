@@ -2,6 +2,59 @@ import Atendimento from '../models/atendimento.js';
 import Funcionario from '../models/funcionarios.js';
 import { Op } from 'sequelize';
 
+// Buscar atendimentos por funcionário
+export async function buscarAtendimentosPorFuncionario(req, res) {
+    try {
+        const { matricula } = req.params;
+        const atendimentos = await Atendimento.findAll({ where: { funcionario_matricula: matricula } });
+        res.status(200).json(atendimentos);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+// Atualizar um atendimento
+export async function atualizarAtendimento(req, res) {
+    try {
+        const { id } = req.params;
+        const [atualizado] = await Atendimento.update(req.body, { where: { id_atendimento: id } });
+        if (atualizado) {
+            const atendimentoAtualizado = await Atendimento.findByPk(id);
+            res.status(200).json(atendimentoAtualizado);
+        } else {
+            res.status(404).json({ error: 'Atendimento não encontrado' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+// Deletar um atendimento
+export async function deletarAtendimento(req, res) {
+    try {
+        const { id } = req.params;
+        const deletado = await Atendimento.destroy({ where: { id_atendimento: id } });
+        if (deletado) {
+            res.status(204).send();
+        } else {
+            res.status(404).json({ error: 'Atendimento não encontrado' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+// Contar atendimentos hoje
+export async function contarAtendimentosHoje(req, res) {
+    try {
+        const inicioDia = new Date(); inicioDia.setHours(0, 0, 0, 0);
+        const fimDia = new Date(); fimDia.setHours(23, 59, 59, 999);
+        const total = await Atendimento.count({ where: { data_hora_entrada: { [Op.between]: [inicioDia, fimDia] } } });
+        res.status(200).json({ total });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
 // Registrar um novo atendimento/triagem
 export async function registrarAtendimento(req, res) {
     try {
