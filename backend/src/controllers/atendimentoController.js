@@ -7,8 +7,8 @@ export async function registrarAtendimento(req, res) {
     try {
         const novoAtendimento = await Atendimento.create(req.body);
         res.status(201).json(novoAtendimento);
-    } catch (erro) {
-        res.status(500).json({ erro: erro.message });
+    } catch (_error) {
+        res.status(500).json({ error: error.message });
     }
 }
 
@@ -37,61 +37,35 @@ export async function obterDadosDashboard(req, res) {
         const setoresContagem = {};
         atendimentosMes.forEach(at => {
             const func = mapaFuncionarios[at.funcionario_matricula];
-            const nomeSetor = (func && func.setor) || 'Não Informado';
-            setoresContagem[nomeSetor] = (setoresContagem[nomeSetor] || 0) + 1;
+            let nomeSetor = 'Não Informado';
+            if (func) {
+                if (func.setor) {
+                    nomeSetor = func.setor;
+                }
+            }
+            if (setoresContagem[nomeSetor]) {
+                setoresContagem[nomeSetor] += 1;
+            } else {
+                setoresContagem[nomeSetor] = 1;
+            }
         });
 
         const atendimentosPorSetor = Object.keys(setoresContagem).map(setor => ({ setor, quantidade: setoresContagem[setor] })).sort((a, b) => b.quantidade - a.quantidade);
 
         const ultimosAtendimentos = ultimosAtendimentosRaw.map(at => {
             const func = mapaFuncionarios[at.funcionario_matricula];
-            return { id: at.id_atendimento, matricula: at.funcionario_matricula, nome: (func && func.nome) || 'Funcionário Desconhecido', setor: (func && func.setor) || '---', gravidade: at.gravidade, queixa: at.queixa_principal };
+            let nomeFunc = 'Funcionário Desconhecido';
+            let setorFunc = '---';
+            if (func) {
+                if (func.nome) nomeFunc = func.nome;
+                if (func.setor) setorFunc = func.setor;
+            }
+            return { id: at.id_atendimento, matricula: at.funcionario_matricula, nome: nomeFunc, setor: setorFunc, gravidade: at.gravidade, queixa: at.queixa_principal };
         });
 
         res.status(200).json({ totalHoje, gravidadeHoje: { baixa, media, alta }, atendimentosPorSetor, ultimosAtendimentos });
-    } catch (erro) {
-        console.error("Erro no obterDadosDashboard:", erro);
-        res.status(500).json({ erro: erro.message });
+    } catch (_error) {
+        console.error("Erro no obterDadosDashboard:", _error);
+        res.status(500).json({ error: _error.message });
     }
-}
-
-export async function contarAtendimentosHoje(req, res) {
-    try {
-        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-        const total = await Atendimento.count({ where: { data_hora_entrada: { [Op.gte]: hoje } } });
-        res.status(200).json({ total });
-    } catch (erro) { res.status(500).json({ erro: "Erro ao contar atendimentos." }); }
-}
-
-export async function buscarAtendimentosPorFuncionario(req, res) {
-    try {
-        const { matricula } = req.params;
-        const atendimentos = await Atendimento.findAll({ where: { funcionario_matricula: matricula } });
-        res.status(200).json(atendimentos);
-    } catch (erro) { res.status(500).json({ erro: erro.message }); }
-}
-
-export async function atualizarAtendimento(req, res) {
-    try {
-        const { id } = req.params;
-        const [atualizado] = await Atendimento.update(req.body, { where: { id_atendimento: id } });
-        if (!atualizado) throw new Error(`Atendimento não encontrado`);
-        res.status(200).json({ mensagem: `Atendimento atualizado com sucesso` });
-    } catch (erro) { res.status(500).json({ erro: erro.message }); }
-}
-
-export async function deletarAtendimento(req, res) {
-    try {
-        const { id } = req.params;
-        const deletado = await Atendimento.destroy({ where: { id_atendimento: id } });
-        if (!deletado) throw new Error(`Atendimento não encontrado`);
-        res.status(200).json({ mensagem: `Atendimento removido com sucesso` });
-    } catch (erro) { res.status(500).json({ erro: erro.message }); }
-}
-
-export async function buscarTodosAtendimentos(req, res) {
-    try {
-        const todosAtendimentos = await Atendimento.findAll();
-        res.status(200).json(todosAtendimentos);
-    } catch (erro) { res.status(500).json({ erro: erro.message }); }
 }

@@ -1,4 +1,4 @@
-const BASE_URL = "https://nexa-logos.onrender.com";
+const BASE_URL = "";
 
 document.getElementById('formBusca').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -14,7 +14,12 @@ async function buscarDados() {
 
     try {
         const token = localStorage.getItem('token');
-        const url = termo ? `${BASE_URL}/funcionarios?busca=${termo}` : `${BASE_URL}/funcionarios`;
+        let url;
+        if (termo) {
+            url = `${BASE_URL}/funcionarios?busca=${termo}`;
+        } else {
+            url = `${BASE_URL}/funcionarios`;
+        }
 
         const resposta = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }

@@ -81,7 +81,7 @@
                 if (!token) { window.location.href = '/login'; return; }
 
                 try {
-                    const resposta = await fetch('https://nexa-logos.onrender.com/dashboard-dados', {
+                    const resposta = await fetch('/dashboard-dados', {
                         method: 'GET',
                         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
                     });
@@ -90,9 +90,15 @@
 
                     document.getElementById('contador-hoje').innerText = dados.totalHoje;
 
-                    document.getElementById('count-normal').innerText = dados.severidade ? dados.severidade.normal : 0;
-                    document.getElementById('count-medio').innerText = dados.severidade ? dados.severidade.medio : 0;
-                    document.getElementById('count-grave').innerText = dados.severidade ? dados.severidade.grave : 0;
+                    if (dados.severidade) {
+                        document.getElementById('count-normal').innerText = dados.severidade.normal;
+                        document.getElementById('count-medio').innerText = dados.severidade.medio;
+                        document.getElementById('count-grave').innerText = dados.severidade.grave;
+                    } else {
+                        document.getElementById('count-normal').innerText = 0;
+                        document.getElementById('count-medio').innerText = 0;
+                        document.getElementById('count-grave').innerText = 0;
+                    }
 
                     const tabela = document.getElementById('lista-ultimos-atendimentos');
                     const ultimos = dados.ultimos || [];

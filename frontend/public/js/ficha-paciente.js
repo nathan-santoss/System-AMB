@@ -1,4 +1,4 @@
-const BASE_URL = "https://nexa-logos.onrender.com";
+const BASE_URL = "";
 
 function abrirModalAlergia() {
     document.getElementById('modal-backdrop').classList.remove('hidden');
@@ -31,10 +31,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (resposta.ok) {
             const paciente = await resposta.json();
 
-            document.getElementById('info-nome').textContent = paciente.nome || 'Não informado';
+            if (paciente.nome) {
+                document.getElementById('info-nome').textContent = paciente.nome;
+            } else {
+                document.getElementById('info-nome').textContent = 'Não informado';
+            }
             document.getElementById('info-matricula').textContent = `Matrícula: ${paciente.matricula}`;
-            document.getElementById('info-cargo').textContent = paciente.cargo || 'Não informado';
-            document.getElementById('info-setor').textContent = paciente.setor || 'Não informado';
+
+            if (paciente.cargo) {
+                document.getElementById('info-cargo').textContent = paciente.cargo;
+            } else {
+                document.getElementById('info-cargo').textContent = 'Não informado';
+            }
+            if (paciente.setor) {
+                document.getElementById('info-setor').textContent = paciente.setor;
+            } else {
+                document.getElementById('info-setor').textContent = 'Não informado';
+            }
 
             carregarAlergias(matricula, token);
         } else {
@@ -55,7 +68,20 @@ async function carregarAlergias(matricula, token) {
 
         if (resposta.ok) {
             const dadosBrutos = await resposta.json();
-            const alergias = Array.isArray(dadosBrutos) ? dadosBrutos : (dadosBrutos.alergias || dadosBrutos.dados || []);
+
+            let alergias;
+            if (Array.isArray(dadosBrutos)) {
+                alergias = dadosBrutos;
+            } else {
+                if (dadosBrutos.alergias) {
+                    alergias = dadosBrutos.alergias;
+                } else if (dadosBrutos.dados) {
+                    alergias = dadosBrutos.dados;
+                } else {
+                    alergias = [];
+                }
+            }
+
             const lista = document.getElementById('lista-alergias');
 
             if (alergias.length === 0) {
@@ -65,8 +91,21 @@ async function carregarAlergias(matricula, token) {
             }
 
             lista.innerHTML = alergias.map(alergia => {
-                const id = alergia.id_alergia || alergia.id;
-                const descricao = alergia.descricao_alergia || alergia.descricao || alergia.nome;
+                let id;
+                if (alergia.id_alergia) {
+                    id = alergia.id_alergia;
+                } else {
+                    id = alergia.id;
+                }
+
+                let descricao;
+                if (alergia.descricao_alergia) {
+                    descricao = alergia.descricao_alergia;
+                } else if (alergia.descricao) {
+                    descricao = alergia.descricao;
+                } else {
+                    descricao = alergia.nome;
+                }
                 return `
                 <li class="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-red-100 text-red-700 font-medium group transition-all shadow-sm">
                     <div class="flex items-center gap-2">
@@ -161,7 +200,11 @@ document.getElementById('formTriagem').addEventListener('submit', async (e) => {
             window.location.href = '/dashboard';
         } else {
             const erro = await resposta.json();
-            alert("Erro ao salvar: " + (erro.erro || "Verifique os dados."));
+            if (erro.erro) {
+                alert("Erro ao salvar: " + erro.erro);
+            } else {
+                alert("Erro ao salvar: Verifique os dados.");
+            }
         }
     } catch (erro) {
         console.error(erro);

@@ -5,7 +5,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const senha = document.getElementById('senha').value;
 
     try {
-        const resposta = await fetch('https://nexa-logos.onrender.com/auth/login', {
+        const resposta = await fetch('/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, senha })
@@ -14,11 +14,14 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         const dados = await resposta.json();
 
         if (resposta.ok) {
-
             localStorage.setItem('token', dados.token);
             window.location.href = '/dashboard';
         } else {
-            alert('Acesso negado: ' + (dados.erro || 'Credenciais inválidas.'));
+            if (dados.erro) {
+                alert('Acesso negado: ' + dados.erro);
+            } else {
+                alert('Acesso negado: Credenciais inválidas.');
+            }
         }
     } catch (erro) {
         console.error("Erro na requisição:", erro);
