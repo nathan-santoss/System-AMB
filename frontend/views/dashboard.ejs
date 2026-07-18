@@ -52,9 +52,9 @@
                     <table class="w-full text-sm">
                         <thead class="text-gray-500 border-b">
                             <tr>
-                                <th class="pb-2 text-left">Paciente</th>
-                                <th class="pb-2">Severidade</th>
-                                <th class="pb-2">Data</th>
+                                <th class="pb-2 text-left font-semibold">Paciente / Queixa</th>
+                                <th class="pb-2 text-center font-semibold">Gravidade</th>
+                                <th class="pb-2 text-center font-semibold">Data/Hora</th>
                             </tr>
                         </thead>
                         <tbody id="lista-ultimos-atendimentos" class="text-gray-700">
@@ -63,68 +63,14 @@
                 </div>
 
                 <div class="bg-white p-6 rounded-xl shadow-sm">
-                    <h3 class="text-xl font-bold text-azulEscuro mb-4">Ranking de Setores (Mês)</h3>
+                    <h3 class="text-xl font-bold text-azulEscuro mb-4">Ranking de Setores</h3>
                     <div id="lista-setores" class="space-y-3">
                     </div>
                 </div>
             </div>
         </main>
 
-        <script>
-            function fazerLogout() {
-                localStorage.removeItem('token');
-                window.location.href = '/';
-            }
-
-            async function carregarDashboard() {
-                const token = localStorage.getItem('token');
-                if (!token) { window.location.href = '/login'; return; }
-
-                try {
-                    const resposta = await fetch('/dashboard-dados', {
-                        method: 'GET',
-                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-                    });
-                    if (!resposta.ok) throw new Error('Erro ao carregar dados');
-                    const dados = await resposta.json();
-
-                    document.getElementById('contador-hoje').innerText = dados.totalHoje;
-
-                    if (dados.severidade) {
-                        document.getElementById('count-normal').innerText = dados.severidade.normal;
-                        document.getElementById('count-medio').innerText = dados.severidade.medio;
-                        document.getElementById('count-grave').innerText = dados.severidade.grave;
-                    } else {
-                        document.getElementById('count-normal').innerText = 0;
-                        document.getElementById('count-medio').innerText = 0;
-                        document.getElementById('count-grave').innerText = 0;
-                    }
-
-                    const tabela = document.getElementById('lista-ultimos-atendimentos');
-                    const ultimos = dados.ultimos || [];
-                    tabela.innerHTML = ultimos.map(a => `
-                        <tr class="border-b">
-                            <td class="py-3">${a.nome}</td>
-                            <td class="text-center">${a.severidade}</td>
-                            <td class="text-center">${a.data}</td>
-                        </tr>
-                    `).join('');
-
-                    const setoresDiv = document.getElementById('lista-setores');
-                    const setoresData = dados.setores || [];
-                    setoresDiv.innerHTML = setoresData.map(s => `
-                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
-                            <span>${s.nome}</span>
-                            <span class="font-bold text-azulEscuro">${s.total}</span>
-                        </div>
-                    `).join('');
-                } catch (erro) {
-                    console.error("Erro:", erro);
-                }
-            }
-
-            document.addEventListener('DOMContentLoaded', carregarDashboard);
-        </script>
+        <script src="/js/dashboard.js"></script>
 </body>
 
 </html>

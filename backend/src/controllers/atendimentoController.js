@@ -45,23 +45,21 @@ export async function deletarAtendimento(req, res) {
 }
 
 // Contar atendimentos hoje
-export async function contarAtendimentosHoje(req, res) {
-    try {
-        const inicioDia = new Date(); inicioDia.setHours(0, 0, 0, 0);
-        const fimDia = new Date(); fimDia.setHours(23, 59, 59, 999);
-        const total = await Atendimento.count({ where: { data_hora_entrada: { [Op.between]: [inicioDia, fimDia] } } });
-        res.status(200).json({ total });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-}
-// Registrar um novo atendimento/triagem
 export async function registrarAtendimento(req, res) {
     try {
+        // Validação contra dados vazios ou corrompidos
+        const { funcionario_matricula, gravidade, queixa_principal } = req.body;
+        
+        if (!funcionario_matricula || !gravidade || !queixa_principal) {
+            return res.status(400).json({ message: "Preencha a matrícula, gravidade e queixa principal." });
+        }
+
         const novoAtendimento = await Atendimento.create(req.body);
         res.status(201).json(novoAtendimento);
     } catch (_error) {
-        res.status(500).json({ error: error.message });
+
+        console.error(_error);
+        res.status(500).json({ message: "Erro ao registrar atendimento.", details: _error.message });
     }
 }
 

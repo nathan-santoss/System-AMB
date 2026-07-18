@@ -43,7 +43,9 @@ export async function atualizarFuncionario(req, res) {
             where: { matricula: matricula }
         })
 
-        if (!atualizado) throw new Error(`Funcionário não encontrado`)
+        if (!atualizado) {
+            return res.status(404).json({ message: 'Registro não encontrado.' });
+        }
 
         res.status(200).json({
             mensagem: `Funcionário atualizado com sucesso`

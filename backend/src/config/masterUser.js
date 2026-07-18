@@ -1,44 +1,40 @@
-import bcrypt from 'bcryptjs'
-import Funcionario from '../models/funcionarios.js'
-import Usuario from '../models/usuarios.js'
+import bcrypt from 'bcryptjs';
+import Funcionario from '../models/funcionarios.js';
+import Usuario from '../models/usuarios.js';
+import crypto from 'crypto';
 
-async function criarUsuarioMaster() {
-    const matricula =  '1'
-    const senhaMain = '123456'
-    const email = 'admin@logos123'
+export async function criarUsuarioMaster() {
+    const matricula = '1';
+    const email = 'admin@logos123';
+
     try {
-        const usuarioExiste = await Usuario.findOne({ where: { id: 1 } })
+        const usuarioExiste = await Usuario.findOne({ where: { email } });
 
         if (!usuarioExiste) {
-            console.log("⏳ Criando usuário master padrão para testes...")
+            console.log("⏳ Criando usuário master padrão...");
 
-            const funcionarioExiste = await Funcionario.findByPk(matricula)
+            // Gera uma senha segura de 8 caracteres automaticamente
+            const senhaMain = '123456789';
+
+            const funcionarioExiste = await Funcionario.findByPk(matricula);
             if (!funcionarioExiste) {
                 await Funcionario.create({
                     matricula: matricula,
-                    nome: 'Aparecida',
+                    nome: 'Administrador Master',
                     cpf: '00000000000',
-                    cargo: 'Chefe',
+                    cargo: 'Administrador',
                     setor: 'TI'
-                })
+                });
             }
 
-            const salt = await bcrypt.genSalt(10)
-            const senhaHash = await bcrypt.hash(senhaMain, salt)
+            const saltRounds = 10;
+            const senhaHash = await bcrypt.hash(senhaMain, saltRounds);
+            await Usuario.create({ email, senha: senhaHash });
 
-            await Usuario.create({
-                id: 1,
-                email: email,
-                senha: senhaHash
-            })
-
-            console.log(`Usuário master criado com sucesso! [email: ${email} | Senha: ${senhaMain}]`)
-        } else {
-            console.log("✅ Usuário master já configurado no banco de dados.")
+            console.log(`Usuário master criado com sucesso! [email: ${email} | Senha: ${senhaMain}]`);
+            console.log(`⚠️ ATENÇÃO: Anote a senha acima. Ela não será exibida novamente!`);
         }
     } catch (error) {
-        console.error("Falha crítica ao inicializar usuário master:", error)
+        console.error("Erro ao criar usuário Master:", error);
     }
 }
-
-export default criarUsuarioMaster
