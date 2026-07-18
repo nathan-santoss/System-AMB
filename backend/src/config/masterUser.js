@@ -32,7 +32,7 @@ async function criarUsuarioMaster() {
                 senha: senhaHash
             })
 
-            console.log(`Usuário master criado com sucesso! [email: ${email} | Senha: ${senhaMain}`)
+            console.log(`Usuário master criado com sucesso! [email: ${email} | Senha: ${senhaMain}]`)
         } else {
             console.log("✅ Usuário master já configurado no banco de dados.")
         }
