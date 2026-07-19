@@ -44,12 +44,12 @@ export async function deletarAtendimento(req, res) {
     }
 }
 
-// Contar atendimentos hoje
+// Registrar um novo atendimento
 export async function registrarAtendimento(req, res) {
     try {
         // Validação contra dados vazios ou corrompidos
         const { funcionario_matricula, gravidade, queixa_principal } = req.body;
-        
+
         if (!funcionario_matricula || !gravidade || !queixa_principal) {
             return res.status(400).json({ message: "Preencha a matrícula, gravidade e queixa principal." });
         }
@@ -57,7 +57,6 @@ export async function registrarAtendimento(req, res) {
         const novoAtendimento = await Atendimento.create(req.body);
         res.status(201).json(novoAtendimento);
     } catch (_error) {
-
         console.error(_error);
         res.status(500).json({ message: "Erro ao registrar atendimento.", details: _error.message });
     }
