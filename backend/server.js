@@ -27,10 +27,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Configuração básica de CORS
-app.use(cors({
-    origin: '*',
-    credentials: true 
-}));
+app.use(cors());
 
 app.use(express.json());
 
