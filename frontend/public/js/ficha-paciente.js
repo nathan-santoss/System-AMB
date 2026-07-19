@@ -1,213 +1,245 @@
-const BASE_URL = "";
+const BASE_URL = "/api";
 
-function abrirModalAlergia() {
-    document.getElementById('modal-backdrop').classList.remove('hidden');
-    document.getElementById('modal-backdrop').classList.add('flex');
+// Função para prevenir XSS
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
-function fecharModalAlergia() {
-    document.getElementById('modal-backdrop').classList.add('hidden');
-    document.getElementById('modal-backdrop').classList.remove('flex');
-    document.getElementById('descricao_alergia').value = '';
-}
+document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('token')) {
+        window.location.href = '/login';
+        return;
+    }
 
-document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const matricula = params.get('matricula');
 
     if (!matricula) {
-        alert("Nenhum paciente selecionado!");
+        alert('Matrícula não informada.');
         window.location.href = '/consultar-paciente';
         return;
     }
 
-    const token = localStorage.getItem('token');
-
-    try {
-        const resposta = await fetch(`${BASE_URL}/funcionarios/${matricula}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (resposta.ok) {
-            const paciente = await resposta.json();
-
-            if (paciente.nome) {
-                document.getElementById('info-nome').textContent = paciente.nome;
-            } else {
-                document.getElementById('info-nome').textContent = 'Não informado';
-            }
-            document.getElementById('info-matricula').textContent = `Matrícula: ${paciente.matricula}`;
-
-            if (paciente.cargo) {
-                document.getElementById('info-cargo').textContent = paciente.cargo;
-            } else {
-                document.getElementById('info-cargo').textContent = 'Não informado';
-            }
-            if (paciente.setor) {
-                document.getElementById('info-setor').textContent = paciente.setor;
-            } else {
-                document.getElementById('info-setor').textContent = 'Não informado';
-            }
-
-            carregarAlergias(matricula, token);
-        } else {
-            alert("Erro ao buscar dados do paciente.");
-            window.location.href = '/consultar-paciente';
-        }
-    } catch (erro) {
-        console.error(erro);
-        alert("Falha na conexão com o servidor.");
-    }
+    carregarDadosPaciente(matricula);
+    carregarAlergias(matricula);
+    carregarHistoricoAtendimentos(matricula);
 });
 
-async function carregarAlergias(matricula, token) {
+async function carregarDadosPaciente(matricula) {
     try {
-        const resposta = await fetch(`${BASE_URL}/alergias?funcionario_matricula=${matricula}`, {
+        const token = localStorage.getItem('token');
+        // CORREÇÃO (Item 12): Rotas apontando para /api
+        const resposta = await fetch(`${BASE_URL}/funcionarios/${encodeURIComponent(matricula)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (resposta.ok) {
-            const dadosBrutos = await resposta.json();
+        if (!resposta.ok) throw new Error('Paciente não encontrado');
 
-            let alergias;
-            if (Array.isArray(dadosBrutos)) {
-                alergias = dadosBrutos;
-            } else {
-                if (dadosBrutos.alergias) {
-                    alergias = dadosBrutos.alergias;
-                } else if (dadosBrutos.dados) {
-                    alergias = dadosBrutos.dados;
-                } else {
-                    alergias = [];
-                }
-            }
+        const paciente = await resposta.json();
 
-            const lista = document.getElementById('lista-alergias');
-
-            if (alergias.length === 0) {
-                lista.innerHTML = `<li class="flex items-center gap-2 text-slate-500 py-2"><i data-lucide="info" class="w-4 h-4"></i> Nenhuma relatada.</li>`;
-                lucide.createIcons();
-                return;
-            }
-
-            lista.innerHTML = alergias.map(alergia => {
-                let id;
-                if (alergia.id_alergia) {
-                    id = alergia.id_alergia;
-                } else {
-                    id = alergia.id;
-                }
-
-                let descricao;
-                if (alergia.descricao_alergia) {
-                    descricao = alergia.descricao_alergia;
-                } else if (alergia.descricao) {
-                    descricao = alergia.descricao;
-                } else {
-                    descricao = alergia.nome;
-                }
-                return `
-                <li class="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-red-100 text-red-700 font-medium group transition-all shadow-sm">
-                    <div class="flex items-center gap-2">
-                        <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
-                        <span>${descricao}</span>
-                    </div>
-                    <button onclick="excluirAlergia(${id})" class="text-red-300 hover:text-red-600 transition-colors p-1" title="Remover alergia">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
-                </li>
-                `;
-            }).join('');
-            lucide.createIcons();
-        }
+        // CORREÇÃO (Item 13): Prevenção XSS
+        document.getElementById('nome-paciente').textContent = paciente.nome || 'Não informado';
+        document.getElementById('matricula-paciente').textContent = paciente.matricula;
+        document.getElementById('setor-paciente').textContent = paciente.setor || 'Não informado';
+        document.getElementById('cargo-paciente').textContent = paciente.cargo || 'Não informado';
     } catch (erro) {
-        console.error(erro);
+        alert(erro.message);
     }
 }
 
-document.getElementById('formAlergia').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const params = new URLSearchParams(window.location.search);
-    const matricula = params.get('matricula');
-    const token = localStorage.getItem('token');
-    const descricao = document.getElementById('descricao_alergia').value;
+async function carregarAlergias(matricula) {
+    const listaAlergias = document.getElementById('lista-alergias');
+    listaAlergias.innerHTML = '<p class="text-sm text-gray-500">Carregando...</p>';
 
     try {
-        const resposta = await fetch(`${BASE_URL}/alergias`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ funcionario_matricula: matricula, descricao_alergia: descricao })
+        const token = localStorage.getItem('token');
+        const resposta = await fetch(`${BASE_URL}/alergias?funcionario_matricula=${encodeURIComponent(matricula)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (resposta.ok) {
-            fecharModalAlergia();
-            carregarAlergias(matricula, token);
-        } else {
-            alert("Erro ao salvar alergia.");
+        if (!resposta.ok) throw new Error('Erro ao carregar alergias');
+
+        const alergias = await resposta.json();
+
+        if (alergias.length === 0) {
+            listaAlergias.innerHTML = '<p class="text-sm text-gray-500">Nenhuma alergia registrada.</p>';
+            return;
         }
+
+        listaAlergias.innerHTML = '';
+        alergias.forEach(alergia => {
+            const div = document.createElement('div');
+            div.className = "bg-red-50 text-vermelhoAlerta border border-red-100 rounded-lg p-3 text-sm flex justify-between items-center";
+
+            // CORREÇÃO (Item 13): EscapeHTML na descrição da alergia
+            div.innerHTML = `
+                <span class="font-medium">${escapeHTML(alergia.descricao_alergia)}</span>
+                <button onclick="excluirAlergia(${alergia.id_alergia})" class="text-red-400 hover:text-red-700 transition-colors" title="Remover">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            `;
+            listaAlergias.appendChild(div);
+        });
+
+        if (window.lucide) window.lucide.createIcons();
     } catch (erro) {
-        console.error(erro);
+        listaAlergias.innerHTML = `<p class="text-sm text-red-500">${escapeHTML(erro.message)}</p>`;
+    }
+}
+
+// Funções de Modal para Alergia
+function abrirModalAlergia() {
+    document.getElementById('modalAlergia').classList.remove('hidden');
+}
+
+function fecharModalAlergia() {
+    document.getElementById('modalAlergia').classList.add('hidden');
+    document.getElementById('formAlergia').reset();
+}
+
+document.getElementById('formAlergia')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const params = new URLSearchParams(window.location.search);
+    const matricula = params.get('matricula');
+    const descricao = document.getElementById('descricaoAlergia').value;
+
+    try {
+        const token = localStorage.getItem('token');
+        const resposta = await fetch(`${BASE_URL}/alergias`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                funcionario_matricula: matricula,
+                descricao_alergia: descricao
+            })
+        });
+
+        if (!resposta.ok) {
+            const erroData = await resposta.json();
+            throw new Error(erroData.message || erroData.erro || 'Erro ao cadastrar alergia');
+        }
+
+        fecharModalAlergia();
+        carregarAlergias(matricula);
+    } catch (erro) {
+        alert(erro.message);
     }
 });
 
-window.excluirAlergia = async function (idAlergia) {
-    if (!confirm("Tem certeza que deseja remover esta alergia do prontuário?")) return;
-    const token = localStorage.getItem('token');
-    const params = new URLSearchParams(window.location.search);
-    const matricula = params.get('matricula');
+async function excluirAlergia(idAlergia) {
+    if (!confirm('Deseja realmente remover esta alergia?')) return;
 
     try {
+        const token = localStorage.getItem('token');
         const resposta = await fetch(`${BASE_URL}/alergias/${idAlergia}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (resposta.ok) {
-            carregarAlergias(matricula, token);
-        } else {
-            alert("Erro ao remover a alergia no servidor.");
-        }
+        if (!resposta.ok) throw new Error('Falha ao remover alergia');
+
+        const params = new URLSearchParams(window.location.search);
+        carregarAlergias(params.get('matricula'));
     } catch (erro) {
-        console.error(erro);
+        alert(erro.message);
     }
 }
 
-document.getElementById('formTriagem').addEventListener('submit', async (e) => {
+// Registrando Atendimento (Triagem)
+document.getElementById('form-triagem')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const params = new URLSearchParams(window.location.search);
 
-    const dadosTriagem = {
-        funcionario_matricula: params.get('matricula'),
-        pressao_arterial: document.getElementById('pressao').value,
-        temperatura: document.getElementById('temperatura').value,
-        queixa_principal: document.getElementById('queixa').value,
-        gravidade: document.getElementById('gravidade').value,
-        acao_tomada: document.getElementById('acao').value
-    };
+    const params = new URLSearchParams(window.location.search);
+    const matricula = params.get('matricula');
+
+    const pressao = document.getElementById('pressao').value;
+    const temperatura = document.getElementById('temperatura').value;
+    const queixa = document.getElementById('queixa').value;
+    const gravidade = document.querySelector('input[name="gravidade"]:checked')?.value;
+
+    if (!gravidade) {
+        alert("Por favor, selecione a gravidade.");
+        return;
+    }
 
     try {
+        const token = localStorage.getItem('token');
         const resposta = await fetch(`${BASE_URL}/atendimentos`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(dadosTriagem)
+            body: JSON.stringify({
+                funcionario_matricula: matricula,
+                pressao_arterial: pressao,
+                temperatura: temperatura,
+                queixa_principal: queixa,
+                gravidade: gravidade,
+                data_hora_entrada: new Date().toISOString()
+            })
         });
 
-        if (resposta.ok) {
-            alert("Atendimento registrado com sucesso!");
-            window.location.href = '/dashboard';
-        } else {
-            const erro = await resposta.json();
-            if (erro.erro) {
-                alert("Erro ao salvar: " + erro.erro);
-            } else {
-                alert("Erro ao salvar: Verifique os dados.");
-            }
+        const dados = await resposta.json();
+
+        if (!resposta.ok) {
+            throw new Error(dados.message || dados.erro || 'Erro ao registrar atendimento');
         }
+
+        alert('Triagem registrada com sucesso!');
+        document.getElementById('form-triagem').reset();
+        carregarHistoricoAtendimentos(matricula);
+
     } catch (erro) {
-        console.error(erro);
-        alert("Falha na conexão com o servidor ao tentar salvar a triagem.");
+        alert('Erro: ' + erro.message);
     }
 });
+
+async function carregarHistoricoAtendimentos(matricula) {
+    // Implementação de carregamento de histórico (caso exista a rota GET /atendimentos/:matricula)
+    // Para evitar que a página trave se não houver container, testamos:
+    const historicoContainer = document.getElementById('historico-atendimentos');
+    if (!historicoContainer) return;
+
+    historicoContainer.innerHTML = '<p class="text-sm text-gray-500">Carregando histórico...</p>';
+
+    try {
+        const token = localStorage.getItem('token');
+        const resposta = await fetch(`${BASE_URL}/atendimentos/${encodeURIComponent(matricula)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!resposta.ok) throw new Error("Falha ao carregar histórico");
+
+        const atendimentos = await resposta.json();
+
+        if (atendimentos.length === 0) {
+            historicoContainer.innerHTML = '<p class="text-sm text-gray-500">Nenhum atendimento anterior.</p>';
+            return;
+        }
+
+        historicoContainer.innerHTML = '';
+        atendimentos.sort((a, b) => new Date(b.data_hora_entrada) - new Date(a.data_hora_entrada)).forEach(at => {
+            const data = new Date(at.data_hora_entrada).toLocaleDateString('pt-BR');
+            const div = document.createElement('div');
+            div.className = "border-l-4 border-azulEscuro pl-3 py-1 mb-4 bg-gray-50 rounded-r-lg p-2";
+            div.innerHTML = `
+                <p class="text-xs text-gray-400 mb-1">Data: ${data} - Gravidade: <span class="font-bold">${escapeHTML(at.gravidade)}</span></p>
+                <p class="text-sm text-gray-700">${escapeHTML(at.queixa_principal)}</p>
+            `;
+            historicoContainer.appendChild(div);
+        });
+    } catch (erro) {
+        historicoContainer.innerHTML = `<p class="text-sm text-red-500">${escapeHTML(erro.message)}</p>`;
+    }
+}
