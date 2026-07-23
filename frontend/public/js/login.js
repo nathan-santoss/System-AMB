@@ -1,22 +1,4 @@
-const BASE_URL = '/api';
-
-
-function obterToken() {
-
-    return localStorage.getItem(
-        'token'
-    );
-
-}
-
-
-function removerToken() {
-
-    localStorage.removeItem(
-        'token'
-    );
-
-}
+const LOGIN_BASE_URL = '/api/auth';
 
 
 function atualizarIcones() {
@@ -26,6 +8,35 @@ function atualizarIcones() {
         window.lucide.createIcons();
 
     }
+
+}
+
+
+function authSessionEstaDisponivel() {
+
+    if (!window.AuthSession) {
+
+        return false;
+
+    }
+
+    if (
+        typeof window.AuthSession.verificarSessaoNaTelaLogin !== 'function'
+    ) {
+
+        return false;
+
+    }
+
+    if (
+        typeof window.AuthSession.salvarToken !== 'function'
+    ) {
+
+        return false;
+
+    }
+
+    return true;
 
 }
 
@@ -123,102 +134,18 @@ function obterMensagemErro(dados, mensagemPadrao) {
 }
 
 
-function mostrarMensagemLogin(mensagem, tipo) {
+function obterElementoMensagem() {
 
-    const elemento = document.getElementById(
+    return document.getElementById(
         'mensagem-login'
     );
-
-    if (!elemento) {
-
-        return;
-
-    }
-
-    elemento.className =
-        'mb-5 rounded-xl border px-4 py-3 text-sm flex items-start gap-3';
-
-    let classesTipo =
-        'bg-blue-50 border-blue-200 text-blue-800';
-
-    let icone = 'info';
-
-    if (tipo === 'erro') {
-
-        classesTipo =
-            'bg-red-50 border-red-200 text-red-700';
-
-        icone = 'circle-alert';
-
-    }
-
-    if (tipo === 'sucesso') {
-
-        classesTipo =
-            'bg-green-50 border-green-200 text-green-700';
-
-        icone = 'circle-check-big';
-
-    }
-
-    if (tipo === 'aviso') {
-
-        classesTipo =
-            'bg-yellow-50 border-yellow-200 text-yellow-800';
-
-        icone = 'triangle-alert';
-
-    }
-
-    elemento.className +=
-        ' ' +
-        classesTipo;
-
-    elemento.innerHTML = '';
-
-    const elementoIcone = document.createElement(
-        'i'
-    );
-
-    elementoIcone.setAttribute(
-        'data-lucide',
-        icone
-    );
-
-    elementoIcone.className =
-        'w-5 h-5 shrink-0 mt-0.5';
-
-    const elementoTexto = document.createElement(
-        'p'
-    );
-
-    elementoTexto.className =
-        'font-medium leading-relaxed';
-
-    elementoTexto.textContent = mensagem;
-
-    elemento.appendChild(
-        elementoIcone
-    );
-
-    elemento.appendChild(
-        elementoTexto
-    );
-
-    elemento.classList.remove(
-        'hidden'
-    );
-
-    atualizarIcones();
 
 }
 
 
 function esconderMensagemLogin() {
 
-    const elemento = document.getElementById(
-        'mensagem-login'
-    );
+    const elemento = obterElementoMensagem();
 
     if (!elemento) {
 
@@ -235,11 +162,133 @@ function esconderMensagemLogin() {
 }
 
 
-function definirBotaoCarregando(carregando) {
+function mostrarMensagemLogin(mensagem, tipo) {
 
-    const botao = document.getElementById(
+    const elemento = obterElementoMensagem();
+
+    if (!elemento) {
+
+        window.alert(
+            mensagem
+        );
+
+        return;
+
+    }
+
+    elemento.className =
+        'mb-5 rounded-xl border px-4 py-3 text-sm flex items-start gap-3';
+
+    let classesTipo =
+        'bg-blue-50 border-blue-200 text-blue-800';
+
+    let nomeIcone = 'info';
+
+    if (tipo === 'erro') {
+
+        classesTipo =
+            'bg-red-50 border-red-200 text-red-700';
+
+        nomeIcone = 'circle-alert';
+
+    }
+
+    if (tipo === 'sucesso') {
+
+        classesTipo =
+            'bg-green-50 border-green-200 text-green-700';
+
+        nomeIcone = 'circle-check-big';
+
+    }
+
+    if (tipo === 'aviso') {
+
+        classesTipo =
+            'bg-yellow-50 border-yellow-200 text-yellow-800';
+
+        nomeIcone = 'triangle-alert';
+
+    }
+
+    elemento.className +=
+        ' ' +
+        classesTipo;
+
+    elemento.innerHTML = '';
+
+    const icone = document.createElement(
+        'i'
+    );
+
+    icone.setAttribute(
+        'data-lucide',
+        nomeIcone
+    );
+
+    icone.className =
+        'w-5 h-5 shrink-0 mt-0.5';
+
+    const texto = document.createElement(
+        'p'
+    );
+
+    texto.className =
+        'font-medium leading-relaxed';
+
+    texto.textContent = mensagem;
+
+    elemento.appendChild(
+        icone
+    );
+
+    elemento.appendChild(
+        texto
+    );
+
+    elemento.classList.remove(
+        'hidden'
+    );
+
+    atualizarIcones();
+
+}
+
+
+function obterBotaoEntrar() {
+
+    let botao = document.getElementById(
         'botao-entrar'
     );
+
+    if (botao) {
+
+        return botao;
+
+    }
+
+    const formulario = document.getElementById(
+        'loginForm'
+    );
+
+    if (!formulario) {
+
+        return null;
+
+    }
+
+    botao = formulario.querySelector(
+        'button[type="submit"]'
+    );
+
+    return botao;
+
+}
+
+
+function definirBotaoCarregando(carregando) {
+
+    const botao = obterBotaoEntrar();
 
     if (!botao) {
 
@@ -248,6 +297,13 @@ function definirBotaoCarregando(carregando) {
     }
 
     if (carregando) {
+
+        if (!botao.dataset.conteudoOriginal) {
+
+            botao.dataset.conteudoOriginal =
+                botao.innerHTML;
+
+        }
 
         botao.disabled = true;
 
@@ -268,6 +324,7 @@ function definirBotaoCarregando(carregando) {
         `;
 
         atualizarIcones();
+
         return;
 
     }
@@ -279,16 +336,25 @@ function definirBotaoCarregando(carregando) {
         'cursor-not-allowed'
     );
 
-    botao.innerHTML = `
-        <span>
-            Entrar no sistema
-        </span>
+    if (botao.dataset.conteudoOriginal) {
 
-        <i
-            data-lucide="log-in"
-            class="w-5 h-5">
-        </i>
-    `;
+        botao.innerHTML =
+            botao.dataset.conteudoOriginal;
+
+    } else {
+
+        botao.innerHTML = `
+            <span>
+                Entrar no sistema
+            </span>
+
+            <i
+                data-lucide="log-in"
+                class="w-5 h-5">
+            </i>
+        `;
+
+    }
 
     atualizarIcones();
 
@@ -305,7 +371,10 @@ function alternarVisibilidadeSenha() {
         'botao-alternar-senha'
     );
 
-    if (!campoSenha || !botao) {
+    if (
+        !campoSenha ||
+        !botao
+    ) {
 
         return;
 
@@ -333,6 +402,7 @@ function alternarVisibilidadeSenha() {
         `;
 
         atualizarIcones();
+
         return;
 
     }
@@ -361,6 +431,40 @@ function alternarVisibilidadeSenha() {
 }
 
 
+function salvarTokenRecebido(token) {
+
+    if (typeof token !== 'string') {
+
+        return false;
+
+    }
+
+    const tokenNormalizado = token.trim();
+
+    if (tokenNormalizado.length === 0) {
+
+        return false;
+
+    }
+
+    if (authSessionEstaDisponivel()) {
+
+        return window.AuthSession.salvarToken(
+            tokenNormalizado
+        );
+
+    }
+
+    localStorage.setItem(
+        'token',
+        tokenNormalizado
+    );
+
+    return true;
+
+}
+
+
 async function realizarLogin(evento) {
 
     evento.preventDefault();
@@ -375,7 +479,10 @@ async function realizarLogin(evento) {
         'senha'
     );
 
-    if (!campoEmail || !campoSenha) {
+    if (
+        !campoEmail ||
+        !campoSenha
+    ) {
 
         mostrarMensagemLogin(
             'Não foi possível localizar os campos de acesso.',
@@ -400,11 +507,15 @@ async function realizarLogin(evento) {
         );
 
         campoEmail.focus();
+
         return;
 
     }
 
-    if (typeof senha !== 'string') {
+    if (
+        typeof senha !== 'string' ||
+        senha.length === 0
+    ) {
 
         mostrarMensagemLogin(
             'Informe a senha.',
@@ -412,6 +523,7 @@ async function realizarLogin(evento) {
         );
 
         campoSenha.focus();
+
         return;
 
     }
@@ -424,6 +536,7 @@ async function realizarLogin(evento) {
         );
 
         campoSenha.focus();
+
         return;
 
     }
@@ -435,13 +548,15 @@ async function realizarLogin(evento) {
     try {
 
         const resposta = await fetch(
-            BASE_URL + '/auth/login',
+            LOGIN_BASE_URL + '/login',
             {
                 method: 'POST',
 
                 headers: {
                     'Content-Type': 'application/json'
                 },
+
+                credentials: 'same-origin',
 
                 body: JSON.stringify({
                     email,
@@ -455,8 +570,6 @@ async function realizarLogin(evento) {
         );
 
         if (!resposta.ok) {
-
-            removerToken();
 
             const mensagem = obterMensagemErro(
                 dados,
@@ -475,18 +588,23 @@ async function realizarLogin(evento) {
             dados.token.trim().length === 0
         ) {
 
-            removerToken();
-
             throw new Error(
                 'O servidor não forneceu um token de autenticação válido.'
             );
 
         }
 
-        localStorage.setItem(
-            'token',
+        const tokenFoiSalvo = salvarTokenRecebido(
             dados.token
         );
+
+        if (!tokenFoiSalvo) {
+
+            throw new Error(
+                'Não foi possível armazenar o token da sessão.'
+            );
+
+        }
 
         mostrarMensagemLogin(
             'Login realizado com sucesso. Redirecionando...',
@@ -583,25 +701,85 @@ function configurarEventos() {
 }
 
 
-document.addEventListener(
-    'DOMContentLoaded',
-    function () {
+async function verificarSessaoExistente() {
 
-        removerToken();
+    if (!authSessionEstaDisponivel()) {
 
-        configurarEventos();
-
-        atualizarIcones();
-
-        const campoEmail = document.getElementById(
-            'email'
+        console.error(
+            'O arquivo auth-session.js não foi carregado.'
         );
 
-        if (campoEmail) {
-
-            campoEmail.focus();
-
-        }
+        return false;
 
     }
+
+    mostrarMensagemLogin(
+        'Verificando sessão...',
+        'informacao'
+    );
+
+    const resultadoSessao =
+        await window.AuthSession.verificarSessaoNaTelaLogin();
+
+    if (resultadoSessao.autenticado) {
+
+        return true;
+
+    }
+
+    esconderMensagemLogin();
+
+    if (resultadoSessao.status === 0) {
+
+        mostrarMensagemLogin(
+            resultadoSessao.mensagem,
+            'erro'
+        );
+
+    }
+
+    return false;
+
+}
+
+
+async function inicializarLogin() {
+
+    atualizarIcones();
+
+    configurarEventos();
+
+    definirBotaoCarregando(
+        true
+    );
+
+    const sessaoExistente =
+        await verificarSessaoExistente();
+
+    if (sessaoExistente) {
+
+        return;
+
+    }
+
+    definirBotaoCarregando(
+        false
+    );
+
+    const campoEmail = document.getElementById(
+        'email'
+    );
+
+    if (campoEmail) {
+
+        campoEmail.focus();
+
+    }
+
+}
+
+
+document.addEventListener(
+    'DOMContentLoaded',
+    inicializarLogin
 );
