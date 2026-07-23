@@ -1,63 +1,75 @@
 import express from 'express';
 
 import {
-    buscarAlergias,
-    cadastrarAlergia,
-    atualizarAlergia,
-    deletarAlergia
-} from '../controllers/alergiaController.js';
+    buscarAtendimentosPorFuncionario,
+    registrarAtendimento,
+    atualizarAtendimento,
+    deletarAtendimento,
+    obterDadosDashboard
+} from '../controllers/atendimentoController.js';
 
-import { verificarToken } from '../middlewares/authMiddleware.js';
+import {
+    verificarToken
+} from '../middlewares/authMiddleware.js';
 
 
 const router = express.Router();
 
 
-// GET /api/alergias?funcionario_matricula=123
+// Dados utilizados pelo dashboard
+// GET /api/atendimentos/dashboard-dados
+//
+// Esta rota precisa permanecer antes de "/:matricula",
+// pois "dashboard-dados" poderia ser interpretado como uma matrícula.
 router.get(
-    '/',
+    '/dashboard-dados',
     verificarToken,
-    buscarAlergias
+    obterDadosDashboard
 );
 
 
-// GET /api/alergias/funcionario/123
+// Buscar todos os atendimentos de um funcionário
+// GET /api/atendimentos/:matricula
 router.get(
-    '/funcionario/:matricula',
+    '/:matricula',
     verificarToken,
-    buscarAlergias
+    buscarAtendimentosPorFuncionario
 );
 
 
-// POST /api/alergias
+// Registrar um novo atendimento
+// POST /api/atendimentos
 router.post(
     '/',
     verificarToken,
-    cadastrarAlergia
+    registrarAtendimento
 );
 
 
-// PUT /api/alergias/:id
+// Atualizar completamente ou parcialmente um atendimento
+// PUT /api/atendimentos/:id
 router.put(
     '/:id',
     verificarToken,
-    atualizarAlergia
+    atualizarAtendimento
 );
 
 
-// PATCH /api/alergias/:id
+// Atualizar parcialmente um atendimento
+// PATCH /api/atendimentos/:id
 router.patch(
     '/:id',
     verificarToken,
-    atualizarAlergia
+    atualizarAtendimento
 );
 
 
-// DELETE /api/alergias/:id
+// Excluir um atendimento
+// DELETE /api/atendimentos/:id
 router.delete(
     '/:id',
     verificarToken,
-    deletarAlergia
+    deletarAtendimento
 );
 
 

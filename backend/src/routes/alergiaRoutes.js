@@ -1,20 +1,72 @@
-import express from 'express'
+import express from 'express';
 
 import {
     buscarAlergias,
     cadastrarAlergia,
     atualizarAlergia,
     deletarAlergia
-} from '../controllers/alergiaController.js'
-import { verificarToken } from '../middlewares/authMiddleware.js'
+} from '../controllers/alergiaController.js';
 
-const router = express.Router()
+import {
+    verificarToken
+} from '../middlewares/authMiddleware.js';
 
-router.get('/alergias', verificarToken, buscarAlergias);
-router.post('/alergias', verificarToken, cadastrarAlergia)
-router.put('/alergias/:id', verificarToken, atualizarAlergia)
-router.patch('/alergias/:id', verificarToken, atualizarAlergia)
 
-router.delete('/alergias/:id', verificarToken, deletarAlergia)
+const router = express.Router();
 
-export default router
+
+// Buscar alergias utilizando matrícula pela query:
+// GET /api/alergias?funcionario_matricula=123
+router.get(
+    '/',
+    verificarToken,
+    buscarAlergias
+);
+
+
+// Buscar alergias utilizando matrícula pela URL:
+// GET /api/alergias/funcionario/123
+router.get(
+    '/funcionario/:matricula',
+    verificarToken,
+    buscarAlergias
+);
+
+
+// Cadastrar uma nova alergia:
+// POST /api/alergias
+router.post(
+    '/',
+    verificarToken,
+    cadastrarAlergia
+);
+
+
+// Atualizar completamente uma alergia:
+// PUT /api/alergias/:id
+router.put(
+    '/:id',
+    verificarToken,
+    atualizarAlergia
+);
+
+
+// Atualizar parcialmente uma alergia:
+// PATCH /api/alergias/:id
+router.patch(
+    '/:id',
+    verificarToken,
+    atualizarAlergia
+);
+
+
+// Excluir uma alergia:
+// DELETE /api/alergias/:id
+router.delete(
+    '/:id',
+    verificarToken,
+    deletarAlergia
+);
+
+
+export default router;

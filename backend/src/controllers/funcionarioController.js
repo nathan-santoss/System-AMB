@@ -1,4 +1,5 @@
 import Funcionario from '../models/funcionarios.js';
+import { Op } from 'sequelize';
 
 
 function corpoEhObjetoValido(corpo) {
@@ -105,11 +106,52 @@ function normalizarCpf(valor) {
 
     if (typeof valor === 'string') {
 
-        return valor.replace(/\D/g, '').trim();
+        return valor.replace(
+            /\D/g,
+            ''
+        ).trim();
 
     }
 
     return valor;
+
+}
+
+
+function normalizarBusca(valor) {
+
+    if (valor === undefined || valor === null) {
+
+        return '';
+
+    }
+
+    if (typeof valor !== 'string') {
+
+        return valor;
+
+    }
+
+    return valor.trim();
+
+}
+
+
+function buscaEhValida(busca) {
+
+    if (typeof busca !== 'string') {
+
+        return false;
+
+    }
+
+    if (busca.length > 150) {
+
+        return false;
+
+    }
+
+    return true;
 
 }
 
@@ -204,6 +246,58 @@ function textoOpcionalEhValido(valor, tamanhoMaximo) {
     }
 
     return true;
+
+}
+
+
+function criarFiltroBusca(busca) {
+
+    const filtros = [
+        {
+            matricula: {
+                [Op.like]: `%${busca}%`
+            }
+        },
+        {
+            nome: {
+                [Op.like]: `%${busca}%`
+            }
+        },
+        {
+            cargo: {
+                [Op.like]: `%${busca}%`
+            }
+        },
+        {
+            setor: {
+                [Op.like]: `%${busca}%`
+            }
+        },
+        {
+            nucleo: {
+                [Op.like]: `%${busca}%`
+            }
+        }
+    ];
+
+    const cpfBusca = busca.replace(
+        /\D/g,
+        ''
+    );
+
+    if (cpfBusca.length > 0) {
+
+        filtros.push({
+            cpf: {
+                [Op.like]: `%${cpfBusca}%`
+            }
+        });
+
+    }
+
+    return {
+        [Op.or]: filtros
+    };
 
 }
 
@@ -442,19 +536,43 @@ export async function cadastrarFuncionario(req, res) {
 }
 
 
-// Buscar todos os funcionários
+// Buscar funcionários
 export async function buscarFuncionarios(req, res) {
 
     try {
 
-        const funcionarios = await Funcionario.findAll({
+        const busca = normalizarBusca(
+            req.query.busca
+        );
+
+        if (!buscaEhValida(busca)) {
+
+            return res.status(400).json({
+                erro: 'O termo de busca deve ser um texto com no máximo 150 caracteres.'
+            });
+
+        }
+
+        const opcoesConsulta = {
             order: [
                 [
                     'nome',
                     'ASC'
                 ]
             ]
-        });
+        };
+
+        if (busca.length > 0) {
+
+            opcoesConsulta.where = criarFiltroBusca(
+                busca
+            );
+
+        }
+
+        const funcionarios = await Funcionario.findAll(
+            opcoesConsulta
+        );
 
         return res.status(200).json(funcionarios);
 
