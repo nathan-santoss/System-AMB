@@ -1,4 +1,4 @@
-import express from 'express'
+import express from 'express';
 
 import {
     cadastrarFuncionario,
@@ -6,18 +6,66 @@ import {
     atualizarFuncionario,
     deletarFuncionario,
     buscarFuncionarioPorMatricula
-} from '../controllers/funcionarioController.js'
-import { verificarToken } from '../middlewares/authMiddleware.js'
+} from '../controllers/funcionarioController.js';
 
-const router = express.Router()
+import { verificarToken } from '../middlewares/authMiddleware.js';
 
-router.post(`/funcionarios`, verificarToken, cadastrarFuncionario)
-router.get(`/funcionarios`, verificarToken, buscarFuncionarios)
 
-router.put(`/funcionarios/:matricula`, verificarToken, atualizarFuncionario)
-router.patch(`/funcionarios/:matricula`, verificarToken, atualizarFuncionario)
+const router = express.Router();
 
-router.delete(`/funcionarios/:matricula`, verificarToken, deletarFuncionario)
 
-router.get(`/funcionarios/:matricula`, verificarToken, buscarFuncionarioPorMatricula)
-export default router
+// Cadastrar funcionário
+// POST /api/funcionarios
+router.post(
+    '/',
+    verificarToken,
+    cadastrarFuncionario
+);
+
+
+// Buscar todos os funcionários
+// GET /api/funcionarios
+router.get(
+    '/',
+    verificarToken,
+    buscarFuncionarios
+);
+
+
+// Buscar funcionário pela matrícula
+// GET /api/funcionarios/:matricula
+router.get(
+    '/:matricula',
+    verificarToken,
+    buscarFuncionarioPorMatricula
+);
+
+
+// Atualizar todos ou vários campos do funcionário
+// PUT /api/funcionarios/:matricula
+router.put(
+    '/:matricula',
+    verificarToken,
+    atualizarFuncionario
+);
+
+
+// Atualizar parcialmente o funcionário
+// PATCH /api/funcionarios/:matricula
+router.patch(
+    '/:matricula',
+    verificarToken,
+    atualizarFuncionario
+);
+
+
+// Deletar funcionário
+// DELETE /api/funcionarios/:matricula
+router.delete(
+    '/:matricula',
+    verificarToken,
+    deletarFuncionario
+);
+
+
+export default router;

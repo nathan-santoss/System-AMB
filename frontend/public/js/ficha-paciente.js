@@ -44,10 +44,10 @@ async function carregarDadosPaciente(matricula) {
         const paciente = await resposta.json();
 
         // CORREÇÃO (Item 13): Prevenção XSS
-        document.getElementById('nome-paciente').textContent = paciente.nome || 'Não informado';
-        document.getElementById('matricula-paciente').textContent = paciente.matricula;
-        document.getElementById('setor-paciente').textContent = paciente.setor || 'Não informado';
-        document.getElementById('cargo-paciente').textContent = paciente.cargo || 'Não informado';
+        document.getElementById('info-nome').textContent = paciente.nome || 'Não informado';
+        document.getElementById('info-matricula').textContent = paciente.matricula;
+        document.getElementById('info-setor').textContent = paciente.setor || 'Não informado';
+        document.getElementById('info-cargo').textContent = paciente.cargo || 'Não informado';
     } catch (erro) {
         alert(erro.message);
     }

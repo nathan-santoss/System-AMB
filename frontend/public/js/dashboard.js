@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // Apontando para a rota de API correta do backend
-        const resposta = await fetch('/api/atendimentos/dashboard', {
+        const resposta = await fetch('/api/atendimentos/dashboard-dados', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,

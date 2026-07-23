@@ -1,21 +1,64 @@
 import express from 'express';
+
 import {
-    registrarAtendimento,
-    buscarAtendimentosPorFuncionario,
-    atualizarAtendimento,
-    deletarAtendimento,
-    obterDadosDashboard 
-} from '../controllers/atendimentoController.js';
+    buscarAlergias,
+    cadastrarAlergia,
+    atualizarAlergia,
+    deletarAlergia
+} from '../controllers/alergiaController.js';
+
 import { verificarToken } from '../middlewares/authMiddleware.js';
+
 
 const router = express.Router();
 
-router.post('/', verificarToken, registrarAtendimento);
-router.get('/:matricula', verificarToken, buscarAtendimentosPorFuncionario);
-router.put('/:id', verificarToken, atualizarAtendimento);
-router.patch('/:id', verificarToken, atualizarAtendimento);
-router.delete('/:id', verificarToken, deletarAtendimento);
 
-router.get('/dashboard-dados', verificarToken, obterDadosDashboard);
+// GET /api/alergias?funcionario_matricula=123
+router.get(
+    '/',
+    verificarToken,
+    buscarAlergias
+);
+
+
+// GET /api/alergias/funcionario/123
+router.get(
+    '/funcionario/:matricula',
+    verificarToken,
+    buscarAlergias
+);
+
+
+// POST /api/alergias
+router.post(
+    '/',
+    verificarToken,
+    cadastrarAlergia
+);
+
+
+// PUT /api/alergias/:id
+router.put(
+    '/:id',
+    verificarToken,
+    atualizarAlergia
+);
+
+
+// PATCH /api/alergias/:id
+router.patch(
+    '/:id',
+    verificarToken,
+    atualizarAlergia
+);
+
+
+// DELETE /api/alergias/:id
+router.delete(
+    '/:id',
+    verificarToken,
+    deletarAlergia
+);
+
 
 export default router;
