@@ -1,140 +1,515 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <%- include('partials/head') %>
+
+        <title>Ficha do Funcionário - Sistema de Ambulatório</title>
 </head>
 
 <body class="bg-gray-100 flex min-h-screen">
+
     <%- include('partials/sidebar') %>
 
-        <main class="flex-1 p-8 overflow-y-auto w-full">
-            <div
-                class="bg-white p-6 rounded-2xl shadow-sm mb-6 flex justify-between items-center border-l-4 border-azulEscuro">
-                <div>
-                    <h1 class="text-2xl font-bold text-azulEscuro flex items-center gap-3">
-                        <i data-lucide="user" class="w-6 h-6"></i>
-                        <span id="info-nome">Carregando...</span>
-                    </h1>
-                    <p class="text-gray-600 mt-1 font-medium">
-                        <span id="info-matricula" class="mr-4">Matrícula: ...</span>
-                        <i data-lucide="map-pin" class="w-4 h-4 inline text-gray-400"></i> Setor: <span id="info-setor"
-                            class="mr-4">...</span>
-                        <i data-lucide="briefcase" class="w-4 h-4 inline text-gray-400"></i> Cargo: <span
-                            id="info-cargo">...</span>
-                    </p>
-                </div>
-            </div>
+        <main class="flex-1 w-full overflow-y-auto">
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="p-4 sm:p-6 lg:p-8">
 
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2 mb-6">
-                            <i data-lucide="activity" class="w-6 h-6 text-azulEscuro"></i> Registro de Triagem
-                        </h2>
+                <header class="bg-white p-5 sm:p-6 rounded-2xl shadow-sm mb-6 border-l-4 border-azulEscuro">
 
-                        <form id="formTriagem" class="space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Pressão
-                                        Arterial</label>
-                                    <input type="text" id="pressao" placeholder="Ex: 120/80"
-                                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-azulEscuro outline-none"
-                                        required>
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
+                        <div>
+
+                            <div class="flex items-center gap-3">
+
+                                <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+
+                                    <i data-lucide="user-round" class="w-7 h-7 text-azulEscuro">
+                                    </i>
+
                                 </div>
+
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Temperatura
-                                        (°C)</label>
-                                    <input type="text" id="temperatura" placeholder="Ex: 36.5"
-                                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-azulEscuro outline-none"
-                                        required>
+
+                                    <h1 class="text-2xl font-bold text-azulEscuro">
+
+                                        <span id="info-nome">
+                                            Carregando funcionário...
+                                        </span>
+
+                                    </h1>
+
+                                    <p class="text-sm text-slate-500 mt-1">
+
+                                        Ficha ambulatorial do funcionário
+
+                                    </p>
+
                                 </div>
+
                             </div>
 
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-1">Queixa Principal</label>
-                                <textarea id="queixa" rows="3"
-                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-azulEscuro outline-none resize-none"
-                                    required placeholder="Relato do paciente..."></textarea>
+                            <div
+                                class="flex flex-col gap-2 mt-5 text-sm text-slate-600 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5">
+
+                                <span id="info-matricula" class="font-semibold text-slate-700">
+
+                                    Matrícula: ...
+
+                                </span>
+
+                                <span class="flex items-center gap-1">
+
+                                    <i data-lucide="map-pin" class="w-4 h-4 text-slate-400">
+                                    </i>
+
+                                    Setor:
+
+                                    <strong id="info-setor" class="font-semibold text-slate-700">
+
+                                        ...
+
+                                    </strong>
+
+                                </span>
+
+                                <span class="flex items-center gap-1">
+
+                                    <i data-lucide="briefcase-business" class="w-4 h-4 text-slate-400">
+                                    </i>
+
+                                    Cargo:
+
+                                    <strong id="info-cargo" class="font-semibold text-slate-700">
+
+                                        ...
+
+                                    </strong>
+
+                                </span>
+
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Gravidade</label>
-                                    <select id="gravidade"
-                                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-azulEscuro outline-none"
-                                        required>
-                                        <option value="">Selecione...</option>
-                                        <option value="Baixa">Baixa (Verde)</option>
-                                        <option value="Média">Média (Amarelo)</option>
-                                        <option value="Alta">Alta (Vermelho)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Ação Tomada</label>
-                                    <select id="acao"
-                                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-azulEscuro outline-none"
-                                        required>
-                                        <option value="">Selecione...</option>
-                                        <option value="Medicação no Local">Medicação no Local</option>
-                                        <option value="Atestado Emitido">Atestado Emitido</option>
-                                        <option value="Encaminhado UPA">Encaminhado UPA/Hospital</option>
-                                        <option value="Liberado">Liberado ao Trabalho</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <button type="submit"
-                                class="w-full bg-azulEscuro hover:bg-blue-800 text-white font-bold py-3.5 rounded-xl shadow-md transition-all flex justify-center items-center gap-2 mt-4">
-                                <i data-lucide="check-circle" class="w-5 h-5"></i> Salvar Atendimento
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="space-y-6">
-                    <div class="bg-red-50 rounded-2xl shadow-sm border border-red-100 p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-red-800 flex items-center gap-2">
-                                <i data-lucide="shield-alert" class="w-5 h-5"></i> Alertas Médicos
-                            </h3>
-                            <button onclick="abrirModalAlergia()"
-                                class="text-sm bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-1.5 px-3 rounded-lg transition-colors flex items-center gap-1">
-                                <i data-lucide="plus" class="w-4 h-4"></i> Adicionar
-                            </button>
                         </div>
-                        <ul id="lista-alergias" class="space-y-2">
-                            <li class="text-red-400 flex justify-center py-4"><i data-lucide="loader"
-                                    class="animate-spin w-5 h-5"></i></li>
-                        </ul>
+
+                        <a href="/consultar-paciente"
+                            class="w-full lg:w-auto inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-5 py-3 rounded-xl transition-all">
+
+                            <i data-lucide="arrow-left" class="w-5 h-5">
+                            </i>
+
+                            Voltar para funcionários
+
+                        </a>
+
                     </div>
+
+                </header>
+
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    <div class="lg:col-span-2 space-y-6">
+
+                        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6">
+
+                            <div class="mb-6">
+
+                                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+
+                                    <i data-lucide="activity" class="w-6 h-6 text-azulEscuro">
+                                    </i>
+
+                                    Registro de atendimento
+
+                                </h2>
+
+                                <p class="text-sm text-slate-500 mt-1">
+
+                                    Registre os dados da triagem e a conduta adotada.
+
+                                </p>
+
+                            </div>
+
+                            <form id="formTriagem" class="space-y-5">
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                                    <div>
+
+                                        <label for="pressao" class="block text-sm font-semibold text-slate-700 mb-1">
+
+                                            Pressão arterial
+
+                                            <span class="text-red-600">
+                                                *
+                                            </span>
+
+                                        </label>
+
+                                        <input type="text" id="pressao" maxlength="20" autocomplete="off"
+                                            placeholder="Exemplo: 120/80" required
+                                            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+
+                                    </div>
+
+                                    <div>
+
+                                        <label for="temperatura"
+                                            class="block text-sm font-semibold text-slate-700 mb-1">
+
+                                            Temperatura em °C
+
+                                            <span class="text-red-600">
+                                                *
+                                            </span>
+
+                                        </label>
+
+                                        <input type="text" id="temperatura" maxlength="6" inputmode="decimal"
+                                            autocomplete="off" placeholder="Exemplo: 36,5" required
+                                            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+
+                                    </div>
+
+                                </div>
+
+
+                                <div>
+
+                                    <label for="queixa" class="block text-sm font-semibold text-slate-700 mb-1">
+
+                                        Queixa principal
+
+                                        <span class="text-red-600">
+                                            *
+                                        </span>
+
+                                    </label>
+
+                                    <textarea id="queixa" rows="4" maxlength="5000" required
+                                        placeholder="Descreva a queixa relatada pelo funcionário..."
+                                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none resize-none transition-all"></textarea>
+
+                                </div>
+
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                                    <div>
+
+                                        <label for="gravidade" class="block text-sm font-semibold text-slate-700 mb-1">
+
+                                            Gravidade
+
+                                            <span class="text-red-600">
+                                                *
+                                            </span>
+
+                                        </label>
+
+                                        <select id="gravidade" required
+                                            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+
+                                            <option value="">
+                                                Selecione a gravidade
+                                            </option>
+
+                                            <option value="Baixa">
+                                                Baixa
+                                            </option>
+
+                                            <option value="Média">
+                                                Média
+                                            </option>
+
+                                            <option value="Alta">
+                                                Alta
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+                                    <div>
+
+                                        <label for="acao" class="block text-sm font-semibold text-slate-700 mb-1">
+
+                                            Ação tomada
+
+                                            <span class="text-red-600">
+                                                *
+                                            </span>
+
+                                        </label>
+
+                                        <select id="acao" required
+                                            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+
+                                            <option value="">
+                                                Selecione a ação
+                                            </option>
+
+                                            <option value="Medicação no Local">
+                                                Medicação no local
+                                            </option>
+
+                                            <option value="Atestado Emitido">
+                                                Atestado emitido
+                                            </option>
+
+                                            <option value="Encaminhado UPA">
+                                                Encaminhado para UPA ou hospital
+                                            </option>
+
+                                            <option value="Liberado">
+                                                Liberado para o trabalho
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="pt-2">
+
+                                    <button type="submit"
+                                        class="w-full bg-azulEscuro hover:bg-blue-800 text-white font-bold py-3.5 px-5 rounded-xl shadow-md transition-all flex justify-center items-center gap-2">
+
+                                        <i data-lucide="circle-check-big" class="w-5 h-5">
+                                        </i>
+
+                                        Salvar atendimento
+
+                                    </button>
+
+                                </div>
+
+                            </form>
+
+                        </section>
+
+
+                        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+
+                            <div class="px-5 sm:px-6 py-5 border-b border-slate-100">
+
+                                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+
+                                    <i data-lucide="history" class="w-6 h-6 text-azulEscuro">
+                                    </i>
+
+                                    Histórico de atendimentos
+
+                                </h2>
+
+                                <p class="text-sm text-slate-500 mt-1">
+
+                                    Atendimentos anteriores registrados para este funcionário.
+
+                                </p>
+
+                            </div>
+
+                            <div id="historico-atendimentos" class="p-5 sm:p-6 space-y-4">
+
+                                <div class="text-sm text-slate-400 flex items-center justify-center gap-2 py-6">
+
+                                    <i data-lucide="loader-circle" class="w-5 h-5 animate-spin">
+                                    </i>
+
+                                    Carregando histórico...
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+
+                    <div class="space-y-6">
+
+                        <section class="bg-red-50 rounded-2xl shadow-sm border border-red-100 overflow-hidden">
+
+                            <div class="p-5 sm:p-6 border-b border-red-100">
+
+                                <div
+                                    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-stretch xl:flex-row xl:items-center">
+
+                                    <div>
+
+                                        <h2 class="font-bold text-red-800 flex items-center gap-2">
+
+                                            <i data-lucide="shield-alert" class="w-5 h-5">
+                                            </i>
+
+                                            Alertas médicos
+
+                                        </h2>
+
+                                        <p class="text-xs text-red-600 mt-1">
+
+                                            Alergias cadastradas para o funcionário.
+
+                                        </p>
+
+                                    </div>
+
+                                    <button type="button" onclick="abrirModalAlergia()"
+                                        class="inline-flex items-center justify-center gap-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 px-3 rounded-lg transition-all">
+
+                                        <i data-lucide="plus" class="w-4 h-4">
+                                        </i>
+
+                                        Adicionar
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                            <ul id="lista-alergias" class="p-5 sm:p-6 space-y-3">
+
+                                <li class="text-red-400 flex items-center justify-center gap-2 py-4">
+
+                                    <i data-lucide="loader-circle" class="animate-spin w-5 h-5">
+                                    </i>
+
+                                    <span>
+                                        Carregando alergias...
+                                    </span>
+
+                                </li>
+
+                            </ul>
+
+                        </section>
+
+
+                        <section class="bg-blue-50 rounded-2xl shadow-sm border border-blue-100 p-5 sm:p-6">
+
+                            <h2 class="font-bold text-blue-900 flex items-center gap-2">
+
+                                <i data-lucide="info" class="w-5 h-5">
+                                </i>
+
+                                Orientação
+
+                            </h2>
+
+                            <p class="text-sm text-blue-800 mt-3 leading-relaxed">
+
+                                Confira os dados do funcionário e os alertas médicos antes de registrar um novo
+                                atendimento.
+
+                            </p>
+
+                        </section>
+
+                    </div>
+
                 </div>
 
             </div>
+
         </main>
 
+
         <div id="modal-backdrop"
-            class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 backdrop-blur-sm">
-            <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-red-700 flex items-center gap-2">Nova Alergia</h3>
-                    <button onclick="fecharModalAlergia()" class="text-gray-400 hover:text-red-500"><i data-lucide="x"
-                            class="w-5 h-5"></i></button>
+            class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog"
+            aria-modal="true" aria-labelledby="titulo-modal-alergia">
+
+            <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+
+                <div class="flex justify-between items-center px-6 py-5 border-b border-slate-100">
+
+                    <div>
+
+                        <h2 id="titulo-modal-alergia" class="text-xl font-bold text-red-700 flex items-center gap-2">
+
+                            <i data-lucide="shield-plus" class="w-6 h-6">
+                            </i>
+
+                            Nova alergia
+
+                        </h2>
+
+                        <p class="text-sm text-slate-500 mt-1">
+
+                            Cadastre um novo alerta médico.
+
+                        </p>
+
+                    </div>
+
+                    <button type="button" onclick="fecharModalAlergia()"
+                        class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                        aria-label="Fechar modal">
+
+                        <i data-lucide="x" class="w-5 h-5">
+                        </i>
+
+                    </button>
+
                 </div>
-                <form id="formAlergia">
-                    <input type="text" id="descricao_alergia" placeholder="Ex: Dipirona, Amendoim..."
-                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-400 mb-4 outline-none"
-                        required>
-                    <button type="submit"
-                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all">Salvar
-                        Alergia</button>
+
+                <form id="formAlergia" class="p-6">
+
+                    <div>
+
+                        <label for="descricao_alergia" class="block text-sm font-semibold text-slate-700 mb-1">
+
+                            Descrição da alergia
+
+                            <span class="text-red-600">
+                                *
+                            </span>
+
+                        </label>
+
+                        <input type="text" id="descricao_alergia" maxlength="255" autocomplete="off"
+                            placeholder="Exemplo: Dipirona, amendoim ou látex" required
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none transition-all">
+
+                    </div>
+
+                    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6">
+
+                        <button type="button" onclick="fecharModalAlergia()"
+                            class="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">
+
+                            Cancelar
+
+                        </button>
+
+                        <button type="submit"
+                            class="px-5 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold shadow-md transition-all flex items-center justify-center gap-2">
+
+                            <i data-lucide="save" class="w-5 h-5">
+                            </i>
+
+                            Salvar alergia
+
+                        </button>
+
+                    </div>
+
                 </form>
+
             </div>
+
         </div>
 
+
         <script src="/js/ficha-paciente.js"></script>
-        <script>lucide.createIcons();</script>
+
 </body>
 
 </html>

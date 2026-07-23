@@ -3,106 +3,488 @@
 
 <head>
     <%- include('partials/head') %>
+        <title>Funcionários - Sistema de Ambulatório</title>
 </head>
 
 <body class="bg-cinzaFundo flex min-h-screen overflow-hidden text-cinzaTexto">
+
     <%- include('partials/sidebar') %>
 
-        <main class="flex-1 p-8 overflow-y-auto w-full">
-            <div class="mb-8">
-                <h1 class="text-3xl font-bold text-slate-800 mb-1">Buscar Paciente</h1>
-                <p class="text-slate-500 text-sm">Pesquise por nome, matrícula ou CPF para iniciar o atendimento ou
-                    gerenciar cadastros.</p>
-            </div>
+        <main class="flex-1 w-full overflow-y-auto">
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
-                <form id="formBusca" class="flex flex-col sm:flex-row gap-4">
-                    <div class="flex-1 relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i data-lucide="search" class="h-5 w-5 text-slate-400"></i>
+            <div class="p-4 sm:p-6 lg:p-8">
+
+                <header class="flex flex-col gap-4 mb-8 lg:flex-row lg:items-center lg:justify-between">
+
+                    <div>
+                        <div class="flex items-center gap-3 mb-1">
+                            <div class="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center">
+                                <i data-lucide="users" class="w-6 h-6 text-azulEscuro"></i>
+                            </div>
+
+                            <div>
+                                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+                                    Funcionários
+                                </h1>
+
+                                <p class="text-sm text-slate-500 mt-1">
+                                    Consulte, cadastre e gerencie os funcionários atendidos pelo ambulatório.
+                                </p>
+                            </div>
                         </div>
-                        <input type="text" id="inputBusca" placeholder="Digite o termo de busca..."
-                            class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-azulEscuro focus:border-transparent transition-all">
                     </div>
-                    <button type="submit"
-                        class="bg-azulEscuro hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
-                        Buscar
+
+                    <button type="button" onclick="abrirModalCadastro()"
+                        class="w-full lg:w-auto bg-azulEscuro hover:bg-blue-800 text-white font-bold py-3 px-5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="user-plus" class="w-5 h-5"></i>
+                        Cadastrar funcionário
                     </button>
-                </form>
+
+                </header>
+
+
+                <section class="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-100 mb-6">
+
+                    <div class="flex items-center gap-2 mb-4">
+                        <i data-lucide="search" class="w-5 h-5 text-azulEscuro"></i>
+
+                        <h2 class="font-bold text-slate-800">
+                            Buscar funcionário
+                        </h2>
+                    </div>
+
+                    <form id="form-busca" class="flex flex-col sm:flex-row gap-3">
+
+                        <div class="flex-1 relative">
+
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <i data-lucide="search" class="h-5 w-5 text-slate-400"></i>
+                            </div>
+
+                            <input type="text" id="input-busca" name="busca" maxlength="150" autocomplete="off"
+                                placeholder="Nome, matrícula, CPF, cargo, setor ou núcleo..."
+                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-azulEscuro focus:border-transparent transition-all">
+
+                        </div>
+
+                        <button type="submit"
+                            class="bg-azulEscuro hover:bg-blue-800 text-white font-bold py-3 px-7 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="search" class="w-5 h-5"></i>
+                            Buscar
+                        </button>
+
+                        <button type="button" id="botao-limpar-busca"
+                            class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-5 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="eraser" class="w-5 h-5"></i>
+                            Limpar
+                        </button>
+
+                    </form>
+
+                </section>
+
+
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+
+                    <div
+                        class="px-5 sm:px-6 py-5 border-b border-slate-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                        <div>
+                            <h2 class="font-bold text-lg text-slate-800">
+                                Lista de funcionários
+                            </h2>
+
+                            <p id="texto-total-funcionarios" class="text-sm text-slate-500 mt-1">
+                                Carregando registros...
+                            </p>
+                        </div>
+
+                        <button type="button" id="botao-atualizar-lista"
+                            class="text-azulEscuro hover:bg-blue-50 font-semibold px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            Atualizar
+                        </button>
+
+                    </div>
+
+                    <div class="overflow-x-auto">
+
+                        <table class="w-full text-left border-collapse min-w-[980px]">
+
+                            <thead>
+                                <tr
+                                    class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
+                                    <th class="py-4 px-6 font-semibold">Matrícula</th>
+                                    <th class="py-4 px-6 font-semibold">Nome</th>
+                                    <th class="py-4 px-6 font-semibold">CPF</th>
+                                    <th class="py-4 px-6 font-semibold">Cargo</th>
+                                    <th class="py-4 px-6 font-semibold">Setor</th>
+                                    <th class="py-4 px-6 font-semibold">Núcleo</th>
+                                    <th class="py-4 px-6 font-semibold text-center">Ações</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabela-pacientes" class="divide-y divide-slate-100">
+
+                                <tr>
+                                    <td colspan="7" class="py-14 px-6 text-center text-slate-400">
+
+                                        <i data-lucide="loader-circle"
+                                            class="w-10 h-10 mx-auto mb-3 animate-spin opacity-60"></i>
+
+                                        <p>Carregando funcionários...</p>
+
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[600px]">
-                        <thead>
-                            <tr
-                                class="bg-slate-50 border-b border-slate-100 text-slate-500 text-sm uppercase tracking-wider">
-                                <th class="py-4 px-6 font-semibold">Matrícula</th>
-                                <th class="py-4 px-6 font-semibold">Nome do Funcionário</th>
-                                <th class="py-4 px-6 font-semibold">Cargo / Setor</th>
-                                <th class="py-4 px-6 font-semibold text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaPacientes" class="divide-y divide-slate-100">
-                            <tr>
-                                <td colspan="4" class="py-12 text-center text-slate-400">
-                                    <i data-lucide="users" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
-                                    <p>Utilize a barra acima para procurar um funcionário no sistema.</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </main>
 
-        <div id="modal-editar-paciente"
-            class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 backdrop-blur-sm">
-            <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-azulEscuro flex items-center gap-2">
-                        <i data-lucide="user-cog" class="w-6 h-6"></i> Editar Funcionário
-                    </h2>
-                    <button onclick="fecharModalEditar()" class="text-gray-400 hover:text-red-500">
+
+        <div id="modal-cadastrar"
+            class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog"
+            aria-modal="true" aria-labelledby="titulo-modal-cadastrar">
+
+            <div class="bg-white rounded-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto shadow-2xl">
+
+                <div
+                    class="sticky top-0 z-10 bg-white flex justify-between items-center px-6 py-5 border-b border-slate-100">
+
+                    <div>
+                        <h2 id="titulo-modal-cadastrar"
+                            class="text-xl font-bold text-azulEscuro flex items-center gap-2">
+                            <i data-lucide="user-plus" class="w-6 h-6"></i>
+                            Cadastrar funcionário
+                        </h2>
+
+                        <p class="text-sm text-slate-500 mt-1">
+                            Preencha os dados corporativos do funcionário.
+                        </p>
+                    </div>
+
+                    <button type="button" onclick="fecharModalCadastro()"
+                        class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                        aria-label="Fechar">
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
+
                 </div>
-                <form id="form-editar-paciente" class="space-y-4">
-                    <input type="hidden" id="edit-matricula">
+
+                <form id="form-cadastrar-paciente" class="p-6 space-y-6">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                        <div>
+                            <label for="cadastro-matricula" class="block text-sm font-semibold text-slate-700 mb-1">
+                                Matrícula
+                                <span class="text-red-600">*</span>
+                            </label>
+
+                            <input type="text" id="cadastro-matricula" maxlength="20" required autocomplete="off"
+                                placeholder="Ex: 102030"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                        </div>
+
+                        <div>
+                            <label for="cadastro-cpf" class="block text-sm font-semibold text-slate-700 mb-1">
+                                CPF
+                                <span class="text-red-600">*</span>
+                            </label>
+
+                            <input type="text" id="cadastro-cpf" maxlength="14" inputmode="numeric" required
+                                autocomplete="off" placeholder="000.000.000-00"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                        </div>
+
+                    </div>
+
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700">Nome Completo</label>
-                        <input type="text" id="edit-nome"
-                            class="w-full px-4 py-2 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
-                            required>
+                        <label for="cadastro-nome" class="block text-sm font-semibold text-slate-700 mb-1">
+                            Nome completo
+                            <span class="text-red-600">*</span>
+                        </label>
+
+                        <input type="text" id="cadastro-nome" maxlength="150" required autocomplete="off"
+                            placeholder="Nome completo do funcionário"
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700">Setor</label>
-                            <input type="text" id="edit-setor"
-                                class="w-full px-4 py-2 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
-                                required>
+                            <label for="cadastro-cargo" class="block text-sm font-semibold text-slate-700 mb-1">
+                                Cargo
+                            </label>
+
+                            <input type="text" id="cadastro-cargo" maxlength="100" autocomplete="off"
+                                placeholder="Ex: Auxiliar"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
                         </div>
+
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700">Cargo</label>
-                            <input type="text" id="edit-cargo"
-                                class="w-full px-4 py-2 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
-                                required>
+                            <label for="cadastro-setor" class="block text-sm font-semibold text-slate-700 mb-1">
+                                Setor
+                            </label>
+
+                            <input type="text" id="cadastro-setor" maxlength="100" autocomplete="off"
+                                placeholder="Ex: Logística"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
                         </div>
+
+                        <div>
+                            <label for="cadastro-nucleo" class="block text-sm font-semibold text-slate-700 mb-1">
+                                Núcleo
+                            </label>
+
+                            <input type="text" id="cadastro-nucleo" maxlength="100" autocomplete="off"
+                                placeholder="Ex: Operacional"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                        </div>
+
                     </div>
-                    <button type="submit"
-                        class="w-full bg-azulEscuro text-white font-bold py-3 rounded-xl mt-4 hover:bg-blue-800 transition-all">
-                        Guardar Alterações
-                    </button>
+
+                    <div class="border-t border-slate-100 pt-5">
+
+                        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i data-lucide="network" class="w-5 h-5 text-azulEscuro"></i>
+                            Estrutura de liderança
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+                            <div>
+                                <label for="cadastro-supervisor"
+                                    class="block text-sm font-semibold text-slate-700 mb-1">
+                                    Supervisor
+                                </label>
+
+                                <input type="text" id="cadastro-supervisor" maxlength="100" autocomplete="off"
+                                    placeholder="Nome do supervisor"
+                                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                            </div>
+
+                            <div>
+                                <label for="cadastro-coordenador"
+                                    class="block text-sm font-semibold text-slate-700 mb-1">
+                                    Coordenador
+                                </label>
+
+                                <input type="text" id="cadastro-coordenador" maxlength="100" autocomplete="off"
+                                    placeholder="Nome do coordenador"
+                                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                            </div>
+
+                            <div>
+                                <label for="cadastro-gerente" class="block text-sm font-semibold text-slate-700 mb-1">
+                                    Gerente
+                                </label>
+
+                                <input type="text" id="cadastro-gerente" maxlength="100" autocomplete="off"
+                                    placeholder="Nome do gerente"
+                                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
+
+                        <button type="button" onclick="fecharModalCadastro()"
+                            class="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">
+                            Cancelar
+                        </button>
+
+                        <button type="submit" id="botao-salvar-cadastro"
+                            class="px-6 py-3 rounded-xl bg-azulEscuro hover:bg-blue-800 text-white font-bold shadow-md transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="save" class="w-5 h-5"></i>
+                            Salvar funcionário
+                        </button>
+
+                    </div>
+
                 </form>
+
             </div>
+
         </div>
 
-        <script>
-            lucide.createIcons();
-            if (!localStorage.getItem('token')) window.location.href = '/';
-            function fazerLogout() { localStorage.removeItem('token'); window.location.href = '/'; }
-        </script>
+
+        <div id="modal-editar"
+            class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog"
+            aria-modal="true" aria-labelledby="titulo-modal-editar">
+
+            <div class="bg-white rounded-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto shadow-2xl">
+
+                <div
+                    class="sticky top-0 z-10 bg-white flex justify-between items-center px-6 py-5 border-b border-slate-100">
+
+                    <div>
+                        <h2 id="titulo-modal-editar" class="text-xl font-bold text-azulEscuro flex items-center gap-2">
+                            <i data-lucide="user-cog" class="w-6 h-6"></i>
+                            Editar funcionário
+                        </h2>
+
+                        <p class="text-sm text-slate-500 mt-1">
+                            Atualize os dados cadastrais do funcionário.
+                        </p>
+                    </div>
+
+                    <button type="button" onclick="fecharModalEditar()"
+                        class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                        aria-label="Fechar">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+
+                </div>
+
+                <form id="form-editar-paciente" class="p-6 space-y-6">
+
+                    <input type="hidden" id="edit-matricula">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                        <div>
+                            <label for="edit-matricula-exibicao"
+                                class="block text-sm font-semibold text-slate-700 mb-1">
+                                Matrícula
+                            </label>
+
+                            <input type="text" id="edit-matricula-exibicao" disabled
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 cursor-not-allowed">
+                        </div>
+
+                        <div>
+                            <label for="edit-cpf" class="block text-sm font-semibold text-slate-700 mb-1">
+                                CPF
+                                <span class="text-red-600">*</span>
+                            </label>
+
+                            <input type="text" id="edit-cpf" maxlength="14" inputmode="numeric" required
+                                autocomplete="off" placeholder="000.000.000-00"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                        </div>
+
+                    </div>
+
+                    <div>
+                        <label for="edit-nome" class="block text-sm font-semibold text-slate-700 mb-1">
+                            Nome completo
+                            <span class="text-red-600">*</span>
+                        </label>
+
+                        <input type="text" id="edit-nome" maxlength="150" required autocomplete="off"
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+                        <div>
+                            <label for="edit-cargo" class="block text-sm font-semibold text-slate-700 mb-1">
+                                Cargo
+                            </label>
+
+                            <input type="text" id="edit-cargo" maxlength="100" autocomplete="off"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                        </div>
+
+                        <div>
+                            <label for="edit-setor" class="block text-sm font-semibold text-slate-700 mb-1">
+                                Setor
+                            </label>
+
+                            <input type="text" id="edit-setor" maxlength="100" autocomplete="off"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                        </div>
+
+                        <div>
+                            <label for="edit-nucleo" class="block text-sm font-semibold text-slate-700 mb-1">
+                                Núcleo
+                            </label>
+
+                            <input type="text" id="edit-nucleo" maxlength="100" autocomplete="off"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                        </div>
+
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-5">
+
+                        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i data-lucide="network" class="w-5 h-5 text-azulEscuro"></i>
+                            Estrutura de liderança
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+                            <div>
+                                <label for="edit-supervisor" class="block text-sm font-semibold text-slate-700 mb-1">
+                                    Supervisor
+                                </label>
+
+                                <input type="text" id="edit-supervisor" maxlength="100" autocomplete="off"
+                                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                            </div>
+
+                            <div>
+                                <label for="edit-coordenador" class="block text-sm font-semibold text-slate-700 mb-1">
+                                    Coordenador
+                                </label>
+
+                                <input type="text" id="edit-coordenador" maxlength="100" autocomplete="off"
+                                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                            </div>
+
+                            <div>
+                                <label for="edit-gerente" class="block text-sm font-semibold text-slate-700 mb-1">
+                                    Gerente
+                                </label>
+
+                                <input type="text" id="edit-gerente" maxlength="100" autocomplete="off"
+                                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
+
+                        <button type="button" onclick="fecharModalEditar()"
+                            class="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">
+                            Cancelar
+                        </button>
+
+                        <button type="submit" id="botao-salvar-edicao"
+                            class="px-6 py-3 rounded-xl bg-azulEscuro hover:bg-blue-800 text-white font-bold shadow-md transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="save" class="w-5 h-5"></i>
+                            Salvar alterações
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+
+        <div id="mensagem-flutuante" class="fixed top-5 right-5 z-[70] hidden max-w-sm rounded-xl shadow-xl px-5 py-4"
+            role="alert"></div>
+
+
         <script src="/js/consultar-paciente.js"></script>
+
 </body>
 
 </html>

@@ -1,114 +1,152 @@
 import bcrypt from 'bcryptjs';
-import database from './database.js';
-import Funcionario from '../models/funcionarios.js';
+
 import Usuario from '../models/usuarios.js';
 
 
-const MATRICULA_MASTER = '1';
 const EMAIL_MASTER = 'logos@123.com';
 const SENHA_MASTER = 'logos@123';
 
 
+async function criarNovoUsuarioMaster(senhaHash) {
+
+    const novoUsuario = await Usuario.create({
+        email: EMAIL_MASTER,
+        senha: senhaHash
+    });
+
+    console.log(
+        'Usuário master criado com sucesso.'
+    );
+
+    return novoUsuario;
+
+}
+
+
+async function atualizarSenhaUsuarioMaster(
+    usuarioMaster,
+    senhaHash
+) {
+
+    await usuarioMaster.update({
+        senha: senhaHash
+    });
+
+    console.log(
+        'Senha do usuário master atualizada com sucesso.'
+    );
+
+}
+
+
+async function verificarSenhaUsuarioMaster(
+    usuarioMaster
+) {
+
+    if (!usuarioMaster.senha) {
+
+        return false;
+
+    }
+
+    const senhaCorreta = await bcrypt.compare(
+        SENHA_MASTER,
+        usuarioMaster.senha
+    );
+
+    return senhaCorreta;
+
+}
+
+
 export async function criarUsuarioMaster() {
-    const transacao = await database.transaction();
 
     try {
-        let funcionarioMaster = await Funcionario.findByPk(
-            MATRICULA_MASTER,
-            {
-                transaction: transacao
-            }
-        );
 
-        if (!funcionarioMaster) {
-            funcionarioMaster = await Funcionario.create(
-                {
-                    matricula: MATRICULA_MASTER,
-                    nome: 'Administrador Master',
-                    cpf: '00000000000',
-                    cargo: 'Administrador',
-                    setor: 'TI',
-                    nucleo: null,
-                    supervisor: null,
-                    coordenador: null,
-                    gerente: null
-                },
-                {
-                    transaction: transacao
+        const usuarioMaster = await Usuario
+            .unscoped()
+            .findOne({
+                where: {
+                    email: EMAIL_MASTER
                 }
-            );
-
-            console.log(
-                'Funcionário administrador master criado.'
-            );
-        }
-
-        const usuarioMaster = await Usuario.unscoped().findOne({
-            where: {
-                email: EMAIL_MASTER
-            },
-            transaction: transacao
-        });
-
-        const senhaHash = await bcrypt.hash(
-            SENHA_MASTER,
-            10
-        );
+            });
 
         if (!usuarioMaster) {
-            await Usuario.create(
-                {
-                    email: EMAIL_MASTER,
-                    senha: senhaHash
-                },
-                {
-                    transaction: transacao
-                }
+
+            const senhaHash = await bcrypt.hash(
+                SENHA_MASTER,
+                10
+            );
+
+            await criarNovoUsuarioMaster(
+                senhaHash
             );
 
             console.log(
-                'Usuário master criado com sucesso.'
-            );
-        } else {
-            const senhaAtualCorreta = await bcrypt.compare(
-                SENHA_MASTER,
-                usuarioMaster.senha
+                'Login master disponível.'
             );
 
-            if (!senhaAtualCorreta) {
-                await usuarioMaster.update(
-                    {
-                        senha: senhaHash
-                    },
-                    {
-                        transaction: transacao
-                    }
-                );
+            console.log(
+                'E-mail: ' + EMAIL_MASTER
+            );
 
-                console.log(
-                    'Senha do usuário master atualizada.'
-                );
-            } else {
-                console.log(
-                    'Usuário master já está configurado.'
-                );
-            }
+            console.log(
+                'Senha: ' + SENHA_MASTER
+            );
+
+            return;
+
         }
 
-        await transacao.commit();
+        const senhaAtualCorreta =
+            await verificarSenhaUsuarioMaster(
+                usuarioMaster
+            );
+
+        if (!senhaAtualCorreta) {
+
+            const senhaHash = await bcrypt.hash(
+                SENHA_MASTER,
+                10
+            );
+
+            await atualizarSenhaUsuarioMaster(
+                usuarioMaster,
+                senhaHash
+            );
+
+        } else {
+
+            console.log(
+                'Usuário master já está configurado.'
+            );
+
+        }
 
         console.log(
-            `Login master disponível: ${EMAIL_MASTER}
-            Senha: ${SENHA_MASTER}`
+            'Login master disponível.'
         );
+
+        console.log(
+            'E-mail: ' + EMAIL_MASTER
+        );
+
+        console.log(
+            'Senha: ' + SENHA_MASTER
+        );
+
     } catch (erro) {
-        await transacao.rollback();
 
         console.error(
-            'Erro ao criar ou atualizar o usuário master:',
+            'Erro ao criar ou atualizar o usuário master:'
+        );
+
+        console.error(
             erro
         );
 
         throw erro;
+
     }
+
 }
