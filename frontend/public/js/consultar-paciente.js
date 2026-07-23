@@ -1,33 +1,32 @@
-const BASE_URL = '/api';
+const FUNCIONARIOS_BASE_URL = '/api/funcionarios';
 
 let termoBuscaAtual = '';
+let temporizadorMensagem = null;
 
 
-function obterToken() {
+function atualizarIcones() {
 
-    return localStorage.getItem('token');
+    if (window.lucide) {
 
-}
+        window.lucide.createIcons();
 
-
-function fazerLogout() {
-
-    localStorage.removeItem('token');
-    window.location.href = '/login';
+    }
 
 }
 
 
-window.fazerLogout = fazerLogout;
+function authSessionEstaDisponivel() {
 
+    if (!window.AuthSession) {
 
-function verificarAutenticacao() {
+        return false;
 
-    const token = obterToken();
+    }
 
-    if (!token) {
+    if (
+        typeof window.AuthSession.fetchAutenticado !== 'function'
+    ) {
 
-        fazerLogout();
         return false;
 
     }
@@ -37,23 +36,47 @@ function verificarAutenticacao() {
 }
 
 
-function respostaExigeNovoLogin(resposta) {
+async function fazerLogout() {
 
-    if (resposta.status === 401) {
+    if (authSessionEstaDisponivel()) {
 
-        fazerLogout();
-        return true;
-
-    }
-
-    if (resposta.status === 403) {
-
-        fazerLogout();
-        return true;
+        await window.AuthSession.fazerLogout();
+        return;
 
     }
 
-    return false;
+    localStorage.removeItem(
+        'token'
+    );
+
+    window.location.href = '/login';
+
+}
+
+
+window.fazerLogout = fazerLogout;
+
+
+async function respostaExigeNovoLogin(resposta) {
+
+    if (!resposta) {
+
+        return false;
+
+    }
+
+    if (
+        resposta.status !== 401 &&
+        resposta.status !== 403
+    ) {
+
+        return false;
+
+    }
+
+    await fazerLogout();
+
+    return true;
 
 }
 
@@ -79,13 +102,25 @@ function obterMensagemErro(dados, mensagemPadrao) {
 
         if (typeof dados.erro === 'string') {
 
-            return dados.erro;
+            const mensagemErro = dados.erro.trim();
+
+            if (mensagemErro.length > 0) {
+
+                return mensagemErro;
+
+            }
 
         }
 
         if (typeof dados.message === 'string') {
 
-            return dados.message;
+            const mensagem = dados.message.trim();
+
+            if (mensagem.length > 0) {
+
+                return mensagem;
+
+            }
 
         }
 
@@ -93,7 +128,9 @@ function obterMensagemErro(dados, mensagemPadrao) {
 
             if (dados.detalhes.length > 0) {
 
-                return dados.detalhes.join(' ');
+                return dados.detalhes.join(
+                    ' '
+                );
 
             }
 
@@ -108,7 +145,10 @@ function obterMensagemErro(dados, mensagemPadrao) {
 
 function escapeHTML(valor) {
 
-    if (valor === null || valor === undefined) {
+    if (
+        valor === null ||
+        valor === undefined
+    ) {
 
         return '';
 
@@ -126,7 +166,10 @@ function escapeHTML(valor) {
 
 function obterTextoExibicao(valor) {
 
-    if (valor === null || valor === undefined) {
+    if (
+        valor === null ||
+        valor === undefined
+    ) {
 
         return 'Não informado';
 
@@ -145,6 +188,22 @@ function obterTextoExibicao(valor) {
 }
 
 
+function obterValorFormulario(valor) {
+
+    if (
+        valor === null ||
+        valor === undefined
+    ) {
+
+        return '';
+
+    }
+
+    return String(valor);
+
+}
+
+
 function somenteNumeros(valor) {
 
     if (typeof valor !== 'string') {
@@ -153,14 +212,22 @@ function somenteNumeros(valor) {
 
     }
 
-    return valor.replace(/\D/g, '');
+    return valor.replace(
+        /\D/g,
+        ''
+    );
 
 }
 
 
 function formatarCpf(valor) {
 
-    const numeros = somenteNumeros(valor).slice(0, 11);
+    const numeros = somenteNumeros(
+        obterValorFormulario(valor)
+    ).slice(
+        0,
+        11
+    );
 
     if (numeros.length <= 3) {
 
@@ -203,11 +270,31 @@ function aplicarMascaraCpf(evento) {
 }
 
 
-function atualizarIcones() {
+function esconderMensagem() {
 
-    if (window.lucide) {
+    const elemento = document.getElementById(
+        'mensagem-flutuante'
+    );
 
-        window.lucide.createIcons();
+    if (!elemento) {
+
+        return;
+
+    }
+
+    elemento.classList.add(
+        'hidden'
+    );
+
+    elemento.innerHTML = '';
+
+    if (temporizadorMensagem) {
+
+        window.clearTimeout(
+            temporizadorMensagem
+        );
+
+        temporizadorMensagem = null;
 
     }
 
@@ -226,50 +313,84 @@ function mostrarMensagem(mensagem, tipo) {
 
     }
 
-    elemento.className = 'fixed top-5 right-5 z-[70] max-w-sm rounded-xl shadow-xl px-5 py-4 flex items-start gap-3';
+    if (temporizadorMensagem) {
 
-    let classesTipo = 'bg-slate-800 text-white';
+        window.clearTimeout(
+            temporizadorMensagem
+        );
+
+        temporizadorMensagem = null;
+
+    }
+
+    elemento.className =
+        'fixed top-5 right-5 z-[70] max-w-sm rounded-xl shadow-xl px-5 py-4 flex items-start gap-3';
+
+    let classesTipo =
+        'bg-slate-800 text-white';
+
     let icone = 'info';
 
     if (tipo === 'sucesso') {
 
-        classesTipo = 'bg-green-600 text-white';
+        classesTipo =
+            'bg-green-600 text-white';
+
         icone = 'circle-check';
 
     }
 
     if (tipo === 'erro') {
 
-        classesTipo = 'bg-red-600 text-white';
+        classesTipo =
+            'bg-red-600 text-white';
+
         icone = 'circle-alert';
 
     }
 
     if (tipo === 'aviso') {
 
-        classesTipo = 'bg-yellow-500 text-yellow-950';
+        classesTipo =
+            'bg-yellow-500 text-yellow-950';
+
         icone = 'triangle-alert';
 
     }
 
-    elemento.className += ' ' + classesTipo;
+    elemento.className +=
+        ' ' +
+        classesTipo;
 
     elemento.innerHTML = `
-        <i data-lucide="${icone}" class="w-5 h-5 shrink-0 mt-0.5"></i>
+        <i
+            data-lucide="${icone}"
+            class="w-5 h-5 shrink-0 mt-0.5">
+        </i>
+
         <div class="flex-1">
-            <p class="font-semibold">${escapeHTML(mensagem)}</p>
+            <p class="font-semibold">
+                ${escapeHTML(mensagem)}
+            </p>
         </div>
+
         <button
             type="button"
             id="botao-fechar-mensagem"
             class="opacity-80 hover:opacity-100 transition-opacity"
-            aria-label="Fechar mensagem"
-        >
-            <i data-lucide="x" class="w-4 h-4"></i>
+            aria-label="Fechar mensagem">
+
+            <i
+                data-lucide="x"
+                class="w-4 h-4">
+            </i>
+
         </button>
     `;
 
-    elemento.classList.remove('hidden');
+    elemento.classList.remove(
+        'hidden'
+    );
 
     const botaoFechar = document.getElementById(
         'botao-fechar-mensagem'
@@ -277,26 +398,29 @@ function mostrarMensagem(mensagem, tipo) {
 
     if (botaoFechar) {
 
-        botaoFechar.addEventListener('click', () => {
-
-            elemento.classList.add('hidden');
-
-        });
+        botaoFechar.addEventListener(
+            'click',
+            esconderMensagem
+        );
 
     }
 
     atualizarIcones();
 
-    window.setTimeout(() => {
-
-        elemento.classList.add('hidden');
-
-    }, 5000);
+    temporizadorMensagem = window.setTimeout(
+        esconderMensagem,
+        5000
+    );
 
 }
 
 
-function definirBotaoCarregando(botao, carregando, textoNormal, textoCarregando) {
+function definirBotaoCarregando(
+    botao,
+    carregando,
+    textoNormal,
+    textoCarregando
+) {
 
     if (!botao) {
 
@@ -307,14 +431,21 @@ function definirBotaoCarregando(botao, carregando, textoNormal, textoCarregando)
     if (carregando) {
 
         botao.disabled = true;
+
         botao.classList.add(
             'opacity-70',
             'cursor-not-allowed'
         );
 
         botao.innerHTML = `
-            <i data-lucide="loader-circle" class="w-5 h-5 animate-spin"></i>
-            ${escapeHTML(textoCarregando)}
+            <i
+                data-lucide="loader-circle"
+                class="w-5 h-5 animate-spin">
+            </i>
+
+            <span>
+                ${escapeHTML(textoCarregando)}
+            </span>
         `;
 
         atualizarIcones();
@@ -323,14 +454,21 @@ function definirBotaoCarregando(botao, carregando, textoNormal, textoCarregando)
     }
 
     botao.disabled = false;
+
     botao.classList.remove(
         'opacity-70',
         'cursor-not-allowed'
     );
 
     botao.innerHTML = `
-        <i data-lucide="save" class="w-5 h-5"></i>
-        ${escapeHTML(textoNormal)}
+        <i
+            data-lucide="save"
+            class="w-5 h-5">
+        </i>
+
+        <span>
+            ${escapeHTML(textoNormal)}
+        </span>
     `;
 
     atualizarIcones();
@@ -352,7 +490,11 @@ function atualizarBloqueioRolagem() {
 
     if (modalCadastro) {
 
-        if (!modalCadastro.classList.contains('hidden')) {
+        if (
+            !modalCadastro.classList.contains(
+                'hidden'
+            )
+        ) {
 
             existeModalAberto = true;
 
@@ -362,7 +504,11 @@ function atualizarBloqueioRolagem() {
 
     if (modalEditar) {
 
-        if (!modalEditar.classList.contains('hidden')) {
+        if (
+            !modalEditar.classList.contains(
+                'hidden'
+            )
+        ) {
 
             existeModalAberto = true;
 
@@ -372,12 +518,17 @@ function atualizarBloqueioRolagem() {
 
     if (existeModalAberto) {
 
-        document.body.classList.add('overflow-hidden');
+        document.body.classList.add(
+            'overflow-hidden'
+        );
+
         return;
 
     }
 
-    document.body.classList.remove('overflow-hidden');
+    document.body.classList.remove(
+        'overflow-hidden'
+    );
 
 }
 
@@ -392,7 +543,10 @@ function abrirModalCadastro() {
         'form-cadastrar-paciente'
     );
 
-    if (!modal || !formulario) {
+    if (
+        !modal ||
+        !formulario
+    ) {
 
         return;
 
@@ -400,8 +554,13 @@ function abrirModalCadastro() {
 
     formulario.reset();
 
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    modal.classList.remove(
+        'hidden'
+    );
+
+    modal.classList.add(
+        'flex'
+    );
 
     atualizarBloqueioRolagem();
     atualizarIcones();
@@ -412,11 +571,14 @@ function abrirModalCadastro() {
 
     if (campoMatricula) {
 
-        window.setTimeout(() => {
+        window.setTimeout(
+            function () {
 
-            campoMatricula.focus();
+                campoMatricula.focus();
 
-        }, 100);
+            },
+            100
+        );
 
     }
 
@@ -435,8 +597,13 @@ function fecharModalCadastro() {
 
     }
 
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    modal.classList.add(
+        'hidden'
+    );
+
+    modal.classList.remove(
+        'flex'
+    );
 
     atualizarBloqueioRolagem();
 
@@ -449,6 +616,35 @@ window.fecharModalCadastro = fecharModalCadastro;
 
 function abrirModalEditar(funcionario) {
 
+    if (
+        !funcionario ||
+        typeof funcionario !== 'object'
+    ) {
+
+        mostrarMensagem(
+            'Não foi possível identificar o funcionário.',
+            'erro'
+        );
+
+        return;
+
+    }
+
+    const matricula = obterValorFormulario(
+        funcionario.matricula
+    ).trim();
+
+    if (matricula.length === 0) {
+
+        mostrarMensagem(
+            'O funcionário não possui uma matrícula válida.',
+            'erro'
+        );
+
+        return;
+
+    }
+
     const modal = document.getElementById(
         'modal-editar'
     );
@@ -459,38 +655,69 @@ function abrirModalEditar(funcionario) {
 
     }
 
-    document.getElementById('edit-matricula').value =
-        obterTextoExibicao(funcionario.matricula);
+    document.getElementById(
+        'edit-matricula'
+    ).value = matricula;
 
-    document.getElementById('edit-matricula-exibicao').value =
-        obterTextoExibicao(funcionario.matricula);
+    document.getElementById(
+        'edit-matricula-exibicao'
+    ).value = matricula;
 
-    document.getElementById('edit-nome').value =
-        obterValorFormulario(funcionario.nome);
+    document.getElementById(
+        'edit-nome'
+    ).value = obterValorFormulario(
+        funcionario.nome
+    );
 
-    document.getElementById('edit-cpf').value =
-        formatarCpf(obterValorFormulario(funcionario.cpf));
+    document.getElementById(
+        'edit-cpf'
+    ).value = formatarCpf(
+        funcionario.cpf
+    );
 
-    document.getElementById('edit-cargo').value =
-        obterValorFormulario(funcionario.cargo);
+    document.getElementById(
+        'edit-cargo'
+    ).value = obterValorFormulario(
+        funcionario.cargo
+    );
 
-    document.getElementById('edit-setor').value =
-        obterValorFormulario(funcionario.setor);
+    document.getElementById(
+        'edit-setor'
+    ).value = obterValorFormulario(
+        funcionario.setor
+    );
 
-    document.getElementById('edit-nucleo').value =
-        obterValorFormulario(funcionario.nucleo);
+    document.getElementById(
+        'edit-nucleo'
+    ).value = obterValorFormulario(
+        funcionario.nucleo
+    );
 
-    document.getElementById('edit-supervisor').value =
-        obterValorFormulario(funcionario.supervisor);
+    document.getElementById(
+        'edit-supervisor'
+    ).value = obterValorFormulario(
+        funcionario.supervisor
+    );
 
-    document.getElementById('edit-coordenador').value =
-        obterValorFormulario(funcionario.coordenador);
+    document.getElementById(
+        'edit-coordenador'
+    ).value = obterValorFormulario(
+        funcionario.coordenador
+    );
 
-    document.getElementById('edit-gerente').value =
-        obterValorFormulario(funcionario.gerente);
+    document.getElementById(
+        'edit-gerente'
+    ).value = obterValorFormulario(
+        funcionario.gerente
+    );
 
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    modal.classList.remove(
+        'hidden'
+    );
+
+    modal.classList.add(
+        'flex'
+    );
 
     atualizarBloqueioRolagem();
     atualizarIcones();
@@ -501,11 +728,14 @@ function abrirModalEditar(funcionario) {
 
     if (campoNome) {
 
-        window.setTimeout(() => {
+        window.setTimeout(
+            function () {
 
-            campoNome.focus();
+                campoNome.focus();
 
-        }, 100);
+            },
+            100
+        );
 
     }
 
@@ -524,8 +754,13 @@ function fecharModalEditar() {
 
     }
 
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    modal.classList.add(
+        'hidden'
+    );
+
+    modal.classList.remove(
+        'flex'
+    );
 
     atualizarBloqueioRolagem();
 
@@ -533,19 +768,6 @@ function fecharModalEditar() {
 
 
 window.fecharModalEditar = fecharModalEditar;
-
-
-function obterValorFormulario(valor) {
-
-    if (valor === null || valor === undefined) {
-
-        return '';
-
-    }
-
-    return String(valor);
-
-}
 
 
 function mostrarTabelaCarregando() {
@@ -562,12 +784,19 @@ function mostrarTabelaCarregando() {
 
     tabela.innerHTML = `
         <tr>
-            <td colspan="7" class="py-14 px-6 text-center text-slate-400">
+            <td
+                colspan="7"
+                class="py-14 px-6 text-center text-slate-400">
+
                 <i
                     data-lucide="loader-circle"
-                    class="w-10 h-10 mx-auto mb-3 animate-spin opacity-60"
-                ></i>
-                <p>Carregando funcionários...</p>
+                    class="w-10 h-10 mx-auto mb-3 animate-spin opacity-60">
+                </i>
+
+                <p>
+                    Carregando funcionários...
+                </p>
+
             </td>
         </tr>
     `;
@@ -591,17 +820,23 @@ function mostrarTabelaVazia() {
 
     tabela.innerHTML = `
         <tr>
-            <td colspan="7" class="py-14 px-6 text-center text-slate-400">
+            <td
+                colspan="7"
+                class="py-14 px-6 text-center text-slate-400">
+
                 <i
                     data-lucide="user-search"
-                    class="w-12 h-12 mx-auto mb-3 opacity-50"
-                ></i>
+                    class="w-12 h-12 mx-auto mb-3 opacity-50">
+                </i>
+
                 <p class="font-medium text-slate-500">
                     Nenhum funcionário encontrado.
                 </p>
+
                 <p class="text-sm mt-1">
                     Tente utilizar outro nome, matrícula, CPF ou setor.
                 </p>
+
             </td>
         </tr>
     `;
@@ -625,12 +860,19 @@ function mostrarErroTabela(mensagem) {
 
     tabela.innerHTML = `
         <tr>
-            <td colspan="7" class="py-14 px-6 text-center text-red-500">
+            <td
+                colspan="7"
+                class="py-14 px-6 text-center text-red-500">
+
                 <i
                     data-lucide="circle-alert"
-                    class="w-11 h-11 mx-auto mb-3 opacity-70"
-                ></i>
-                <p class="font-semibold">${escapeHTML(mensagem)}</p>
+                    class="w-11 h-11 mx-auto mb-3 opacity-70">
+                </i>
+
+                <p class="font-semibold">
+                    ${escapeHTML(mensagem)}
+                </p>
+
             </td>
         </tr>
     `;
@@ -654,30 +896,40 @@ function atualizarTextoTotal(quantidade) {
 
     if (quantidade === 0) {
 
-        elemento.textContent = 'Nenhum funcionário encontrado.';
+        elemento.textContent =
+            'Nenhum funcionário encontrado.';
+
         return;
 
     }
 
     if (quantidade === 1) {
 
-        elemento.textContent = '1 funcionário encontrado.';
+        elemento.textContent =
+            '1 funcionário encontrado.';
+
         return;
 
     }
 
     elemento.textContent =
-        quantidade + ' funcionários encontrados.';
+        quantidade +
+        ' funcionários encontrados.';
 
 }
 
 
 function criarCelula(texto, classes) {
 
-    const celula = document.createElement('td');
+    const celula = document.createElement(
+        'td'
+    );
 
     celula.className = classes;
-    celula.textContent = obterTextoExibicao(texto);
+
+    celula.textContent = obterTextoExibicao(
+        texto
+    );
 
     return celula;
 
@@ -686,15 +938,23 @@ function criarCelula(texto, classes) {
 
 function criarBotaoAcao(configuracao) {
 
-    const botao = document.createElement('button');
+    const botao = document.createElement(
+        'button'
+    );
 
     botao.type = 'button';
     botao.className = configuracao.classes;
     botao.title = configuracao.titulo;
 
     botao.innerHTML = `
-        <i data-lucide="${configuracao.icone}" class="w-4 h-4"></i>
-        <span>${escapeHTML(configuracao.texto)}</span>
+        <i
+            data-lucide="${configuracao.icone}"
+            class="w-4 h-4">
+        </i>
+
+        <span>
+            ${escapeHTML(configuracao.texto)}
+        </span>
     `;
 
     botao.addEventListener(
@@ -709,20 +969,33 @@ function criarBotaoAcao(configuracao) {
 
 function criarLinkProntuario(funcionario) {
 
-    const link = document.createElement('a');
+    const matricula = obterValorFormulario(
+        funcionario.matricula
+    ).trim();
+
+    const link = document.createElement(
+        'a'
+    );
 
     link.href =
         '/ficha-paciente?matricula=' +
-        encodeURIComponent(funcionario.matricula);
+        encodeURIComponent(matricula);
 
     link.className =
         'inline-flex items-center justify-center gap-1.5 bg-azulEscuro hover:bg-blue-800 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-all shadow-sm';
 
-    link.title = 'Abrir ficha ambulatorial';
+    link.title =
+        'Abrir ficha ambulatorial';
 
     link.innerHTML = `
-        <i data-lucide="clipboard-plus" class="w-4 h-4"></i>
-        <span>Ficha</span>
+        <i
+            data-lucide="clipboard-plus"
+            class="w-4 h-4">
+        </i>
+
+        <span>
+            Ficha
+        </span>
     `;
 
     return link;
@@ -732,7 +1005,9 @@ function criarLinkProntuario(funcionario) {
 
 function criarLinhaFuncionario(funcionario) {
 
-    const linha = document.createElement('tr');
+    const linha = document.createElement(
+        'tr'
+    );
 
     linha.className =
         'hover:bg-slate-50 transition-colors';
@@ -751,13 +1026,9 @@ function criarLinhaFuncionario(funcionario) {
         )
     );
 
-    const cpfFormatado = formatarCpf(
-        obterValorFormulario(funcionario.cpf)
-    );
-
     linha.appendChild(
         criarCelula(
-            cpfFormatado,
+            formatarCpf(funcionario.cpf),
             'py-4 px-6 text-sm text-slate-600'
         )
     );
@@ -783,12 +1054,16 @@ function criarLinhaFuncionario(funcionario) {
         )
     );
 
-    const celulaAcoes = document.createElement('td');
+    const celulaAcoes = document.createElement(
+        'td'
+    );
 
     celulaAcoes.className =
         'py-4 px-6';
 
-    const containerAcoes = document.createElement('div');
+    const containerAcoes = document.createElement(
+        'div'
+    );
 
     containerAcoes.className =
         'flex items-center justify-center gap-2';
@@ -802,9 +1077,11 @@ function criarLinhaFuncionario(funcionario) {
         titulo: 'Editar funcionário',
         icone: 'pencil',
         classes: 'inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-semibold transition-all',
-        acao: () => {
+        acao: function () {
 
-            abrirModalEditar(funcionario);
+            abrirModalEditar(
+                funcionario
+            );
 
         }
     });
@@ -814,21 +1091,71 @@ function criarLinhaFuncionario(funcionario) {
         titulo: 'Excluir funcionário',
         icone: 'trash-2',
         classes: 'inline-flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-700 px-3 py-2 rounded-lg text-xs font-semibold transition-all',
-        acao: () => {
+        acao: function () {
 
-            deletarFuncionario(funcionario);
+            deletarFuncionario(
+                funcionario
+            );
 
         }
     });
 
-    containerAcoes.appendChild(linkProntuario);
-    containerAcoes.appendChild(botaoEditar);
-    containerAcoes.appendChild(botaoExcluir);
+    containerAcoes.appendChild(
+        linkProntuario
+    );
 
-    celulaAcoes.appendChild(containerAcoes);
-    linha.appendChild(celulaAcoes);
+    containerAcoes.appendChild(
+        botaoEditar
+    );
+
+    containerAcoes.appendChild(
+        botaoExcluir
+    );
+
+    celulaAcoes.appendChild(
+        containerAcoes
+    );
+
+    linha.appendChild(
+        celulaAcoes
+    );
 
     return linha;
+
+}
+
+
+function funcionarioPossuiMatricula(funcionario) {
+
+    if (
+        !funcionario ||
+        typeof funcionario !== 'object'
+    ) {
+
+        return false;
+
+    }
+
+    if (
+        funcionario.matricula === null ||
+        funcionario.matricula === undefined
+    ) {
+
+        return false;
+
+    }
+
+    const matricula = String(
+        funcionario.matricula
+    ).trim();
+
+    if (matricula.length === 0) {
+
+        return false;
+
+    }
+
+    return true;
 
 }
 
@@ -849,32 +1176,47 @@ function renderizarFuncionarios(funcionarios) {
 
     if (!Array.isArray(funcionarios)) {
 
-        atualizarTextoTotal(0);
-        mostrarTabelaVazia();
-        return;
-
-    }
-
-    atualizarTextoTotal(
-        funcionarios.length
-    );
-
-    if (funcionarios.length === 0) {
-
-        mostrarTabelaVazia();
-        return;
-
-    }
-
-    funcionarios.forEach(funcionario => {
-
-        const linha = criarLinhaFuncionario(
-            funcionario
+        atualizarTextoTotal(
+            0
         );
 
-        tabela.appendChild(linha);
+        mostrarTabelaVazia();
+        return;
 
-    });
+    }
+
+    const funcionariosValidos = funcionarios.filter(
+        function (funcionario) {
+
+            return funcionarioPossuiMatricula(
+                funcionario
+            );
+
+        }
+    );
+
+    atualizarTextoTotal(
+        funcionariosValidos.length
+    );
+
+    if (funcionariosValidos.length === 0) {
+
+        mostrarTabelaVazia();
+        return;
+
+    }
+
+    funcionariosValidos.forEach(
+        function (funcionario) {
+
+            tabela.appendChild(
+                criarLinhaFuncionario(
+                    funcionario
+                )
+            );
+
+        }
+    );
 
     atualizarIcones();
 
@@ -883,15 +1225,9 @@ function renderizarFuncionarios(funcionarios) {
 
 async function buscarFuncionarios(termo) {
 
-    if (!verificarAutenticacao()) {
-
-        return;
-
-    }
-
     mostrarTabelaCarregando();
 
-    let url = BASE_URL + '/funcionarios';
+    let url = FUNCIONARIOS_BASE_URL;
 
     if (typeof termo === 'string') {
 
@@ -901,7 +1237,9 @@ async function buscarFuncionarios(termo) {
 
             url +=
                 '?busca=' +
-                encodeURIComponent(termoNormalizado);
+                encodeURIComponent(
+                    termoNormalizado
+                );
 
         }
 
@@ -909,17 +1247,20 @@ async function buscarFuncionarios(termo) {
 
     try {
 
-        const resposta = await fetch(
-            url,
-            {
-                method: 'GET',
-                headers: {
-                    Authorization: 'Bearer ' + obterToken()
+        const resposta =
+            await window.AuthSession.fetchAutenticado(
+                url,
+                {
+                    method: 'GET',
+                    cache: 'no-store'
                 }
-            }
-        );
+            );
 
-        if (respostaExigeNovoLogin(resposta)) {
+        if (
+            await respostaExigeNovoLogin(
+                resposta
+            )
+        ) {
 
             return;
 
@@ -936,11 +1277,15 @@ async function buscarFuncionarios(termo) {
                 'Não foi possível carregar os funcionários.'
             );
 
-            throw new Error(mensagem);
+            throw new Error(
+                mensagem
+            );
 
         }
 
-        renderizarFuncionarios(dados);
+        renderizarFuncionarios(
+            dados
+        );
 
     } catch (erro) {
 
@@ -949,29 +1294,22 @@ async function buscarFuncionarios(termo) {
             erro
         );
 
-        atualizarTextoTotal(0);
-        mostrarErroTabela(erro.message);
+        atualizarTextoTotal(
+            0
+        );
+
+        mostrarErroTabela(
+            erro.message
+        );
 
     }
 
 }
 
 
-async function cadastrarFuncionario(evento) {
+function obterDadosCadastro() {
 
-    evento.preventDefault();
-
-    if (!verificarAutenticacao()) {
-
-        return;
-
-    }
-
-    const botao = document.getElementById(
-        'botao-salvar-cadastro'
-    );
-
-    const dadosCadastro = {
+    return {
         matricula: document.getElementById(
             'cadastro-matricula'
         ).value.trim(),
@@ -1011,32 +1349,64 @@ async function cadastrarFuncionario(evento) {
         ).value.trim()
     };
 
-    if (dadosCadastro.matricula.length === 0) {
+}
 
-        mostrarMensagem(
-            'Informe a matrícula do funcionário.',
-            'aviso'
-        );
 
-        return;
+function validarDadosFuncionario(dados) {
 
-    }
+    if (dados.matricula.length === 0) {
 
-    if (dadosCadastro.nome.length < 2) {
-
-        mostrarMensagem(
-            'Informe o nome completo do funcionário.',
-            'aviso'
-        );
-
-        return;
+        return 'Informe a matrícula do funcionário.';
 
     }
 
-    if (dadosCadastro.cpf.length !== 11) {
+    if (dados.matricula.length > 20) {
+
+        return 'A matrícula deve possuir no máximo 20 caracteres.';
+
+    }
+
+    if (dados.nome.length < 2) {
+
+        return 'Informe o nome completo do funcionário.';
+
+    }
+
+    if (dados.nome.length > 150) {
+
+        return 'O nome deve possuir no máximo 150 caracteres.';
+
+    }
+
+    if (dados.cpf.length !== 11) {
+
+        return 'O CPF deve possuir exatamente 11 números.';
+
+    }
+
+    return null;
+
+}
+
+
+async function cadastrarFuncionario(evento) {
+
+    evento.preventDefault();
+
+    const botao = document.getElementById(
+        'botao-salvar-cadastro'
+    );
+
+    const dadosCadastro = obterDadosCadastro();
+
+    const erroValidacao = validarDadosFuncionario(
+        dadosCadastro
+    );
+
+    if (erroValidacao) {
 
         mostrarMensagem(
-            'O CPF deve possuir exatamente 11 números.',
+            erroValidacao,
             'aviso'
         );
 
@@ -1053,19 +1423,27 @@ async function cadastrarFuncionario(evento) {
 
     try {
 
-        const resposta = await fetch(
-            BASE_URL + '/funcionarios',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: 'Bearer ' + obterToken()
-                },
-                body: JSON.stringify(dadosCadastro)
-            }
-        );
+        const resposta =
+            await window.AuthSession.fetchAutenticado(
+                FUNCIONARIOS_BASE_URL,
+                {
+                    method: 'POST',
 
-        if (respostaExigeNovoLogin(resposta)) {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify(
+                        dadosCadastro
+                    )
+                }
+            );
+
+        if (
+            await respostaExigeNovoLogin(
+                resposta
+            )
+        ) {
 
             return;
 
@@ -1082,7 +1460,9 @@ async function cadastrarFuncionario(evento) {
                 'Não foi possível cadastrar o funcionário.'
             );
 
-            throw new Error(mensagem);
+            throw new Error(
+                mensagem
+            );
 
         }
 
@@ -1105,7 +1485,9 @@ async function cadastrarFuncionario(evento) {
 
         }
 
-        await buscarFuncionarios('');
+        await buscarFuncionarios(
+            ''
+        );
 
     } catch (erro) {
 
@@ -1133,25 +1515,9 @@ async function cadastrarFuncionario(evento) {
 }
 
 
-async function atualizarFuncionario(evento) {
+function obterDadosAtualizacao() {
 
-    evento.preventDefault();
-
-    if (!verificarAutenticacao()) {
-
-        return;
-
-    }
-
-    const matricula = document.getElementById(
-        'edit-matricula'
-    ).value.trim();
-
-    const botao = document.getElementById(
-        'botao-salvar-edicao'
-    );
-
-    const dadosAtualizacao = {
+    return {
         nome: document.getElementById(
             'edit-nome'
         ).value.trim(),
@@ -1187,6 +1553,23 @@ async function atualizarFuncionario(evento) {
         ).value.trim()
     };
 
+}
+
+
+async function atualizarFuncionario(evento) {
+
+    evento.preventDefault();
+
+    const matricula = document.getElementById(
+        'edit-matricula'
+    ).value.trim();
+
+    const botao = document.getElementById(
+        'botao-salvar-edicao'
+    );
+
+    const dadosAtualizacao = obterDadosAtualizacao();
+
     if (matricula.length === 0) {
 
         mostrarMensagem(
@@ -1198,21 +1581,20 @@ async function atualizarFuncionario(evento) {
 
     }
 
-    if (dadosAtualizacao.nome.length < 2) {
+    const dadosParaValidacao = {
+        matricula,
+        nome: dadosAtualizacao.nome,
+        cpf: dadosAtualizacao.cpf
+    };
+
+    const erroValidacao = validarDadosFuncionario(
+        dadosParaValidacao
+    );
+
+    if (erroValidacao) {
 
         mostrarMensagem(
-            'Informe o nome completo do funcionário.',
-            'aviso'
-        );
-
-        return;
-
-    }
-
-    if (dadosAtualizacao.cpf.length !== 11) {
-
-        mostrarMensagem(
-            'O CPF deve possuir exatamente 11 números.',
+            erroValidacao,
             'aviso'
         );
 
@@ -1229,21 +1611,29 @@ async function atualizarFuncionario(evento) {
 
     try {
 
-        const resposta = await fetch(
-            BASE_URL +
-            '/funcionarios/' +
-            encodeURIComponent(matricula),
-            {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: 'Bearer ' + obterToken()
-                },
-                body: JSON.stringify(dadosAtualizacao)
-            }
-        );
+        const resposta =
+            await window.AuthSession.fetchAutenticado(
+                FUNCIONARIOS_BASE_URL +
+                '/' +
+                encodeURIComponent(matricula),
+                {
+                    method: 'PATCH',
 
-        if (respostaExigeNovoLogin(resposta)) {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify(
+                        dadosAtualizacao
+                    )
+                }
+            );
+
+        if (
+            await respostaExigeNovoLogin(
+                resposta
+            )
+        ) {
 
             return;
 
@@ -1260,7 +1650,9 @@ async function atualizarFuncionario(evento) {
                 'Não foi possível atualizar o funcionário.'
             );
 
-            throw new Error(mensagem);
+            throw new Error(
+                mensagem
+            );
 
         }
 
@@ -1303,7 +1695,12 @@ async function atualizarFuncionario(evento) {
 
 async function deletarFuncionario(funcionario) {
 
-    if (!verificarAutenticacao()) {
+    if (!funcionarioPossuiMatricula(funcionario)) {
+
+        mostrarMensagem(
+            'O funcionário não possui uma matrícula válida.',
+            'erro'
+        );
 
         return;
 
@@ -1313,9 +1710,9 @@ async function deletarFuncionario(funcionario) {
         funcionario.nome
     );
 
-    const matricula = obterTextoExibicao(
+    const matricula = String(
         funcionario.matricula
-    );
+    ).trim();
 
     const confirmado = window.confirm(
         'Deseja realmente excluir o funcionário "' +
@@ -1333,19 +1730,21 @@ async function deletarFuncionario(funcionario) {
 
     try {
 
-        const resposta = await fetch(
-            BASE_URL +
-            '/funcionarios/' +
-            encodeURIComponent(matricula),
-            {
-                method: 'DELETE',
-                headers: {
-                    Authorization: 'Bearer ' + obterToken()
+        const resposta =
+            await window.AuthSession.fetchAutenticado(
+                FUNCIONARIOS_BASE_URL +
+                '/' +
+                encodeURIComponent(matricula),
+                {
+                    method: 'DELETE'
                 }
-            }
-        );
+            );
 
-        if (respostaExigeNovoLogin(resposta)) {
+        if (
+            await respostaExigeNovoLogin(
+                resposta
+            )
+        ) {
 
             return;
 
@@ -1362,7 +1761,9 @@ async function deletarFuncionario(funcionario) {
                 'Não foi possível excluir o funcionário.'
             );
 
-            throw new Error(mensagem);
+            throw new Error(
+                mensagem
+            );
 
         }
 
@@ -1434,7 +1835,7 @@ function configurarEventos() {
 
         formularioBusca.addEventListener(
             'submit',
-            evento => {
+            function (evento) {
 
                 evento.preventDefault();
 
@@ -1464,7 +1865,7 @@ function configurarEventos() {
 
         botaoLimpar.addEventListener(
             'click',
-            () => {
+            function () {
 
                 const campoBusca = document.getElementById(
                     'input-busca'
@@ -1479,7 +1880,9 @@ function configurarEventos() {
 
                 }
 
-                buscarFuncionarios('');
+                buscarFuncionarios(
+                    ''
+                );
 
             }
         );
@@ -1490,7 +1893,7 @@ function configurarEventos() {
 
         botaoAtualizar.addEventListener(
             'click',
-            () => {
+            function () {
 
                 buscarFuncionarios(
                     termoBuscaAtual
@@ -1541,7 +1944,7 @@ function configurarEventos() {
 
         modalCadastro.addEventListener(
             'click',
-            evento => {
+            function (evento) {
 
                 if (evento.target === modalCadastro) {
 
@@ -1558,7 +1961,7 @@ function configurarEventos() {
 
         modalEditar.addEventListener(
             'click',
-            evento => {
+            function (evento) {
 
                 if (evento.target === modalEditar) {
 
@@ -1573,7 +1976,7 @@ function configurarEventos() {
 
     document.addEventListener(
         'keydown',
-        evento => {
+        function (evento) {
 
             if (evento.key === 'Escape') {
 
@@ -1588,19 +1991,57 @@ function configurarEventos() {
 }
 
 
-document.addEventListener(
-    'DOMContentLoaded',
-    () => {
+async function inicializarPaginaFuncionarios() {
 
-        if (!verificarAutenticacao()) {
+    if (!authSessionEstaDisponivel()) {
 
-            return;
+        console.error(
+            'O arquivo auth-session.js não foi carregado.'
+        );
+
+        localStorage.removeItem(
+            'token'
+        );
+
+        window.location.href = '/login';
+        return;
+
+    }
+
+    mostrarTabelaCarregando();
+    atualizarIcones();
+
+    const resultadoSessao =
+        await window.AuthSession.exigirSessao();
+
+    if (!resultadoSessao.autenticado) {
+
+        if (resultadoSessao.status === 0) {
+
+            atualizarTextoTotal(
+                0
+            );
+
+            mostrarErroTabela(
+                resultadoSessao.mensagem
+            );
 
         }
 
-        configurarEventos();
-        atualizarIcones();
-        buscarFuncionarios('');
+        return;
 
     }
+
+    configurarEventos();
+
+    await buscarFuncionarios(
+        ''
+    );
+
+}
+
+
+document.addEventListener(
+    'DOMContentLoaded',
+    inicializarPaginaFuncionarios
 );

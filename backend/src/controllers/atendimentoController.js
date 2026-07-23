@@ -53,7 +53,7 @@ function normalizarTexto(valor) {
 
 function normalizarTextoOpcional(valor) {
 
-    if (valor === null) {
+    if (valor === null || valor === undefined) {
 
         return null;
 
@@ -215,7 +215,7 @@ function textoObrigatorioEhValido(valor, tamanhoMaximo) {
 
 function textoOpcionalEhValido(valor, tamanhoMaximo) {
 
-    if (valor === null) {
+    if (valor === null || valor === undefined) {
 
         return true;
 
@@ -240,7 +240,7 @@ function textoOpcionalEhValido(valor, tamanhoMaximo) {
 
 function temperaturaEhValida(valor) {
 
-    if (valor === null) {
+    if (valor === null || valor === undefined) {
 
         return true;
 
@@ -285,7 +285,7 @@ function temperaturaEhValida(valor) {
 
 function normalizarTemperatura(valor) {
 
-    if (valor === null) {
+    if (valor === null || valor === undefined) {
 
         return null;
 
@@ -312,7 +312,7 @@ function normalizarTemperatura(valor) {
 
 function dataOpcionalEhValida(valor) {
 
-    if (valor === null) {
+    if (valor === null || valor === undefined) {
 
         return true;
 
@@ -347,7 +347,7 @@ function dataOpcionalEhValida(valor) {
 
 function normalizarDataOpcional(valor) {
 
-    if (valor === null) {
+    if (valor === null || valor === undefined) {
 
         return null;
 
@@ -447,7 +447,9 @@ export async function buscarAtendimentosPorFuncionario(req, res) {
 
         }
 
-        const funcionario = await buscarFuncionario(matricula);
+        const funcionario = await buscarFuncionario(
+            matricula
+        );
 
         if (!funcionario) {
 
@@ -469,7 +471,9 @@ export async function buscarAtendimentosPorFuncionario(req, res) {
             ]
         });
 
-        return res.status(200).json(atendimentos);
+        return res.status(200).json(
+            atendimentos
+        );
 
     } catch (erro) {
 
@@ -508,11 +512,15 @@ export async function registrarAtendimento(req, res) {
             'data_hora_saida'
         ];
 
-        const camposRecebidos = Object.keys(req.body);
+        const camposRecebidos = Object.keys(
+            req.body
+        );
 
         const camposNaoPermitidos = camposRecebidos.filter(campo => {
 
-            return !camposPermitidos.includes(campo);
+            return !camposPermitidos.includes(
+                campo
+            );
 
         });
 
@@ -647,7 +655,9 @@ export async function registrarAtendimento(req, res) {
             data_hora_saida: dataHoraSaida
         });
 
-        return res.status(201).json(novoAtendimento);
+        return res.status(201).json(
+            novoAtendimento
+        );
 
     } catch (erro) {
 
@@ -667,7 +677,7 @@ export async function atualizarAtendimento(req, res) {
 
     try {
 
-        const { id } = req.params;
+        const id = req.params.id;
 
         if (!identificadorEhValido(id)) {
 
@@ -695,7 +705,9 @@ export async function atualizarAtendimento(req, res) {
             'data_hora_saida'
         ];
 
-        const camposRecebidos = Object.keys(req.body);
+        const camposRecebidos = Object.keys(
+            req.body
+        );
 
         if (camposRecebidos.length === 0) {
 
@@ -707,7 +719,9 @@ export async function atualizarAtendimento(req, res) {
 
         const camposNaoPermitidos = camposRecebidos.filter(campo => {
 
-            return !camposPermitidos.includes(campo);
+            return !camposPermitidos.includes(
+                campo
+            );
 
         });
 
@@ -720,7 +734,9 @@ export async function atualizarAtendimento(req, res) {
 
         }
 
-        const atendimento = await Atendimento.findByPk(id);
+        const atendimento = await Atendimento.findByPk(
+            id
+        );
 
         if (!atendimento) {
 
@@ -864,9 +880,13 @@ export async function atualizarAtendimento(req, res) {
 
         }
 
-        await atendimento.update(dadosParaAtualizar);
+        await atendimento.update(
+            dadosParaAtualizar
+        );
 
-        return res.status(200).json(atendimento);
+        return res.status(200).json(
+            atendimento
+        );
 
     } catch (erro) {
 
@@ -886,7 +906,7 @@ export async function deletarAtendimento(req, res) {
 
     try {
 
-        const { id } = req.params;
+        const id = req.params.id;
 
         if (!identificadorEhValido(id)) {
 
@@ -896,7 +916,9 @@ export async function deletarAtendimento(req, res) {
 
         }
 
-        const atendimento = await Atendimento.findByPk(id);
+        const atendimento = await Atendimento.findByPk(
+            id
+        );
 
         if (!atendimento) {
 
@@ -929,19 +951,52 @@ export async function obterDadosDashboard(req, res) {
     try {
 
         const inicioDia = new Date();
-        inicioDia.setHours(0, 0, 0, 0);
+
+        inicioDia.setHours(
+            0,
+            0,
+            0,
+            0
+        );
 
         const fimDia = new Date();
-        fimDia.setHours(23, 59, 59, 999);
+
+        fimDia.setHours(
+            23,
+            59,
+            59,
+            999
+        );
 
         const inicioMes = new Date();
-        inicioMes.setDate(1);
-        inicioMes.setHours(0, 0, 0, 0);
+
+        inicioMes.setDate(
+            1
+        );
+
+        inicioMes.setHours(
+            0,
+            0,
+            0,
+            0
+        );
 
         const fimMes = new Date();
-        fimMes.setMonth(fimMes.getMonth() + 1);
-        fimMes.setDate(0);
-        fimMes.setHours(23, 59, 59, 999);
+
+        fimMes.setMonth(
+            fimMes.getMonth() + 1
+        );
+
+        fimMes.setDate(
+            0
+        );
+
+        fimMes.setHours(
+            23,
+            59,
+            59,
+            999
+        );
 
         const totalHoje = await Atendimento.count({
             where: {
@@ -1021,6 +1076,7 @@ export async function obterDadosDashboard(req, res) {
                     return atendimento.funcionario_matricula;
 
                 }),
+
                 ...ultimosAtendimentosRaw.map(atendimento => {
 
                     return atendimento.funcionario_matricula;
@@ -1091,7 +1147,9 @@ export async function obterDadosDashboard(req, res) {
 
         });
 
-        const atendimentosPorSetor = Object.keys(setoresContagem)
+        const atendimentosPorSetor = Object.keys(
+            setoresContagem
+        )
             .map(setor => {
 
                 return {

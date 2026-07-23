@@ -1,4 +1,5 @@
 import { DataTypes } from 'sequelize';
+
 import database from '../config/database.js';
 import Funcionario from './funcionarios.js';
 
@@ -124,11 +125,7 @@ const Alergia = database.define(
     {
         tableName: 'tb_alergias',
 
-        timestamps: true,
-
-        createdAt: 'criado_em',
-
-        updatedAt: 'atualizado_em',
+        timestamps: false,
 
         indexes: [
             {
@@ -137,6 +134,7 @@ const Alergia = database.define(
                     'funcionario_matricula'
                 ]
             },
+
             {
                 name: 'idx_alergias_descricao',
                 fields: [

@@ -1,57 +1,44 @@
 const BASE_URL = '/api';
 
-
-function obterToken() {
-
-    return localStorage.getItem('token');
-
-}
+let matriculaAtual = null;
 
 
-function fazerLogout() {
+function atualizarIcones() {
 
-    localStorage.removeItem('token');
-    window.location.href = '/login';
+    if (window.lucide) {
+
+        window.lucide.createIcons();
+
+    }
 
 }
 
 
-window.fazerLogout = fazerLogout;
+function authSessionEstaDisponivel() {
 
+    if (!window.AuthSession) {
 
-function verificarAutenticacao() {
+        return false;
 
-    const token = obterToken();
+    }
 
-    if (!token) {
+    if (
+        typeof window.AuthSession.fetchAutenticado !== 'function'
+    ) {
 
-        fazerLogout();
+        return false;
+
+    }
+
+    if (
+        typeof window.AuthSession.exigirSessao !== 'function'
+    ) {
+
         return false;
 
     }
 
     return true;
-
-}
-
-
-function respostaExigeNovoLogin(resposta) {
-
-    if (resposta.status === 401) {
-
-        fazerLogout();
-        return true;
-
-    }
-
-    if (resposta.status === 403) {
-
-        fazerLogout();
-        return true;
-
-    }
-
-    return false;
 
 }
 
@@ -77,13 +64,25 @@ function obterMensagemErro(dados, mensagemPadrao) {
 
         if (typeof dados.erro === 'string') {
 
-            return dados.erro;
+            const mensagemErro = dados.erro.trim();
+
+            if (mensagemErro.length > 0) {
+
+                return mensagemErro;
+
+            }
 
         }
 
         if (typeof dados.message === 'string') {
 
-            return dados.message;
+            const mensagem = dados.message.trim();
+
+            if (mensagem.length > 0) {
+
+                return mensagem;
+
+            }
 
         }
 
@@ -104,59 +103,47 @@ function obterMensagemErro(dados, mensagemPadrao) {
 }
 
 
-function escapeHTML(valor) {
+async function respostaExigeNovoLogin(resposta) {
 
-    if (valor === null || valor === undefined) {
+    if (!resposta) {
 
-        return '';
+        return false;
 
     }
 
-    return String(valor)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+    if (
+        resposta.status !== 401 &&
+        resposta.status !== 403
+    ) {
+
+        return false;
+
+    }
+
+    if (authSessionEstaDisponivel()) {
+
+        await window.AuthSession.fazerLogout();
+        return true;
+
+    }
+
+    localStorage.removeItem('token');
+
+    window.location.href = '/login';
+
+    return true;
 
 }
 
 
-function atualizarIcones() {
+function obterTextoExibicao(valor, textoPadrao) {
 
-    if (window.lucide) {
+    if (
+        valor === null ||
+        valor === undefined
+    ) {
 
-        window.lucide.createIcons();
-
-    }
-
-}
-
-
-function obterMatriculaUrl() {
-
-    const parametros = new URLSearchParams(
-        window.location.search
-    );
-
-    const matricula = parametros.get('matricula');
-
-    if (typeof matricula !== 'string') {
-
-        return '';
-
-    }
-
-    return matricula.trim();
-
-}
-
-
-function obterTextoExibicao(valor) {
-
-    if (valor === null || valor === undefined) {
-
-        return 'Não informado';
+        return textoPadrao;
 
     }
 
@@ -164,7 +151,7 @@ function obterTextoExibicao(valor) {
 
     if (texto.length === 0) {
 
-        return 'Não informado';
+        return textoPadrao;
 
     }
 
@@ -173,62 +160,157 @@ function obterTextoExibicao(valor) {
 }
 
 
-function formatarMatricula(matricula) {
+function obterValorCampo(idCampo) {
 
-    return 'Matrícula: ' + obterTextoExibicao(matricula);
+    const campo = document.getElementById(idCampo);
+
+    if (!campo) {
+
+        return '';
+
+    }
+
+    if (typeof campo.value !== 'string') {
+
+        return '';
+
+    }
+
+    return campo.value.trim();
 
 }
 
 
-function normalizarTemperatura(valor) {
+function definirTextoElemento(idElemento, texto) {
 
-    if (typeof valor !== 'string') {
+    const elemento = document.getElementById(idElemento);
 
-        return valor;
-
-    }
-
-    const temperaturaNormalizada = valor
-        .trim()
-        .replace(',', '.');
-
-    if (temperaturaNormalizada.length === 0) {
-
-        return null;
-
-    }
-
-    return temperaturaNormalizada;
-
-}
-
-
-function abrirModalAlergia() {
-
-    const modal = document.getElementById(
-        'modal-backdrop'
-    );
-
-    if (!modal) {
+    if (!elemento) {
 
         return;
 
     }
 
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    elemento.textContent = texto;
 
-    const campoDescricao = document.getElementById(
-        'descricao_alergia'
+}
+
+
+function obterFormularioTriagem() {
+
+    let formulario = document.getElementById('formTriagem');
+
+    if (formulario) {
+
+        return formulario;
+
+    }
+
+    formulario = document.getElementById('form-triagem');
+
+    return formulario;
+
+}
+
+
+function obterModalAlergia() {
+
+    let modal = document.getElementById('modal-backdrop');
+
+    if (modal) {
+
+        return modal;
+
+    }
+
+    modal = document.getElementById('modalAlergia');
+
+    return modal;
+
+}
+
+
+function obterCampoDescricaoAlergia() {
+
+    let campo = document.getElementById('descricao_alergia');
+
+    if (campo) {
+
+        return campo;
+
+    }
+
+    campo = document.getElementById('descricaoAlergia');
+
+    return campo;
+
+}
+
+
+function definirBotaoCarregando(
+    botao,
+    carregando,
+    textoCarregando
+) {
+
+    if (!botao) {
+
+        return;
+
+    }
+
+    if (carregando) {
+
+        if (!botao.dataset.conteudoOriginal) {
+
+            botao.dataset.conteudoOriginal =
+                botao.innerHTML;
+
+        }
+
+        botao.disabled = true;
+
+        botao.classList.add(
+            'opacity-70',
+            'cursor-not-allowed'
+        );
+
+        botao.innerHTML = '';
+
+        const icone = document.createElement('i');
+
+        icone.setAttribute(
+            'data-lucide',
+            'loader-circle'
+        );
+
+        icone.className =
+            'w-5 h-5 animate-spin inline-block mr-2';
+
+        const texto = document.createElement('span');
+
+        texto.textContent = textoCarregando;
+
+        botao.appendChild(icone);
+        botao.appendChild(texto);
+
+        atualizarIcones();
+
+        return;
+
+    }
+
+    botao.disabled = false;
+
+    botao.classList.remove(
+        'opacity-70',
+        'cursor-not-allowed'
     );
 
-    if (campoDescricao) {
+    if (botao.dataset.conteudoOriginal) {
 
-        window.setTimeout(() => {
-
-            campoDescricao.focus();
-
-        }, 100);
+        botao.innerHTML =
+            botao.dataset.conteudoOriginal;
 
     }
 
@@ -237,61 +319,85 @@ function abrirModalAlergia() {
 }
 
 
-function fecharModalAlergia() {
+function formatarDataHora(valor) {
 
-    const modal = document.getElementById(
-        'modal-backdrop'
-    );
+    if (!valor) {
 
-    const formulario = document.getElementById(
-        'formAlergia'
-    );
-
-    if (modal) {
-
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+        return 'Data não informada';
 
     }
 
-    if (formulario) {
+    const data = new Date(valor);
 
-        formulario.reset();
+    if (Number.isNaN(data.getTime())) {
+
+        return 'Data inválida';
 
     }
+
+    return data.toLocaleString(
+        'pt-BR',
+        {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }
+    );
 
 }
 
 
-window.abrirModalAlergia = abrirModalAlergia;
-window.fecharModalAlergia = fecharModalAlergia;
+function obterClasseGravidade(gravidade) {
+
+    if (gravidade === 'Alta') {
+
+        return 'text-red-700 bg-red-100';
+
+    }
+
+    if (gravidade === 'Média') {
+
+        return 'text-yellow-700 bg-yellow-100';
+
+    }
+
+    if (gravidade === 'Baixa') {
+
+        return 'text-green-700 bg-green-100';
+
+    }
+
+    return 'text-slate-700 bg-slate-100';
+
+}
 
 
-async function carregarDadosFuncionario(matricula) {
+async function carregarDadosPaciente(matricula) {
 
     try {
 
-        const resposta = await fetch(
-            BASE_URL +
-            '/funcionarios/' +
-            encodeURIComponent(matricula),
-            {
-                method: 'GET',
-                headers: {
-                    Authorization: 'Bearer ' + obterToken()
+        const resposta =
+            await window.AuthSession.fetchAutenticado(
+                BASE_URL +
+                '/funcionarios/' +
+                encodeURIComponent(matricula),
+                {
+                    method: 'GET',
+                    cache: 'no-store'
                 }
-            }
-        );
+            );
 
-        if (respostaExigeNovoLogin(resposta)) {
+        if (
+            await respostaExigeNovoLogin(resposta)
+        ) {
 
-            return;
+            return false;
 
         }
 
-        const dados = await lerRespostaJson(
-            resposta
-        );
+        const dados = await lerRespostaJson(resposta);
 
         if (!resposta.ok) {
 
@@ -304,53 +410,40 @@ async function carregarDadosFuncionario(matricula) {
 
         }
 
-        const elementoNome = document.getElementById(
-            'info-nome'
+        definirTextoElemento(
+            'info-nome',
+            obterTextoExibicao(
+                dados.nome,
+                'Nome não informado'
+            )
         );
 
-        const elementoMatricula = document.getElementById(
-            'info-matricula'
+        definirTextoElemento(
+            'info-matricula',
+            'Matrícula: ' +
+            obterTextoExibicao(
+                dados.matricula,
+                matricula
+            )
         );
 
-        const elementoSetor = document.getElementById(
-            'info-setor'
+        definirTextoElemento(
+            'info-setor',
+            obterTextoExibicao(
+                dados.setor,
+                'Não informado'
+            )
         );
 
-        const elementoCargo = document.getElementById(
-            'info-cargo'
+        definirTextoElemento(
+            'info-cargo',
+            obterTextoExibicao(
+                dados.cargo,
+                'Não informado'
+            )
         );
 
-        if (elementoNome) {
-
-            elementoNome.textContent = obterTextoExibicao(
-                dados.nome
-            );
-
-        }
-
-        if (elementoMatricula) {
-
-            elementoMatricula.textContent = formatarMatricula(
-                dados.matricula
-            );
-
-        }
-
-        if (elementoSetor) {
-
-            elementoSetor.textContent = obterTextoExibicao(
-                dados.setor
-            );
-
-        }
-
-        if (elementoCargo) {
-
-            elementoCargo.textContent = obterTextoExibicao(
-                dados.cargo
-            );
-
-        }
+        return true;
 
     } catch (erro) {
 
@@ -359,11 +452,12 @@ async function carregarDadosFuncionario(matricula) {
             erro
         );
 
-        alert(
-            erro.message
-        );
+        alert(erro.message);
 
-        window.location.href = '/consultar-paciente';
+        window.location.href =
+            '/consultar-paciente';
+
+        return false;
 
     }
 
@@ -382,19 +476,41 @@ function mostrarAlergiasCarregando() {
 
     }
 
-    lista.innerHTML = `
-        <li class="text-red-400 flex items-center justify-center gap-2 py-4">
-            <i data-lucide="loader-circle" class="animate-spin w-5 h-5"></i>
-            <span>Carregando alergias...</span>
-        </li>
-    `;
+    lista.innerHTML = '';
+
+    const item = document.createElement('li');
+
+    item.className =
+        'text-red-400 flex items-center justify-center gap-2 py-4';
+
+    const icone = document.createElement('i');
+
+    icone.setAttribute(
+        'data-lucide',
+        'loader-circle'
+    );
+
+    icone.className =
+        'animate-spin w-5 h-5';
+
+    const texto = document.createElement('span');
+
+    texto.textContent = 'Carregando alergias...';
+
+    item.appendChild(icone);
+    item.appendChild(texto);
+
+    lista.appendChild(item);
 
     atualizarIcones();
 
 }
 
 
-function mostrarAlergiasVazias() {
+function mostrarMensagemAlergias(
+    mensagem,
+    classeTexto
+) {
 
     const lista = document.getElementById(
         'lista-alergias'
@@ -406,11 +522,17 @@ function mostrarAlergiasVazias() {
 
     }
 
-    lista.innerHTML = `
-        <li class="text-sm text-red-500 bg-white/70 border border-red-100 rounded-xl p-4 text-center">
-            Nenhuma alergia registrada.
-        </li>
-    `;
+    lista.innerHTML = '';
+
+    const item = document.createElement('li');
+
+    item.className =
+        'text-sm text-center py-4 ' +
+        classeTexto;
+
+    item.textContent = mensagem;
+
+    lista.appendChild(item);
 
 }
 
@@ -420,32 +542,46 @@ function criarItemAlergia(alergia) {
     const item = document.createElement('li');
 
     item.className =
-        'bg-white border border-red-100 rounded-xl p-3 flex items-center justify-between gap-3 shadow-sm';
+        'bg-white text-red-800 border border-red-200 rounded-lg p-3 text-sm flex justify-between items-center gap-3';
 
     const descricao = document.createElement('span');
 
     descricao.className =
-        'text-sm font-semibold text-red-800 break-words';
+        'font-medium break-words';
 
     descricao.textContent = obterTextoExibicao(
-        alergia.descricao_alergia
+        alergia.descricao_alergia,
+        'Alergia não informada'
     );
 
     const botaoExcluir = document.createElement('button');
 
     botaoExcluir.type = 'button';
+
     botaoExcluir.className =
-        'w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-red-400 hover:text-red-700 hover:bg-red-100 transition-all';
+        'text-red-400 hover:text-red-700 transition-colors shrink-0';
 
     botaoExcluir.title = 'Remover alergia';
 
-    botaoExcluir.innerHTML = `
-        <i data-lucide="trash-2" class="w-4 h-4"></i>
-    `;
+    botaoExcluir.setAttribute(
+        'aria-label',
+        'Remover alergia'
+    );
+
+    const icone = document.createElement('i');
+
+    icone.setAttribute(
+        'data-lucide',
+        'trash-2'
+    );
+
+    icone.className = 'w-4 h-4';
+
+    botaoExcluir.appendChild(icone);
 
     botaoExcluir.addEventListener(
         'click',
-        () => {
+        function () {
 
             excluirAlergia(
                 alergia.id_alergia
@@ -478,27 +614,26 @@ async function carregarAlergias(matricula) {
 
     try {
 
-        const resposta = await fetch(
-            BASE_URL +
-            '/alergias?funcionario_matricula=' +
-            encodeURIComponent(matricula),
-            {
-                method: 'GET',
-                headers: {
-                    Authorization: 'Bearer ' + obterToken()
+        const resposta =
+            await window.AuthSession.fetchAutenticado(
+                BASE_URL +
+                '/alergias?funcionario_matricula=' +
+                encodeURIComponent(matricula),
+                {
+                    method: 'GET',
+                    cache: 'no-store'
                 }
-            }
-        );
+            );
 
-        if (respostaExigeNovoLogin(resposta)) {
+        if (
+            await respostaExigeNovoLogin(resposta)
+        ) {
 
             return;
 
         }
 
-        const dados = await lerRespostaJson(
-            resposta
-        );
+        const dados = await lerRespostaJson(resposta);
 
         if (!resposta.ok) {
 
@@ -514,29 +649,39 @@ async function carregarAlergias(matricula) {
         if (!Array.isArray(dados)) {
 
             throw new Error(
-                'A resposta das alergias possui um formato inválido.'
+                'O servidor retornou uma lista de alergias inválida.'
             );
+
+        }
+
+        if (dados.length === 0) {
+
+            mostrarMensagemAlergias(
+                'Nenhuma alergia registrada.',
+                'text-gray-500'
+            );
+
+            return;
 
         }
 
         lista.innerHTML = '';
 
-        if (dados.length === 0) {
+        dados.forEach(
+            function (alergia) {
 
-            mostrarAlergiasVazias();
-            return;
+                if (!alergia) {
 
-        }
+                    return;
 
-        dados.forEach(alergia => {
+                }
 
-            const item = criarItemAlergia(
-                alergia
-            );
+                lista.appendChild(
+                    criarItemAlergia(alergia)
+                );
 
-            lista.appendChild(item);
-
-        });
+            }
+        );
 
         atualizarIcones();
 
@@ -547,32 +692,107 @@ async function carregarAlergias(matricula) {
             erro
         );
 
-        lista.innerHTML = `
-            <li class="text-sm text-red-600 bg-white border border-red-200 rounded-xl p-4 text-center">
-                ${escapeHTML(erro.message)}
-            </li>
-        `;
+        mostrarMensagemAlergias(
+            erro.message,
+            'text-red-600'
+        );
 
     }
 
 }
 
 
-async function cadastrarAlergia(evento) {
+function abrirModalAlergia() {
 
-    evento.preventDefault();
+    const modal = obterModalAlergia();
 
-    if (!verificarAutenticacao()) {
+    if (!modal) {
 
         return;
 
     }
 
-    const matricula = obterMatriculaUrl();
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
 
-    const campoDescricao = document.getElementById(
-        'descricao_alergia'
+    document.body.classList.add(
+        'overflow-hidden'
     );
+
+    const campoDescricao =
+        obterCampoDescricaoAlergia();
+
+    if (campoDescricao) {
+
+        window.setTimeout(
+            function () {
+
+                campoDescricao.focus();
+
+            },
+            100
+        );
+
+    }
+
+    atualizarIcones();
+
+}
+
+
+function fecharModalAlergia() {
+
+    const modal = obterModalAlergia();
+
+    if (!modal) {
+
+        return;
+
+    }
+
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+
+    document.body.classList.remove(
+        'overflow-hidden'
+    );
+
+    const formulario = document.getElementById(
+        'formAlergia'
+    );
+
+    if (formulario) {
+
+        formulario.reset();
+
+    }
+
+}
+
+
+window.abrirModalAlergia =
+    abrirModalAlergia;
+
+window.fecharModalAlergia =
+    fecharModalAlergia;
+
+
+async function cadastrarAlergia(evento) {
+
+    evento.preventDefault();
+
+    if (!matriculaAtual) {
+
+        alert(
+            'A matrícula do funcionário não foi encontrada.'
+        );
+
+        return;
+
+    }
+
+    const campoDescricao =
+        obterCampoDescricaoAlergia();
 
     if (!campoDescricao) {
 
@@ -593,36 +813,74 @@ async function cadastrarAlergia(evento) {
         );
 
         campoDescricao.focus();
+
         return;
 
     }
 
-    try {
+    if (descricao.length > 255) {
 
-        const resposta = await fetch(
-            BASE_URL + '/alergias',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: 'Bearer ' + obterToken()
-                },
-                body: JSON.stringify({
-                    funcionario_matricula: matricula,
-                    descricao_alergia: descricao
-                })
-            }
+        alert(
+            'A descrição da alergia deve possuir no máximo 255 caracteres.'
         );
 
-        if (respostaExigeNovoLogin(resposta)) {
+        campoDescricao.focus();
+
+        return;
+
+    }
+
+    const formulario = document.getElementById(
+        'formAlergia'
+    );
+
+    let botaoSalvar = null;
+
+    if (formulario) {
+
+        botaoSalvar = formulario.querySelector(
+            'button[type="submit"]'
+        );
+
+    }
+
+    definirBotaoCarregando(
+        botaoSalvar,
+        true,
+        'Salvando...'
+    );
+
+    try {
+
+        const resposta =
+            await window.AuthSession.fetchAutenticado(
+                BASE_URL + '/alergias',
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        funcionario_matricula:
+                            matriculaAtual,
+
+                        descricao_alergia:
+                            descricao
+                    })
+                }
+            );
+
+        if (
+            await respostaExigeNovoLogin(resposta)
+        ) {
 
             return;
 
         }
 
-        const dados = await lerRespostaJson(
-            resposta
-        );
+        const dados = await lerRespostaJson(resposta);
 
         if (!resposta.ok) {
 
@@ -638,7 +896,7 @@ async function cadastrarAlergia(evento) {
         fecharModalAlergia();
 
         await carregarAlergias(
-            matricula
+            matriculaAtual
         );
 
         alert(
@@ -652,8 +910,14 @@ async function cadastrarAlergia(evento) {
             erro
         );
 
-        alert(
-            erro.message
+        alert(erro.message);
+
+    } finally {
+
+        definirBotaoCarregando(
+            botaoSalvar,
+            false,
+            'Salvando...'
         );
 
     }
@@ -663,7 +927,16 @@ async function cadastrarAlergia(evento) {
 
 async function excluirAlergia(idAlergia) {
 
-    if (!verificarAutenticacao()) {
+    const id = Number(idAlergia);
+
+    if (
+        !Number.isSafeInteger(id) ||
+        id <= 0
+    ) {
+
+        alert(
+            'O identificador da alergia é inválido.'
+        );
 
         return;
 
@@ -681,19 +954,19 @@ async function excluirAlergia(idAlergia) {
 
     try {
 
-        const resposta = await fetch(
-            BASE_URL +
-            '/alergias/' +
-            encodeURIComponent(idAlergia),
-            {
-                method: 'DELETE',
-                headers: {
-                    Authorization: 'Bearer ' + obterToken()
+        const resposta =
+            await window.AuthSession.fetchAutenticado(
+                BASE_URL +
+                '/alergias/' +
+                encodeURIComponent(id),
+                {
+                    method: 'DELETE'
                 }
-            }
-        );
+            );
 
-        if (respostaExigeNovoLogin(resposta)) {
+        if (
+            await respostaExigeNovoLogin(resposta)
+        ) {
 
             return;
 
@@ -714,10 +987,12 @@ async function excluirAlergia(idAlergia) {
 
         }
 
-        const matricula = obterMatriculaUrl();
-
         await carregarAlergias(
-            matricula
+            matriculaAtual
+        );
+
+        alert(
+            'Alergia removida com sucesso.'
         );
 
     } catch (erro) {
@@ -727,9 +1002,7 @@ async function excluirAlergia(idAlergia) {
             erro
         );
 
-        alert(
-            erro.message
-        );
+        alert(erro.message);
 
     }
 
@@ -739,116 +1012,57 @@ async function excluirAlergia(idAlergia) {
 window.excluirAlergia = excluirAlergia;
 
 
+function normalizarTemperatura(valor) {
+
+    if (typeof valor !== 'string') {
+
+        return null;
+
+    }
+
+    const valorNormalizado = valor
+        .trim()
+        .replace(',', '.');
+
+    if (valorNormalizado.length === 0) {
+
+        return null;
+
+    }
+
+    const numero = Number(valorNormalizado);
+
+    if (!Number.isFinite(numero)) {
+
+        return null;
+
+    }
+
+    return numero;
+
+}
+
+
 async function registrarAtendimento(evento) {
 
     evento.preventDefault();
 
-    if (!verificarAutenticacao()) {
-
-        return;
-
-    }
-
-    const matricula = obterMatriculaUrl();
-
-    const campoPressao = document.getElementById(
-        'pressao'
-    );
-
-    const campoTemperatura = document.getElementById(
-        'temperatura'
-    );
-
-    const campoQueixa = document.getElementById(
-        'queixa'
-    );
-
-    const campoGravidade = document.getElementById(
-        'gravidade'
-    );
-
-    const campoAcao = document.getElementById(
-        'acao'
-    );
-
-    if (
-        !campoPressao ||
-        !campoTemperatura ||
-        !campoQueixa ||
-        !campoGravidade ||
-        !campoAcao
-    ) {
+    if (!matriculaAtual) {
 
         alert(
-            'Não foi possível localizar todos os campos da triagem.'
+            'A matrícula do funcionário não foi encontrada.'
         );
 
         return;
 
     }
 
-    const pressao = campoPressao.value.trim();
-
-    const temperatura = normalizarTemperatura(
-        campoTemperatura.value
-    );
-
-    const queixa = campoQueixa.value.trim();
-
-    const gravidade = campoGravidade.value.trim();
-
-    const acao = campoAcao.value.trim();
-
-    if (pressao.length === 0) {
-
-        alert(
-            'Informe a pressão arterial.'
-        );
-
-        campoPressao.focus();
-        return;
-
-    }
-
-    if (temperatura === null) {
-
-        alert(
-            'Informe a temperatura.'
-        );
-
-        campoTemperatura.focus();
-        return;
-
-    }
-
-    const temperaturaNumerica = Number(
-        temperatura
-    );
-
-    if (!Number.isFinite(temperaturaNumerica)) {
-
-        alert(
-            'Informe uma temperatura válida.'
-        );
-
-        campoTemperatura.focus();
-        return;
-
-    }
-
-    if (
-        temperaturaNumerica < 0 ||
-        temperaturaNumerica > 100
-    ) {
-
-        alert(
-            'A temperatura deve estar entre 0 e 100.'
-        );
-
-        campoTemperatura.focus();
-        return;
-
-    }
+    const pressao = obterValorCampo('pressao');
+    const temperaturaTexto =
+        obterValorCampo('temperatura');
+    const queixa = obterValorCampo('queixa');
+    const gravidade = obterValorCampo('gravidade');
+    const acaoTomada = obterValorCampo('acao');
 
     if (queixa.length === 0) {
 
@@ -856,7 +1070,6 @@ async function registrarAtendimento(evento) {
             'Informe a queixa principal.'
         );
 
-        campoQueixa.focus();
         return;
 
     }
@@ -864,55 +1077,118 @@ async function registrarAtendimento(evento) {
     if (gravidade.length === 0) {
 
         alert(
-            'Selecione a gravidade.'
+            'Selecione a gravidade do atendimento.'
         );
 
-        campoGravidade.focus();
         return;
 
     }
 
-    if (acao.length === 0) {
+    if (acaoTomada.length === 0) {
 
         alert(
             'Selecione a ação tomada.'
         );
 
-        campoAcao.focus();
         return;
 
     }
 
-    try {
+    let temperatura = null;
 
-        const resposta = await fetch(
-            BASE_URL + '/atendimentos',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: 'Bearer ' + obterToken()
-                },
-                body: JSON.stringify({
-                    funcionario_matricula: matricula,
-                    pressao_arterial: pressao,
-                    temperatura: temperaturaNumerica,
-                    queixa_principal: queixa,
-                    gravidade,
-                    acao_tomada: acao
-                })
-            }
-        );
+    if (temperaturaTexto.length > 0) {
 
-        if (respostaExigeNovoLogin(resposta)) {
+        temperatura =
+            normalizarTemperatura(
+                temperaturaTexto
+            );
+
+        if (temperatura === null) {
+
+            alert(
+                'Informe uma temperatura válida.'
+            );
 
             return;
 
         }
 
-        const dados = await lerRespostaJson(
-            resposta
+        if (
+            temperatura < 0 ||
+            temperatura > 100
+        ) {
+
+            alert(
+                'A temperatura deve estar entre 0 e 100.'
+            );
+
+            return;
+
+        }
+
+    }
+
+    const formulario = obterFormularioTriagem();
+
+    let botaoSalvar = null;
+
+    if (formulario) {
+
+        botaoSalvar = formulario.querySelector(
+            'button[type="submit"]'
         );
+
+    }
+
+    definirBotaoCarregando(
+        botaoSalvar,
+        true,
+        'Salvando atendimento...'
+    );
+
+    try {
+
+        const resposta =
+            await window.AuthSession.fetchAutenticado(
+                BASE_URL + '/atendimentos',
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        funcionario_matricula:
+                            matriculaAtual,
+
+                        pressao_arterial:
+                            pressao,
+
+                        temperatura:
+                            temperatura,
+
+                        queixa_principal:
+                            queixa,
+
+                        gravidade:
+                            gravidade,
+
+                        acao_tomada:
+                            acaoTomada
+                    })
+                }
+            );
+
+        if (
+            await respostaExigeNovoLogin(resposta)
+        ) {
+
+            return;
+
+        }
+
+        const dados = await lerRespostaJson(resposta);
 
         if (!resposta.ok) {
 
@@ -925,22 +1201,18 @@ async function registrarAtendimento(evento) {
 
         }
 
-        const formulario = document.getElementById(
-            'formTriagem'
-        );
-
         if (formulario) {
 
             formulario.reset();
 
         }
 
-        alert(
-            'Atendimento registrado com sucesso.'
+        await carregarHistoricoAtendimentos(
+            matriculaAtual
         );
 
-        await carregarHistoricoAtendimentos(
-            matricula
+        alert(
+            'Atendimento registrado com sucesso.'
         );
 
     } catch (erro) {
@@ -951,7 +1223,15 @@ async function registrarAtendimento(evento) {
         );
 
         alert(
-            erro.message
+            'Erro: ' + erro.message
+        );
+
+    } finally {
+
+        definirBotaoCarregando(
+            botaoSalvar,
+            false,
+            'Salvando atendimento...'
         );
 
     }
@@ -959,65 +1239,7 @@ async function registrarAtendimento(evento) {
 }
 
 
-function formatarDataHora(valor) {
-
-    if (!valor) {
-
-        return 'Data não informada';
-
-    }
-
-    const data = new Date(valor);
-
-    if (Number.isNaN(data.getTime())) {
-
-        return 'Data inválida';
-
-    }
-
-    return data.toLocaleString(
-        'pt-BR',
-        {
-            dateStyle: 'short',
-            timeStyle: 'short'
-        }
-    );
-
-}
-
-
-function criarItemHistorico(atendimento) {
-
-    const item = document.createElement('div');
-
-    item.className =
-        'border-l-4 border-azulEscuro bg-slate-50 rounded-r-xl p-4';
-
-    item.innerHTML = `
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-            <p class="text-xs font-semibold text-slate-500">
-                ${escapeHTML(formatarDataHora(atendimento.data_hora_entrada))}
-            </p>
-            <span class="text-xs font-bold text-azulEscuro">
-                ${escapeHTML(obterTextoExibicao(atendimento.gravidade))}
-            </span>
-        </div>
-
-        <p class="text-sm text-slate-700 font-medium">
-            ${escapeHTML(obterTextoExibicao(atendimento.queixa_principal))}
-        </p>
-
-        <p class="text-xs text-slate-500 mt-2">
-            Ação: ${escapeHTML(obterTextoExibicao(atendimento.acao_tomada))}
-        </p>
-    `;
-
-    return item;
-
-}
-
-
-async function carregarHistoricoAtendimentos(matricula) {
+function mostrarHistoricoCarregando() {
 
     const container = document.getElementById(
         'historico-atendimentos'
@@ -1029,38 +1251,158 @@ async function carregarHistoricoAtendimentos(matricula) {
 
     }
 
-    container.innerHTML = `
-        <div class="text-sm text-slate-400 flex items-center justify-center gap-2 py-4">
-            <i data-lucide="loader-circle" class="w-5 h-5 animate-spin"></i>
-            Carregando histórico...
-        </div>
-    `;
+    container.innerHTML = '';
 
-    atualizarIcones();
+    const mensagem = document.createElement('p');
+
+    mensagem.className =
+        'text-sm text-gray-500';
+
+    mensagem.textContent =
+        'Carregando histórico...';
+
+    container.appendChild(mensagem);
+
+}
+
+
+function mostrarMensagemHistorico(
+    mensagem,
+    classeTexto
+) {
+
+    const container = document.getElementById(
+        'historico-atendimentos'
+    );
+
+    if (!container) {
+
+        return;
+
+    }
+
+    container.innerHTML = '';
+
+    const elemento = document.createElement('p');
+
+    elemento.className =
+        'text-sm ' +
+        classeTexto;
+
+    elemento.textContent = mensagem;
+
+    container.appendChild(elemento);
+
+}
+
+
+function criarItemHistorico(atendimento) {
+
+    const item = document.createElement('article');
+
+    item.className =
+        'border-l-4 border-azulEscuro bg-gray-50 rounded-r-xl p-4 mb-4';
+
+    const cabecalho = document.createElement('div');
+
+    cabecalho.className =
+        'flex flex-wrap items-center justify-between gap-2 mb-2';
+
+    const data = document.createElement('p');
+
+    data.className =
+        'text-xs text-gray-500 font-medium';
+
+    data.textContent =
+        formatarDataHora(
+            atendimento.data_hora_entrada
+        );
+
+    const gravidade = document.createElement('span');
+
+    gravidade.className =
+        'text-xs font-bold px-2.5 py-1 rounded-full ' +
+        obterClasseGravidade(
+            atendimento.gravidade
+        );
+
+    gravidade.textContent = obterTextoExibicao(
+        atendimento.gravidade,
+        'Não informada'
+    );
+
+    cabecalho.appendChild(data);
+    cabecalho.appendChild(gravidade);
+
+    const queixa = document.createElement('p');
+
+    queixa.className =
+        'text-sm text-gray-800 font-medium';
+
+    queixa.textContent = obterTextoExibicao(
+        atendimento.queixa_principal,
+        'Queixa não informada'
+    );
+
+    const acao = document.createElement('p');
+
+    acao.className =
+        'text-xs text-gray-500 mt-2';
+
+    acao.textContent =
+        'Ação tomada: ' +
+        obterTextoExibicao(
+            atendimento.acao_tomada,
+            'Não informada'
+        );
+
+    item.appendChild(cabecalho);
+    item.appendChild(queixa);
+    item.appendChild(acao);
+
+    return item;
+
+}
+
+
+async function carregarHistoricoAtendimentos(
+    matricula
+) {
+
+    const container = document.getElementById(
+        'historico-atendimentos'
+    );
+
+    if (!container) {
+
+        return;
+
+    }
+
+    mostrarHistoricoCarregando();
 
     try {
 
-        const resposta = await fetch(
-            BASE_URL +
-            '/atendimentos/' +
-            encodeURIComponent(matricula),
-            {
-                method: 'GET',
-                headers: {
-                    Authorization: 'Bearer ' + obterToken()
+        const resposta =
+            await window.AuthSession.fetchAutenticado(
+                BASE_URL +
+                '/atendimentos/' +
+                encodeURIComponent(matricula),
+                {
+                    method: 'GET',
+                    cache: 'no-store'
                 }
-            }
-        );
+            );
 
-        if (respostaExigeNovoLogin(resposta)) {
+        if (
+            await respostaExigeNovoLogin(resposta)
+        ) {
 
             return;
 
         }
 
-        const dados = await lerRespostaJson(
-            resposta
-        );
+        const dados = await lerRespostaJson(resposta);
 
         if (!resposta.ok) {
 
@@ -1073,37 +1415,63 @@ async function carregarHistoricoAtendimentos(matricula) {
 
         }
 
-        container.innerHTML = '';
-
         if (!Array.isArray(dados)) {
 
             throw new Error(
-                'O histórico possui um formato inválido.'
+                'O servidor retornou um histórico inválido.'
             );
 
         }
 
         if (dados.length === 0) {
 
-            container.innerHTML = `
-                <p class="text-sm text-slate-500 text-center py-4">
-                    Nenhum atendimento anterior.
-                </p>
-            `;
+            mostrarMensagemHistorico(
+                'Nenhum atendimento anterior.',
+                'text-gray-500'
+            );
 
             return;
 
         }
 
-        dados.forEach(atendimento => {
+        dados.sort(
+            function (primeiro, segundo) {
 
-            const item = criarItemHistorico(
-                atendimento
-            );
+                const dataPrimeiro = new Date(
+                    primeiro.data_hora_entrada
+                );
 
-            container.appendChild(item);
+                const dataSegundo = new Date(
+                    segundo.data_hora_entrada
+                );
 
-        });
+                return (
+                    dataSegundo.getTime() -
+                    dataPrimeiro.getTime()
+                );
+
+            }
+        );
+
+        container.innerHTML = '';
+
+        dados.forEach(
+            function (atendimento) {
+
+                if (!atendimento) {
+
+                    return;
+
+                }
+
+                container.appendChild(
+                    criarItemHistorico(
+                        atendimento
+                    )
+                );
+
+            }
+        );
 
     } catch (erro) {
 
@@ -1112,11 +1480,10 @@ async function carregarHistoricoAtendimentos(matricula) {
             erro
         );
 
-        container.innerHTML = `
-            <p class="text-sm text-red-600 text-center py-4">
-                ${escapeHTML(erro.message)}
-            </p>
-        `;
+        mostrarMensagemHistorico(
+            erro.message,
+            'text-red-600'
+        );
 
     }
 
@@ -1125,26 +1492,16 @@ async function carregarHistoricoAtendimentos(matricula) {
 
 function configurarEventos() {
 
-    const formularioTriagem = document.getElementById(
-        'formTriagem'
-    );
-
-    const formularioAlergia = document.getElementById(
-        'formAlergia'
-    );
-
-    const modalAlergia = document.getElementById(
-        'modal-backdrop'
-    );
-
-    if (formularioTriagem) {
-
-        formularioTriagem.addEventListener(
-            'submit',
-            registrarAtendimento
+    const formularioAlergia =
+        document.getElementById(
+            'formAlergia'
         );
 
-    }
+    const formularioTriagem =
+        obterFormularioTriagem();
+
+    const modalAlergia =
+        obterModalAlergia();
 
     if (formularioAlergia) {
 
@@ -1155,11 +1512,20 @@ function configurarEventos() {
 
     }
 
+    if (formularioTriagem) {
+
+        formularioTriagem.addEventListener(
+            'submit',
+            registrarAtendimento
+        );
+
+    }
+
     if (modalAlergia) {
 
         modalAlergia.addEventListener(
             'click',
-            evento => {
+            function (evento) {
 
                 if (evento.target === modalAlergia) {
 
@@ -1174,7 +1540,7 @@ function configurarEventos() {
 
     document.addEventListener(
         'keydown',
-        evento => {
+        function (evento) {
 
             if (evento.key === 'Escape') {
 
@@ -1188,43 +1554,96 @@ function configurarEventos() {
 }
 
 
-document.addEventListener(
-    'DOMContentLoaded',
-    async () => {
+async function inicializarFichaPaciente() {
 
-        if (!verificarAutenticacao()) {
+    atualizarIcones();
 
-            return;
+    if (!authSessionEstaDisponivel()) {
 
-        }
-
-        const matricula = obterMatriculaUrl();
-
-        if (matricula.length === 0) {
-
-            alert(
-                'A matrícula do funcionário não foi informada.'
-            );
-
-            window.location.href = '/consultar-paciente';
-            return;
-
-        }
-
-        configurarEventos();
-        atualizarIcones();
-
-        await carregarDadosFuncionario(
-            matricula
+        console.error(
+            'O arquivo auth-session.js não foi carregado.'
         );
 
-        await carregarAlergias(
-            matricula
-        );
+        localStorage.removeItem('token');
 
-        await carregarHistoricoAtendimentos(
-            matricula
-        );
+        window.location.href = '/login';
+
+        return;
 
     }
+
+    const resultadoSessao =
+        await window.AuthSession.exigirSessao();
+
+    if (!resultadoSessao.autenticado) {
+
+        if (resultadoSessao.status === 0) {
+
+            alert(
+                resultadoSessao.mensagem
+            );
+
+        }
+
+        return;
+
+    }
+
+    const parametros = new URLSearchParams(
+        window.location.search
+    );
+
+    const matriculaParametro =
+        parametros.get('matricula');
+
+    if (
+        typeof matriculaParametro !== 'string' ||
+        matriculaParametro.trim().length === 0
+    ) {
+
+        alert(
+            'A matrícula do funcionário não foi informada.'
+        );
+
+        window.location.href =
+            '/consultar-paciente';
+
+        return;
+
+    }
+
+    matriculaAtual =
+        matriculaParametro.trim();
+
+    configurarEventos();
+
+    const funcionarioValido =
+        await carregarDadosPaciente(
+            matriculaAtual
+        );
+
+    if (!funcionarioValido) {
+
+        return;
+
+    }
+
+    await Promise.all([
+        carregarAlergias(
+            matriculaAtual
+        ),
+
+        carregarHistoricoAtendimentos(
+            matriculaAtual
+        )
+    ]);
+
+    atualizarIcones();
+
+}
+
+
+document.addEventListener(
+    'DOMContentLoaded',
+    inicializarFichaPaciente
 );

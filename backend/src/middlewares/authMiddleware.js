@@ -17,11 +17,12 @@ function extrairTokenAutorizacao(authorization) {
 
     }
 
-    const partesAuthorization = authorizationNormalizado.split(/\s+/);
+    const partesAuthorization =
+        authorizationNormalizado.split(/\s+/);
 
     if (partesAuthorization.length === 1) {
 
-        return partesAuthorization[0];
+        return partesAuthorization[0].trim();
 
     }
 
@@ -51,6 +52,125 @@ function extrairTokenAutorizacao(authorization) {
 }
 
 
+function extrairCookies(cabecalhoCookie) {
+
+    const cookies = {};
+
+    if (typeof cabecalhoCookie !== 'string') {
+
+        return cookies;
+
+    }
+
+    const cabecalhoNormalizado = cabecalhoCookie.trim();
+
+    if (cabecalhoNormalizado.length === 0) {
+
+        return cookies;
+
+    }
+
+    const partesCookies = cabecalhoNormalizado.split(';');
+
+    partesCookies.forEach(parteCookie => {
+
+        const indiceSeparador = parteCookie.indexOf('=');
+
+        if (indiceSeparador === -1) {
+
+            return;
+
+        }
+
+        const nome = parteCookie
+            .slice(0, indiceSeparador)
+            .trim();
+
+        const valor = parteCookie
+            .slice(indiceSeparador + 1)
+            .trim();
+
+        if (nome.length === 0) {
+
+            return;
+
+        }
+
+        try {
+
+            cookies[nome] = decodeURIComponent(valor);
+
+        } catch (erro) {
+
+            cookies[nome] = valor;
+
+        }
+
+    });
+
+    return cookies;
+
+}
+
+
+function extrairTokenCookie(req) {
+
+    if (!req.headers) {
+
+        return null;
+
+    }
+
+    const cookies = extrairCookies(
+        req.headers.cookie
+    );
+
+    if (typeof cookies.token !== 'string') {
+
+        return null;
+
+    }
+
+    const token = cookies.token.trim();
+
+    if (token.length === 0) {
+
+        return null;
+
+    }
+
+    return token;
+
+}
+
+
+function obterTokenRequisicao(req) {
+
+    const tokenAuthorization = extrairTokenAutorizacao(
+        req.headers.authorization
+    );
+
+    if (tokenAuthorization) {
+
+        return tokenAuthorization;
+
+    }
+
+    const tokenCookie = extrairTokenCookie(
+        req
+    );
+
+    if (tokenCookie) {
+
+        return tokenCookie;
+
+    }
+
+    return null;
+
+}
+
+
 function jwtEstaConfigurado() {
 
     if (typeof process.env.JWT_SECRET !== 'string') {
@@ -70,7 +190,20 @@ function jwtEstaConfigurado() {
 }
 
 
-// Middleware responsável por validar a autenticação das rotas protegidas
+function limparCookieToken(res) {
+
+    res.clearCookie(
+        'token',
+        {
+            httpOnly: true,
+            sameSite: 'strict'
+        }
+    );
+
+}
+
+
+// Middleware responsável por validar a autenticação
 export function verificarToken(req, res, next) {
 
     try {
@@ -87,14 +220,14 @@ export function verificarToken(req, res, next) {
 
         }
 
-        const token = extrairTokenAutorizacao(
-            req.headers.authorization
+        const token = obterTokenRequisicao(
+            req
         );
 
         if (!token) {
 
             return res.status(401).json({
-                message: 'Token de autenticação não informado ou malformado.'
+                message: 'Token de autenticação não informado.'
             });
 
         }
@@ -109,6 +242,10 @@ export function verificarToken(req, res, next) {
             typeof usuarioDecodificado !== 'object'
         ) {
 
+            limparCookieToken(
+                res
+            );
+
             return res.status(401).json({
                 message: 'Token de autenticação inválido.'
             });
@@ -117,16 +254,27 @@ export function verificarToken(req, res, next) {
 
         if (!usuarioDecodificado.id_usuario) {
 
+            limparCookieToken(
+                res
+            );
+
             return res.status(401).json({
                 message: 'O token não possui a identificação do usuário.'
             });
 
         }
 
-        if (!usuarioDecodificado.email) {
+        if (
+            typeof usuarioDecodificado.email !== 'string' ||
+            usuarioDecodificado.email.trim().length === 0
+        ) {
+
+            limparCookieToken(
+                res
+            );
 
             return res.status(401).json({
-                message: 'O token não possui o email do usuário.'
+                message: 'O token não possui o e-mail do usuário.'
             });
 
         }
@@ -136,9 +284,15 @@ export function verificarToken(req, res, next) {
             email: usuarioDecodificado.email
         };
 
+        req.tokenAutenticacao = token;
+
         return next();
 
     } catch (erro) {
+
+        limparCookieToken(
+            res
+        );
 
         if (erro.name === 'TokenExpiredError') {
 

@@ -3,74 +3,558 @@
 
 <head>
     <%- include('partials/head') %>
-        <title>Dashboard - Sistema Ambulatório</title>
+
+        <title>Dashboard - Sistema de Ambulatório</title>
 </head>
 
-<body class="bg-cinzaFundo flex min-h-screen overflow-hidden text-cinzaTexto">
+<body class="bg-gray-100 text-slate-700 flex min-h-screen">
 
     <%- include('partials/sidebar') %>
 
-        <main class="flex-1 p-8 overflow-y-auto">
-            <header class="flex justify-between items-center mb-8">
-                <div>
-                    <h1 class="text-3xl font-bold text-azulEscuro">Painel do Ambulatório</h1>
-                    <p class="text-gray-500 mt-1">Resumo das atividades e estatísticas de hoje.</p>
-                </div>
-                <button onclick="fazerLogout()"
-                    class="bg-vermelhoAlerta hover:bg-red-800 text-white px-5 py-2 rounded-lg font-semibold transition-colors shadow-sm">
-                    Sair
-                </button>
-            </header>
+        <main class="flex-1 w-full overflow-y-auto">
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div
-                    class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-azulEscuro flex flex-col justify-between">
-                    <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Atendimentos Hoje</h2>
-                    <h3 id="contador-hoje" class="text-4xl font-bold text-azulEscuro">...</h3>
-                </div>
+            <div class="p-4 sm:p-6 lg:p-8">
 
-                <div
-                    class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-vermelhoAlerta flex flex-col justify-between">
-                    <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Grave / Médio / Normal
-                    </h2>
-                    <h3 class="text-xl font-bold text-vermelhoAlerta">
-                        <span id="count-grave">0</span> / <span id="count-medio">0</span> / <span
-                            id="count-normal">0</span>
-                    </h3>
-                </div>
+                <header class="flex flex-col gap-5 mb-8 lg:flex-row lg:items-center lg:justify-between">
 
-                <div class="bg-azulEscuro hover:bg-blue-800 transition-colors p-6 rounded-xl shadow-sm flex items-center justify-center cursor-pointer"
-                    onclick="window.location.href='/consultar-paciente'">
-                    <h2 class="text-lg font-bold text-white uppercase tracking-wider text-center">+ Nova Triagem Rápida
-                    </h2>
-                </div>
-            </div>
+                    <div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm lg:col-span-2">
-                    <h3 class="text-xl font-bold text-azulEscuro mb-4">Últimos Atendimentos</h3>
-                    <table class="w-full text-sm">
-                        <thead class="text-gray-500 border-b">
-                            <tr>
-                                <th class="pb-2 text-left font-semibold">Paciente / Queixa</th>
-                                <th class="pb-2 text-center font-semibold">Gravidade</th>
-                                <th class="pb-2 text-center font-semibold">Data/Hora</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-ultimos-atendimentos" class="text-gray-700">
-                        </tbody>
-                    </table>
-                </div>
+                        <div class="flex items-center gap-3">
 
-                <div class="bg-white p-6 rounded-xl shadow-sm">
-                    <h3 class="text-xl font-bold text-azulEscuro mb-4">Ranking de Setores</h3>
-                    <div id="lista-setores" class="space-y-3">
+                            <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+
+                                <i data-lucide="layout-dashboard" class="w-7 h-7 text-azulEscuro">
+                                </i>
+
+                            </div>
+
+                            <div>
+
+                                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+
+                                    Painel do Ambulatório
+
+                                </h1>
+
+                                <p class="text-sm text-slate-500 mt-1">
+
+                                    Resumo dos atendimentos e atividades do sistema.
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
                     </div>
-                </div>
+
+                    <div class="flex flex-col gap-3 sm:flex-row">
+
+                        <button type="button" id="botao-atualizar-dashboard"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold px-5 py-3 rounded-xl shadow-sm transition-all">
+
+                            <i data-lucide="refresh-cw" class="w-5 h-5">
+                            </i>
+
+                            Atualizar painel
+
+                        </button>
+
+                        <button type="button" onclick="abrirModalUsuario()"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-azulEscuro hover:bg-blue-800 text-white font-bold px-5 py-3 rounded-xl shadow-md transition-all">
+
+                            <i data-lucide="user-plus" class="w-5 h-5">
+                            </i>
+
+                            Cadastrar usuário
+
+                        </button>
+
+                    </div>
+
+                </header>
+
+
+                <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+
+                    <article class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6">
+
+                        <div class="flex items-start justify-between gap-4">
+
+                            <div>
+
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+
+                                    Atendimentos hoje
+
+                                </p>
+
+                                <h2 id="contador-hoje" class="text-4xl font-bold text-azulEscuro mt-3">
+
+                                    0
+
+                                </h2>
+
+                            </div>
+
+                            <div class="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center">
+
+                                <i data-lucide="stethoscope" class="w-6 h-6 text-azulEscuro">
+                                </i>
+
+                            </div>
+
+                        </div>
+
+                        <p class="text-xs text-slate-400 mt-4">
+
+                            Registros realizados desde o início do dia.
+
+                        </p>
+
+                    </article>
+
+
+                    <article class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6">
+
+                        <div class="flex items-start justify-between gap-4">
+
+                            <div>
+
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+
+                                    Gravidade baixa
+
+                                </p>
+
+                                <h2 id="count-normal" class="text-4xl font-bold text-green-600 mt-3">
+
+                                    0
+
+                                </h2>
+
+                            </div>
+
+                            <div class="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center">
+
+                                <i data-lucide="circle-check-big" class="w-6 h-6 text-green-600">
+                                </i>
+
+                            </div>
+
+                        </div>
+
+                        <p class="text-xs text-slate-400 mt-4">
+
+                            Atendimentos classificados como baixa gravidade.
+
+                        </p>
+
+                    </article>
+
+
+                    <article class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6">
+
+                        <div class="flex items-start justify-between gap-4">
+
+                            <div>
+
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+
+                                    Gravidade média
+
+                                </p>
+
+                                <h2 id="count-medio" class="text-4xl font-bold text-yellow-600 mt-3">
+
+                                    0
+
+                                </h2>
+
+                            </div>
+
+                            <div class="w-11 h-11 rounded-xl bg-yellow-100 flex items-center justify-center">
+
+                                <i data-lucide="triangle-alert" class="w-6 h-6 text-yellow-600">
+                                </i>
+
+                            </div>
+
+                        </div>
+
+                        <p class="text-xs text-slate-400 mt-4">
+
+                            Atendimentos classificados como média gravidade.
+
+                        </p>
+
+                    </article>
+
+
+                    <article class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6">
+
+                        <div class="flex items-start justify-between gap-4">
+
+                            <div>
+
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+
+                                    Gravidade alta
+
+                                </p>
+
+                                <h2 id="count-grave" class="text-4xl font-bold text-red-600 mt-3">
+
+                                    0
+
+                                </h2>
+
+                            </div>
+
+                            <div class="w-11 h-11 rounded-xl bg-red-100 flex items-center justify-center">
+
+                                <i data-lucide="siren" class="w-6 h-6 text-red-600">
+                                </i>
+
+                            </div>
+
+                        </div>
+
+                        <p class="text-xs text-slate-400 mt-4">
+
+                            Atendimentos classificados como alta gravidade.
+
+                        </p>
+
+                    </article>
+
+                </section>
+
+
+                <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden lg:col-span-2">
+
+                        <div
+                            class="px-5 sm:px-6 py-5 border-b border-slate-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                            <div>
+
+                                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+
+                                    <i data-lucide="clock-3" class="w-5 h-5 text-azulEscuro">
+                                    </i>
+
+                                    Últimos atendimentos
+
+                                </h2>
+
+                                <p class="text-sm text-slate-500 mt-1">
+
+                                    Registros mais recentes realizados no ambulatório.
+
+                                </p>
+
+                            </div>
+
+                            <a href="/consultar-paciente"
+                                class="inline-flex items-center justify-center gap-2 text-azulEscuro hover:bg-blue-50 font-semibold px-4 py-2 rounded-lg transition-all">
+
+                                <i data-lucide="plus" class="w-4 h-4">
+                                </i>
+
+                                Novo atendimento
+
+                            </a>
+
+                        </div>
+
+                        <div class="overflow-x-auto">
+
+                            <table class="w-full min-w-[760px] text-left">
+
+                                <thead>
+
+                                    <tr
+                                        class="bg-slate-50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500">
+
+                                        <th class="py-4 px-6 font-semibold">
+
+                                            Funcionário
+
+                                        </th>
+
+                                        <th class="py-4 px-6 font-semibold">
+
+                                            Queixa
+
+                                        </th>
+
+                                        <th class="py-4 px-6 font-semibold text-center">
+
+                                            Gravidade
+
+                                        </th>
+
+                                        <th class="py-4 px-6 font-semibold text-center">
+
+                                            Data e hora
+
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody id="lista-ultimos-atendimentos" class="divide-y divide-slate-100">
+
+                                    <tr>
+
+                                        <td colspan="4" class="py-12 px-6 text-center text-slate-400">
+
+                                            <i data-lucide="loader-circle"
+                                                class="w-9 h-9 mx-auto mb-3 animate-spin opacity-60">
+                                            </i>
+
+                                            <p>
+                                                Carregando atendimentos...
+                                            </p>
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+
+                        <div class="px-5 sm:px-6 py-5 border-b border-slate-100">
+
+                            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+
+                                <i data-lucide="chart-no-axes-column-increasing" class="w-5 h-5 text-azulEscuro">
+                                </i>
+
+                                Ranking de setores
+
+                            </h2>
+
+                            <p class="text-sm text-slate-500 mt-1">
+
+                                Setores com mais atendimentos no mês.
+
+                            </p>
+
+                        </div>
+
+                        <div id="lista-setores" class="p-5 sm:p-6 space-y-3">
+
+                            <div class="text-slate-400 flex items-center justify-center gap-2 py-6">
+
+                                <i data-lucide="loader-circle" class="w-5 h-5 animate-spin">
+                                </i>
+
+                                <span class="text-sm">
+                                    Carregando setores...
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
             </div>
+
         </main>
 
+
+        <div id="modal-cadastrar-usuario"
+            class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog"
+            aria-modal="true" aria-labelledby="titulo-modal-usuario">
+
+            <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+
+                <div class="flex justify-between items-center px-6 py-5 border-b border-slate-100">
+
+                    <div>
+
+                        <h2 id="titulo-modal-usuario" class="text-xl font-bold text-azulEscuro flex items-center gap-2">
+
+                            <i data-lucide="user-plus" class="w-6 h-6">
+                            </i>
+
+                            Cadastrar usuário
+
+                        </h2>
+
+                        <p class="text-sm text-slate-500 mt-1">
+
+                            Crie um novo acesso para o sistema.
+
+                        </p>
+
+                    </div>
+
+                    <button type="button" onclick="fecharModalUsuario()"
+                        class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                        aria-label="Fechar modal">
+
+                        <i data-lucide="x" class="w-5 h-5">
+                        </i>
+
+                    </button>
+
+                </div>
+
+                <form id="form-cadastrar-usuario" class="p-6 space-y-5">
+
+                    <div>
+
+                        <label for="usuario-email" class="block text-sm font-semibold text-slate-700 mb-1">
+
+                            E-mail
+
+                            <span class="text-red-600">
+                                *
+                            </span>
+
+                        </label>
+
+                        <div class="relative">
+
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+
+                                <i data-lucide="mail" class="w-5 h-5 text-slate-400">
+                                </i>
+
+                            </div>
+
+                            <input type="email" id="usuario-email" maxlength="150" autocomplete="off" required
+                                placeholder="usuario@empresa.com"
+                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <label for="usuario-senha" class="block text-sm font-semibold text-slate-700 mb-1">
+
+                            Senha
+
+                            <span class="text-red-600">
+                                *
+                            </span>
+
+                        </label>
+
+                        <div class="relative">
+
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+
+                                <i data-lucide="lock-keyhole" class="w-5 h-5 text-slate-400">
+                                </i>
+
+                            </div>
+
+                            <input type="password" id="usuario-senha" minlength="8" maxlength="255"
+                                autocomplete="new-password" required placeholder="Mínimo de 8 caracteres"
+                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <label for="usuario-confirmar-senha" class="block text-sm font-semibold text-slate-700 mb-1">
+
+                            Confirmar senha
+
+                            <span class="text-red-600">
+                                *
+                            </span>
+
+                        </label>
+
+                        <div class="relative">
+
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+
+                                <i data-lucide="shield-check" class="w-5 h-5 text-slate-400">
+                                </i>
+
+                            </div>
+
+                            <input type="password" id="usuario-confirmar-senha" minlength="8" maxlength="255"
+                                autocomplete="new-password" required placeholder="Digite novamente a senha"
+                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+
+                        <p class="text-sm text-blue-800 leading-relaxed">
+
+                            O novo usuário poderá acessar as funcionalidades protegidas do sistema utilizando o e-mail e
+                            a senha cadastrados.
+
+                        </p>
+
+                    </div>
+
+
+                    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-1">
+
+                        <button type="button" onclick="fecharModalUsuario()"
+                            class="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">
+
+                            Cancelar
+
+                        </button>
+
+                        <button type="submit" id="botao-salvar-usuario"
+                            class="px-5 py-3 rounded-xl bg-azulEscuro hover:bg-blue-800 text-white font-bold shadow-md transition-all flex items-center justify-center gap-2">
+
+                            <i data-lucide="save" class="w-5 h-5">
+                            </i>
+
+                            Salvar usuário
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+
+        <div id="mensagem-dashboard" class="fixed top-5 right-5 z-[70] hidden max-w-sm rounded-xl shadow-xl px-5 py-4"
+            role="alert">
+        </div>
+
+
         <script src="/js/dashboard.js"></script>
+
 </body>
 
 </html>
