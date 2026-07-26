@@ -1,1228 +1,395 @@
-import Atendimento from '../models/atendimento.js';
-import Funcionario from '../models/funcionarios.js';
-import { Op } from 'sequelize';
+import {
+    criarAtendimento as criarAtendimentoService,
+    buscarTodosAtendimentos as buscarTodosAtendimentosService,
+    buscarAtendimentoPorId as buscarAtendimentoService,
+    buscarAtendimentosPorFuncionario as buscarAtendimentosFuncionarioService
+} from '../services/atendimentoService.js';
 
+import {
+    buscarFuncionarioPorMatricula as buscarFuncionarioService
+} from '../services/funcionarioService.js';
 
-function corpoEhObjetoValido(corpo) {
+import {
+    normalizarMatricula
+} from '../utils/normalizadores.js';
 
-    if (!corpo) {
+import {
+    matriculaEhValida,
+    corpoEhObjetoValido,
+    identificadorEhValido
+} from '../utils/validadores.js';
 
-        return false;
+import {
+    responderErroInterno
+} from '../utils/respostas.js';
 
-    }
 
-    if (typeof corpo !== 'object') {
 
-        return false;
-
-    }
-
-    if (Array.isArray(corpo)) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function campoFoiEnviado(objeto, campo) {
-
-    return Object.prototype.hasOwnProperty.call(
-        objeto,
-        campo
-    );
-
-}
-
-
-function normalizarTexto(valor) {
-
-    if (typeof valor !== 'string') {
-
-        return valor;
-
-    }
-
-    return valor.trim();
-
-}
-
-
-function normalizarTextoOpcional(valor) {
-
-    if (valor === null || valor === undefined) {
-
-        return null;
-
-    }
-
-    if (typeof valor !== 'string') {
-
-        return valor;
-
-    }
-
-    const valorNormalizado = valor.trim();
-
-    if (valorNormalizado.length === 0) {
-
-        return null;
-
-    }
-
-    return valorNormalizado;
-
-}
-
-
-function normalizarMatricula(valor) {
-
-    if (typeof valor === 'number') {
-
-        return String(valor).trim();
-
-    }
-
-    if (typeof valor === 'string') {
-
-        return valor.trim();
-
-    }
-
-    return valor;
-
-}
-
-
-function matriculaEhValida(matricula) {
-
-    if (typeof matricula !== 'string') {
-
-        return false;
-
-    }
-
-    if (matricula.length < 1) {
-
-        return false;
-
-    }
-
-    if (matricula.length > 20) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function identificadorEhValido(id) {
-
-    if (id === undefined || id === null) {
-
-        return false;
-
-    }
-
-    const idNormalizado = String(id).trim();
-
-    if (idNormalizado.length === 0) {
-
-        return false;
-
-    }
-
-    if (!/^\d+$/.test(idNormalizado)) {
-
-        return false;
-
-    }
-
-    const idNumerico = Number(idNormalizado);
-
-    if (!Number.isSafeInteger(idNumerico)) {
-
-        return false;
-
-    }
-
-    if (idNumerico <= 0) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function gravidadeEhValida(gravidade) {
-
-    const gravidadesPermitidas = [
-        'Baixa',
-        'Média',
-        'Alta'
-    ];
-
-    if (typeof gravidade !== 'string') {
-
-        return false;
-
-    }
-
-    if (!gravidadesPermitidas.includes(gravidade)) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function textoObrigatorioEhValido(valor, tamanhoMaximo) {
-
-    if (typeof valor !== 'string') {
-
-        return false;
-
-    }
-
-    if (valor.length === 0) {
-
-        return false;
-
-    }
-
-    if (valor.length > tamanhoMaximo) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function textoOpcionalEhValido(valor, tamanhoMaximo) {
-
-    if (valor === null || valor === undefined) {
-
-        return true;
-
-    }
-
-    if (typeof valor !== 'string') {
-
-        return false;
-
-    }
-
-    if (valor.length > tamanhoMaximo) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function temperaturaEhValida(valor) {
-
-    if (valor === null || valor === undefined) {
-
-        return true;
-
-    }
-
-    if (typeof valor === 'string') {
-
-        const valorNormalizado = valor.trim();
-
-        if (valorNormalizado.length === 0) {
-
-            return true;
-
-        }
-
-        valor = Number(valorNormalizado);
-
-    }
-
-    if (typeof valor !== 'number') {
-
-        return false;
-
-    }
-
-    if (!Number.isFinite(valor)) {
-
-        return false;
-
-    }
-
-    if (valor < 0 || valor > 100) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function normalizarTemperatura(valor) {
-
-    if (valor === null || valor === undefined) {
-
-        return null;
-
-    }
-
-    if (typeof valor === 'string') {
-
-        const valorNormalizado = valor.trim();
-
-        if (valorNormalizado.length === 0) {
-
-            return null;
-
-        }
-
-        return Number(valorNormalizado);
-
-    }
-
-    return valor;
-
-}
-
-
-function dataOpcionalEhValida(valor) {
-
-    if (valor === null || valor === undefined) {
-
-        return true;
-
-    }
-
-    if (typeof valor !== 'string') {
-
-        return false;
-
-    }
-
-    const valorNormalizado = valor.trim();
-
-    if (valorNormalizado.length === 0) {
-
-        return true;
-
-    }
-
-    const dataConvertida = new Date(valorNormalizado);
-
-    if (Number.isNaN(dataConvertida.getTime())) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function normalizarDataOpcional(valor) {
-
-    if (valor === null || valor === undefined) {
-
-        return null;
-
-    }
-
-    if (typeof valor !== 'string') {
-
-        return valor;
-
-    }
-
-    const valorNormalizado = valor.trim();
-
-    if (valorNormalizado.length === 0) {
-
-        return null;
-
-    }
-
-    return new Date(valorNormalizado);
-
-}
-
-
-async function buscarFuncionario(matricula) {
-
-    const funcionario = await Funcionario.findOne({
-        where: {
-            matricula
-        },
-        attributes: [
-            'matricula',
-            'nome',
-            'setor',
-            'supervisor',
-            'coordenador',
-            'gerente'
-        ]
-    });
-
-    return funcionario;
-
-}
-
-
-function responderErroInterno(res, mensagem, erro) {
-
-    console.error(
-        mensagem,
-        erro
-    );
-
-    if (erro.name === 'SequelizeValidationError') {
-
-        const detalhes = erro.errors.map(item => {
-
-            return item.message;
-
-        });
-
-        return res.status(400).json({
-            erro: 'Os dados do atendimento são inválidos.',
-            detalhes
-        });
-
-    }
-
-    if (erro.name === 'SequelizeForeignKeyConstraintError') {
-
-        return res.status(400).json({
-            erro: 'O funcionário informado não existe.'
-        });
-
-    }
-
-    return res.status(500).json({
-        erro: 'Ocorreu um erro interno no servidor.'
-    });
-
-}
-
-
-// Buscar atendimentos por funcionário
-export async function buscarAtendimentosPorFuncionario(req, res) {
-
+export async function criarAtendimento(req, res) {
     try {
+        // Primeiro, eu verifico se o corpo da requisição é um objeto JSON válido.
+        if (!corpoEhObjetoValido(req.body)) {
+            return res.status(400).json({
+                erro: 'O corpo da requisição deve ser um objeto JSON válido.'
+            });
+        }
 
+        // Eu pego a matrícula do funcionário que veio no corpo da requisição e a normalizo.
+        const matricula = normalizarMatricula(
+            req.body.funcionario_matricula
+        );
+
+        // Depois, eu valido se a matrícula está em um formato correto.
+        if (!matriculaEhValida(matricula)) {
+            return res.status(400).json({
+                erro: 'A matrícula do funcionário é obrigatória.'
+            });
+        }
+
+        // Eu busco pelo funcionário no banco de dados para garantir que ele existe.
+        const funcionario = await buscarFuncionarioService(
+            matricula
+        );
+
+        // Se o funcionário não for encontrado, eu retorno um erro.
+        if (!funcionario) {
+            return res.status(404).json({
+                erro: 'Funcionário não encontrado.'
+            });
+        }
+
+        // Eu junto os dados do atendimento que recebi, garantindo que a matrícula está normalizada.
+        const dadosAtendimento = {
+            ...req.body,
+            funcionario_matricula: matricula
+        };
+
+        // Com tudo validado, eu chamo o serviço para criar o novo atendimento no banco de dados.
+        const atendimento = await criarAtendimentoService(
+            dadosAtendimento
+        );
+
+        // Se tudo der certo, eu retorno o atendimento que foi criado.
+        return res.status(201).json(atendimento);
+
+    } catch (erro) {
+        // Se algo der errado durante o processo, eu capturo o erro e envio uma resposta adequada.
+        return responderErroInterno(
+            res,
+            'Erro ao criar atendimento:',
+            erro
+        );
+    }
+}
+
+
+
+export async function buscarAtendimentos(req, res) {
+    try {
+        // Eu busco todos os atendimentos, usando os filtros que podem ter vindo na query da URL.
+        const atendimentos =
+            await buscarTodosAtendimentosService(
+                req.query
+            );
+
+        // E retorno a lista de atendimentos que encontrei.
+        return res.status(200).json(atendimentos);
+
+    } catch (erro) {
+        return responderErroInterno(
+            res,
+            'Erro ao buscar atendimentos:',
+            erro
+        );
+    }
+}
+
+
+
+export async function buscarAtendimentoPorId(req, res) {
+    try {
+        // Eu pego o ID do atendimento que veio como parâmetro na URL.
+        const id = req.params.id;
+
+        // Verifico se o ID é um número válido e positivo.
+        if (!identificadorEhValido(id)) {
+            return res.status(400).json({
+                erro: 'O identificador do atendimento é inválido.'
+            });
+        }
+
+        // Eu busco o atendimento específico no banco de dados usando o ID.
+        const atendimento =
+            await buscarAtendimentoService(id);
+
+        // Se não encontrar, eu aviso que o atendimento não existe.
+        if (!atendimento) {
+            return res.status(404).json({
+                erro: 'Atendimento não encontrado.'
+            });
+        }
+
+        // Se encontrar, eu retorno os dados do atendimento.
+        return res.status(200).json(atendimento);
+
+    } catch (erro) {
+        // Se algo der errado, eu lido com o erro.
+        return responderErroInterno(
+            res,
+            'Erro ao buscar atendimento:',
+            erro
+        );
+    }
+}
+
+
+
+export async function buscarHistoricoFuncionario(req, res) {
+    try {
+        // Eu pego a matrícula do funcionário pela URL e a normalizo para um formato padrão.
         const matricula = normalizarMatricula(
             req.params.matricula
         );
 
+        // Valido se a matrícula é um dado aceitável.
         if (!matriculaEhValida(matricula)) {
-
             return res.status(400).json({
-                erro: 'A matrícula do funcionário é inválida.'
+                erro: 'A matrícula informada é inválida.'
             });
-
         }
 
-        const funcionario = await buscarFuncionario(
-            matricula
-        );
+        // Eu busco todos os atendimentos (o histórico) para essa matrícula.
+        const atendimentos =
+            await buscarAtendimentosFuncionarioService(
+                matricula
+            );
 
-        if (!funcionario) {
-
-            return res.status(404).json({
-                erro: 'Funcionário não encontrado.'
-            });
-
-        }
-
-        const atendimentos = await Atendimento.findAll({
-            where: {
-                funcionario_matricula: matricula
-            },
-            order: [
-                [
-                    'data_hora_entrada',
-                    'DESC'
-                ]
-            ]
-        });
-
-        return res.status(200).json(
-            atendimentos
-        );
+        // E retorno a lista de atendimentos encontrada.
+        return res.status(200).json(atendimentos);
 
     } catch (erro) {
-
         return responderErroInterno(
             res,
-            'Erro ao buscar atendimentos por funcionário:',
+            'Erro ao buscar histórico do funcionário:',
             erro
         );
-
     }
-
 }
 
-
-// Registrar um novo atendimento
-export async function registrarAtendimento(req, res) {
-
+export async function atualizarAtendimento(req, res) {
     try {
-
+        // Verifico se recebi um objeto JSON válido no corpo da requisição.
         if (!corpoEhObjetoValido(req.body)) {
-
             return res.status(400).json({
                 erro: 'O corpo da requisição deve ser um objeto JSON válido.'
             });
-
         }
 
-        const camposPermitidos = [
-            'funcionario_matricula',
-            'gravidade',
-            'queixa_principal',
-            'temperatura',
-            'pressao_arterial',
-            'acao_tomada',
-            'local_encaminhamento',
-            'data_hora_saida'
-        ];
-
-        const camposRecebidos = Object.keys(
-            req.body
-        );
-
-        const camposNaoPermitidos = camposRecebidos.filter(campo => {
-
-            return !camposPermitidos.includes(
-                campo
-            );
-
-        });
-
-        if (camposNaoPermitidos.length > 0) {
-
-            return res.status(400).json({
-                erro: 'A requisição contém campos não permitidos.',
-                camposNaoPermitidos
-            });
-
-        }
-
-        const funcionarioMatricula = normalizarMatricula(
-            req.body.funcionario_matricula
-        );
-
-        const gravidade = normalizarTexto(
-            req.body.gravidade
-        );
-
-        const queixaPrincipal = normalizarTexto(
-            req.body.queixa_principal
-        );
-
-        const acaoTomada = normalizarTexto(
-            req.body.acao_tomada
-        );
-
-        const temperatura = normalizarTemperatura(
-            req.body.temperatura
-        );
-
-        const pressaoArterial = normalizarTextoOpcional(
-            req.body.pressao_arterial
-        );
-
-        const localEncaminhamento = normalizarTextoOpcional(
-            req.body.local_encaminhamento
-        );
-
-        const dataHoraSaida = normalizarDataOpcional(
-            req.body.data_hora_saida
-        );
-
-        if (!matriculaEhValida(funcionarioMatricula)) {
-
-            return res.status(400).json({
-                erro: 'A matrícula do funcionário é obrigatória e deve possuir no máximo 20 caracteres.'
-            });
-
-        }
-
-        if (!gravidadeEhValida(gravidade)) {
-
-            return res.status(400).json({
-                erro: 'A gravidade deve ser Baixa, Média ou Alta.'
-            });
-
-        }
-
-        if (!textoObrigatorioEhValido(queixaPrincipal, 65535)) {
-
-            return res.status(400).json({
-                erro: 'A queixa principal é obrigatória.'
-            });
-
-        }
-
-        if (!textoObrigatorioEhValido(acaoTomada, 100)) {
-
-            return res.status(400).json({
-                erro: 'A ação tomada é obrigatória e deve possuir no máximo 100 caracteres.'
-            });
-
-        }
-
-        if (!temperaturaEhValida(temperatura)) {
-
-            return res.status(400).json({
-                erro: 'A temperatura deve ser um número entre 0 e 100.'
-            });
-
-        }
-
-        if (!textoOpcionalEhValido(pressaoArterial, 20)) {
-
-            return res.status(400).json({
-                erro: 'A pressão arterial deve possuir no máximo 20 caracteres.'
-            });
-
-        }
-
-        if (!textoOpcionalEhValido(localEncaminhamento, 100)) {
-
-            return res.status(400).json({
-                erro: 'O local de encaminhamento deve possuir no máximo 100 caracteres.'
-            });
-
-        }
-
-        if (!dataOpcionalEhValida(req.body.data_hora_saida)) {
-
-            return res.status(400).json({
-                erro: 'A data e hora de saída são inválidas.'
-            });
-
-        }
-
-        const funcionario = await buscarFuncionario(
-            funcionarioMatricula
-        );
-
-        if (!funcionario) {
-
-            return res.status(404).json({
-                erro: 'Funcionário não encontrado.'
-            });
-
-        }
-
-        const novoAtendimento = await Atendimento.create({
-            funcionario_matricula: funcionarioMatricula,
-            gravidade,
-            queixa_principal: queixaPrincipal,
-            temperatura,
-            pressao_arterial: pressaoArterial,
-            acao_tomada: acaoTomada,
-            local_encaminhamento: localEncaminhamento,
-            supervisor_na_epoca: funcionario.supervisor,
-            coordenador_na_epoca: funcionario.coordenador,
-            gerente_na_epoca: funcionario.gerente,
-            data_hora_saida: dataHoraSaida
-        });
-
-        return res.status(201).json(
-            novoAtendimento
-        );
-
-    } catch (erro) {
-
-        return responderErroInterno(
-            res,
-            'Erro ao registrar atendimento:',
-            erro
-        );
-
-    }
-
-}
-
-
-// Atualizar um atendimento
-export async function atualizarAtendimento(req, res) {
-
-    try {
-
+        // Pego o ID do atendimento que veio na URL.
         const id = req.params.id;
 
+        // Valido se o ID é um identificador correto.
         if (!identificadorEhValido(id)) {
-
             return res.status(400).json({
                 erro: 'O identificador do atendimento é inválido.'
             });
-
         }
 
-        if (!corpoEhObjetoValido(req.body)) {
+        // Busco o atendimento que será atualizado para garantir que ele existe.
+        const atendimento =
+            await buscarAtendimentoService(id);
 
-            return res.status(400).json({
-                erro: 'O corpo da requisição deve ser um objeto JSON válido.'
-            });
-
-        }
-
-        const camposPermitidos = [
-            'gravidade',
-            'queixa_principal',
-            'temperatura',
-            'pressao_arterial',
-            'acao_tomada',
-            'local_encaminhamento',
-            'data_hora_saida'
-        ];
-
-        const camposRecebidos = Object.keys(
-            req.body
-        );
-
-        if (camposRecebidos.length === 0) {
-
-            return res.status(400).json({
-                erro: 'Informe ao menos um campo para atualização.'
-            });
-
-        }
-
-        const camposNaoPermitidos = camposRecebidos.filter(campo => {
-
-            return !camposPermitidos.includes(
-                campo
-            );
-
-        });
-
-        if (camposNaoPermitidos.length > 0) {
-
-            return res.status(400).json({
-                erro: 'A requisição contém campos que não podem ser atualizados.',
-                camposNaoPermitidos
-            });
-
-        }
-
-        const atendimento = await Atendimento.findByPk(
-            id
-        );
-
+        // Se não existir, eu retorno um erro 404.
         if (!atendimento) {
-
             return res.status(404).json({
                 erro: 'Atendimento não encontrado.'
             });
-
         }
 
-        const dadosParaAtualizar = {};
-
-        if (campoFoiEnviado(req.body, 'gravidade')) {
-
-            const gravidade = normalizarTexto(
-                req.body.gravidade
+        // Chamo o serviço que vai de fato atualizar os dados do atendimento no banco.
+        const atualizado =
+            await atualizarAtendimentoService(
+                atendimento,
+                req.body
             );
 
-            if (!gravidadeEhValida(gravidade)) {
-
-                return res.status(400).json({
-                    erro: 'A gravidade deve ser Baixa, Média ou Alta.'
-                });
-
-            }
-
-            dadosParaAtualizar.gravidade = gravidade;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'queixa_principal')) {
-
-            const queixaPrincipal = normalizarTexto(
-                req.body.queixa_principal
-            );
-
-            if (!textoObrigatorioEhValido(queixaPrincipal, 65535)) {
-
-                return res.status(400).json({
-                    erro: 'A queixa principal não pode ficar vazia.'
-                });
-
-            }
-
-            dadosParaAtualizar.queixa_principal = queixaPrincipal;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'temperatura')) {
-
-            const temperatura = normalizarTemperatura(
-                req.body.temperatura
-            );
-
-            if (!temperaturaEhValida(temperatura)) {
-
-                return res.status(400).json({
-                    erro: 'A temperatura deve ser um número entre 0 e 100.'
-                });
-
-            }
-
-            dadosParaAtualizar.temperatura = temperatura;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'pressao_arterial')) {
-
-            const pressaoArterial = normalizarTextoOpcional(
-                req.body.pressao_arterial
-            );
-
-            if (!textoOpcionalEhValido(pressaoArterial, 20)) {
-
-                return res.status(400).json({
-                    erro: 'A pressão arterial deve possuir no máximo 20 caracteres.'
-                });
-
-            }
-
-            dadosParaAtualizar.pressao_arterial = pressaoArterial;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'acao_tomada')) {
-
-            const acaoTomada = normalizarTexto(
-                req.body.acao_tomada
-            );
-
-            if (!textoObrigatorioEhValido(acaoTomada, 100)) {
-
-                return res.status(400).json({
-                    erro: 'A ação tomada não pode ficar vazia e deve possuir no máximo 100 caracteres.'
-                });
-
-            }
-
-            dadosParaAtualizar.acao_tomada = acaoTomada;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'local_encaminhamento')) {
-
-            const localEncaminhamento = normalizarTextoOpcional(
-                req.body.local_encaminhamento
-            );
-
-            if (!textoOpcionalEhValido(localEncaminhamento, 100)) {
-
-                return res.status(400).json({
-                    erro: 'O local de encaminhamento deve possuir no máximo 100 caracteres.'
-                });
-
-            }
-
-            dadosParaAtualizar.local_encaminhamento = localEncaminhamento;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'data_hora_saida')) {
-
-            if (!dataOpcionalEhValida(req.body.data_hora_saida)) {
-
-                return res.status(400).json({
-                    erro: 'A data e hora de saída são inválidas.'
-                });
-
-            }
-
-            dadosParaAtualizar.data_hora_saida = normalizarDataOpcional(
-                req.body.data_hora_saida
-            );
-
-        }
-
-        if (Object.keys(dadosParaAtualizar).length === 0) {
-
-            return res.status(400).json({
-                erro: 'Informe ao menos um campo válido para atualização.'
-            });
-
-        }
-
-        await atendimento.update(
-            dadosParaAtualizar
-        );
-
-        return res.status(200).json(
-            atendimento
-        );
+        // Retorno o atendimento com os dados atualizados.
+        return res.status(200).json(atualizado);
 
     } catch (erro) {
-
+        // Trato qualquer erro que possa acontecer durante a atualização.
         return responderErroInterno(
             res,
             'Erro ao atualizar atendimento:',
             erro
         );
-
     }
-
 }
 
 
-// Deletar um atendimento
-export async function deletarAtendimento(req, res) {
 
+export async function finalizarAtendimento(req, res) {
     try {
-
+        // Pego o ID do atendimento que quero finalizar a partir da URL.
         const id = req.params.id;
 
+        // Faço a validação do ID.
         if (!identificadorEhValido(id)) {
-
             return res.status(400).json({
                 erro: 'O identificador do atendimento é inválido.'
             });
-
         }
 
-        const atendimento = await Atendimento.findByPk(
-            id
-        );
+        // Busco o atendimento no banco de dados.
+        const atendimento =
+            await buscarAtendimentoService(id);
 
+        // Se o atendimento não for encontrado, eu informo.
         if (!atendimento) {
-
             return res.status(404).json({
                 erro: 'Atendimento não encontrado.'
             });
-
         }
 
-        await atendimento.destroy();
+        // Verifico se o atendimento já foi finalizado antes.
+        if (atendimento.data_hora_saida) {
+            return res.status(400).json({
+                erro: 'Este atendimento já foi finalizado.'
+            });
+        }
 
-        return res.status(204).send();
+        // Chamo o serviço para registrar a data e hora de saída, finalizando o atendimento.
+        const finalizado =
+            await finalizarAtendimentoService(
+                atendimento,
+                new Date()
+            );
+
+        // Retorno o atendimento com o status de finalizado.
+        return res.status(200).json(finalizado);
 
     } catch (erro) {
-
+        // Se ocorrer algum erro, eu o trato.
         return responderErroInterno(
             res,
-            'Erro ao deletar atendimento:',
+            'Erro ao finalizar atendimento:',
             erro
         );
-
     }
-
 }
 
+import {
+    buscarAtendimentosPorPeriodo as buscarAtendimentosPeriodoService,
+    contarAtendimentosPorPeriodo as contarAtendimentosPeriodoService,
+    buscarUltimosAtendimentos as buscarUltimosAtendimentosService,
+    contarAtendimentosAbertos as contarAtendimentosAbertosService
+} from '../services/atendimentoService.js';
 
-// Obter dados compilados para o dashboard
+import {
+    criarInicioDoDia,
+    criarFimDoDia,
+    criarInicioDoMes,
+    criarFimDoMes
+} from '../utils/datas.js';
+
+
+
 export async function obterDadosDashboard(req, res) {
-
     try {
+        // Eu pego a data e hora atuais para usar como base para as buscas.
+        const agora = new Date();
 
-        const inicioDia = new Date();
-
-        inicioDia.setHours(
-            0,
-            0,
-            0,
-            0
+        const inicioDia = criarInicioDoDia(
+            agora
         );
 
-        const fimDia = new Date();
-
-        fimDia.setHours(
-            23,
-            59,
-            59,
-            999
+        const fimDia = criarFimDoDia(
+            agora
         );
 
-        const inicioMes = new Date();
-
-        inicioMes.setDate(
-            1
+        const inicioMes = criarInicioDoMes(
+            agora
         );
 
-        inicioMes.setHours(
-            0,
-            0,
-            0,
-            0
+        const fimMes = criarFimDoMes(
+            agora
         );
 
-        const fimMes = new Date();
+        // Conto quantos atendimentos foram realizados hoje.
+        const atendimentosHoje =
+            await contarAtendimentosPeriodoService(
+                inicioDia,
+                fimDia
+            );
 
-        fimMes.setMonth(
-            fimMes.getMonth() + 1
-        );
+        // Conto quantos atendimentos foram realizados no mês atual.
+        const atendimentosMes =
+            await contarAtendimentosPeriodoService(
+                inicioMes,
+                fimMes
+            );
 
-        fimMes.setDate(
-            0
-        );
+        // Conto quantos atendimentos ainda estão em aberto.
+        const atendimentosAbertos =
+            await contarAtendimentosAbertosService();
 
-        fimMes.setHours(
-            23,
-            59,
-            59,
-            999
-        );
+        // Busco os últimos atendimentos registrados para exibir na tela.
+        const ultimosAtendimentos =
+            await buscarUltimosAtendimentosService();
 
-        const totalHoje = await Atendimento.count({
-            where: {
-                data_hora_entrada: {
-                    [Op.between]: [
-                        inicioDia,
-                        fimDia
-                    ]
-                }
-            }
-        });
-
-        const baixa = await Atendimento.count({
-            where: {
-                gravidade: 'Baixa',
-                data_hora_entrada: {
-                    [Op.between]: [
-                        inicioDia,
-                        fimDia
-                    ]
-                }
-            }
-        });
-
-        const media = await Atendimento.count({
-            where: {
-                gravidade: 'Média',
-                data_hora_entrada: {
-                    [Op.between]: [
-                        inicioDia,
-                        fimDia
-                    ]
-                }
-            }
-        });
-
-        const alta = await Atendimento.count({
-            where: {
-                gravidade: 'Alta',
-                data_hora_entrada: {
-                    [Op.between]: [
-                        inicioDia,
-                        fimDia
-                    ]
-                }
-            }
-        });
-
-        const atendimentosMes = await Atendimento.findAll({
-            where: {
-                data_hora_entrada: {
-                    [Op.between]: [
-                        inicioMes,
-                        fimMes
-                    ]
-                }
-            },
-            attributes: [
-                'funcionario_matricula'
-            ]
-        });
-
-        const ultimosAtendimentosRaw = await Atendimento.findAll({
-            limit: 5,
-            order: [
-                [
-                    'data_hora_entrada',
-                    'DESC'
-                ]
-            ]
-        });
-
-        const todasMatriculas = [
-            ...new Set([
-                ...atendimentosMes.map(atendimento => {
-
-                    return atendimento.funcionario_matricula;
-
-                }),
-
-                ...ultimosAtendimentosRaw.map(atendimento => {
-
-                    return atendimento.funcionario_matricula;
-
-                })
-            ])
-        ];
-
-        let funcionarios = [];
-
-        if (todasMatriculas.length > 0) {
-
-            funcionarios = await Funcionario.findAll({
-                where: {
-                    matricula: {
-                        [Op.in]: todasMatriculas
-                    }
-                },
-                attributes: [
-                    'matricula',
-                    'nome',
-                    'setor'
-                ]
-            });
-
-        }
-
-        const mapaFuncionarios = {};
-
-        funcionarios.forEach(funcionario => {
-
-            mapaFuncionarios[funcionario.matricula] = {
-                nome: funcionario.nome,
-                setor: funcionario.setor
-            };
-
-        });
-
-        const setoresContagem = {};
-
-        atendimentosMes.forEach(atendimento => {
-
-            const funcionario = mapaFuncionarios[
-                atendimento.funcionario_matricula
-            ];
-
-            let nomeSetor = 'Não Informado';
-
-            if (funcionario) {
-
-                if (funcionario.setor) {
-
-                    nomeSetor = funcionario.setor;
-
-                }
-
-            }
-
-            if (setoresContagem[nomeSetor]) {
-
-                setoresContagem[nomeSetor] += 1;
-
-            } else {
-
-                setoresContagem[nomeSetor] = 1;
-
-            }
-
-        });
-
-        const atendimentosPorSetor = Object.keys(
-            setoresContagem
-        )
-            .map(setor => {
-
-                return {
-                    setor,
-                    quantidade: setoresContagem[setor]
-                };
-
-            })
-            .sort((primeiro, segundo) => {
-
-                return segundo.quantidade - primeiro.quantidade;
-
-            });
-
-        const ultimosAtendimentos = ultimosAtendimentosRaw.map(
-            atendimento => {
-
-                const funcionario = mapaFuncionarios[
-                    atendimento.funcionario_matricula
-                ];
-
-                let nomeFuncionario = 'Funcionário Desconhecido';
-                let setorFuncionario = 'Não informado';
-
-                if (funcionario) {
-
-                    if (funcionario.nome) {
-
-                        nomeFuncionario = funcionario.nome;
-
-                    }
-
-                    if (funcionario.setor) {
-
-                        setorFuncionario = funcionario.setor;
-
-                    }
-
-                }
-
-                return {
-                    id_atendimento: atendimento.id_atendimento,
-                    funcionario_matricula: atendimento.funcionario_matricula,
-                    nome: nomeFuncionario,
-                    setor: setorFuncionario,
-                    gravidade: atendimento.gravidade,
-                    queixa_principal: atendimento.queixa_principal,
-                    acao_tomada: atendimento.acao_tomada,
-                    data_hora_entrada: atendimento.data_hora_entrada
-                };
-
-            }
-        );
-
+        // Monto um objeto com todos os dados resumidos para o dashboard.
         return res.status(200).json({
-            totalHoje,
-            gravidadeHoje: {
-                baixa,
-                media,
-                alta
+            resumo: {
+                atendimentosHoje,
+                atendimentosMes,
+                atendimentosAbertos
             },
-            atendimentosPorSetor,
             ultimosAtendimentos
         });
 
     } catch (erro) {
-
+        // Se algo der errado ao buscar os dados, eu retorno um erro.
         return responderErroInterno(
             res,
-            'Erro ao obter os dados do dashboard:',
+            'Erro ao carregar dashboard:',
             erro
         );
-
     }
+}
 
+
+
+export async function buscarAtendimentosPeriodo(req, res) {
+    try {
+        // Eu pego as datas de início e fim que vieram nos parâmetros da URL.
+        const inicio = req.query.inicio;
+        const fim = req.query.fim;
+
+        // Verifico se as duas datas foram informadas.
+        if (!inicio || !fim) {
+            return res.status(400).json({
+                erro: 'Informe a data inicial e final.'
+            });
+        }
+
+        // Chamo o serviço que busca no banco de dados todos os atendimentos dentro do período.
+        const atendimentos =
+            await buscarAtendimentosPeriodoService(
+                inicio,
+                fim
+            );
+
+        // Retorno a lista de atendimentos encontrados.
+        return res.status(200).json(
+            atendimentos
+        );
+
+    } catch (erro) {
+        // Se houver erro, eu o capturo e respondo adequadamente.
+        return responderErroInterno(
+            res,
+            'Erro ao buscar atendimentos por período:',
+            erro
+        );
+    }
 }

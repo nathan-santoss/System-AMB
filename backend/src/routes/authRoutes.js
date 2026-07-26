@@ -13,21 +13,31 @@ import {
 const router = express.Router();
 
 
-// Realizar login
-// POST /api/auth/login
+function ambienteEhProducao() {
+    return process.env.NODE_ENV === 'production';
+}
+
+
+function obterOpcoesLimpezaCookie() {
+    return {
+        httpOnly: true,
+        secure: ambienteEhProducao(),
+        sameSite: 'strict',
+        path: '/'
+    };
+}
+
+
 router.post(
     '/login',
     login
 );
 
 
-// Verificar se a sessão atual continua válida
-// GET /api/auth/verificar
 router.get(
     '/verificar',
     verificarToken,
     function (req, res) {
-
         return res.status(200).json({
             autenticado: true,
             usuario: {
@@ -35,13 +45,10 @@ router.get(
                 email: req.usuario.email
             }
         });
-
     }
 );
 
 
-// Cadastrar novo usuário
-// POST /api/auth/cadastrar
 router.post(
     '/cadastrar',
     verificarToken,
@@ -49,34 +56,17 @@ router.post(
 );
 
 
-// Encerrar a sessão e remover o cookie
-// POST /api/auth/logout
 router.post(
     '/logout',
     function (req, res) {
-
-        let ambienteProducao = false;
-
-        if (process.env.NODE_ENV === 'production') {
-
-            ambienteProducao = true;
-
-        }
-
         res.clearCookie(
             'token',
-            {
-                httpOnly: true,
-                secure: ambienteProducao,
-                sameSite: 'strict',
-                path: '/'
-            }
+            obterOpcoesLimpezaCookie()
         );
 
         return res.status(200).json({
             message: 'Logout realizado com sucesso.'
         });
-
     }
 );
 

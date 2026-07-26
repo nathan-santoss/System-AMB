@@ -1,666 +1,268 @@
-import Funcionario from '../models/funcionarios.js';
-import { Op } from 'sequelize';
+import {
+    criarFuncionario,
+    buscarTodosFuncionarios,
+    buscarFuncionarioPorMatricula as buscarFuncionarioService,
+    atualizarFuncionario as atualizarFuncionarioService,
+    deletarFuncionario as deletarFuncionarioService
+} from '../services/funcionarioService.js';
+
+import {
+    buscarProntuarioFuncionario
+} from '../services/prontuarioService.js';
+
+import {
+    normalizarTexto,
+    normalizarTextoOpcional,
+    normalizarMatricula,
+    normalizarCpf
+} from '../utils/normalizadores.js';
+
+import {
+    corpoEhObjetoValido,
+    matriculaEhValida,
+    cpfEhValido,
+    buscaEhValida,
+    textoOpcionalEhValido
+} from '../utils/validadores.js';
+
+import {
+    responderErroInterno
+} from '../utils/respostas.js';
 
 
-function corpoEhObjetoValido(corpo) {
-
-    if (!corpo) {
-
-        return false;
-
-    }
-
-    if (typeof corpo !== 'object') {
-
-        return false;
-
-    }
-
-    if (Array.isArray(corpo)) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function campoFoiEnviado(objeto, campo) {
-
-    return Object.prototype.hasOwnProperty.call(
-        objeto,
-        campo
-    );
-
-}
-
-
-function normalizarTexto(valor) {
-
-    if (typeof valor !== 'string') {
-
-        return valor;
-
-    }
-
-    return valor.trim();
-
-}
-
-
-function normalizarTextoOpcional(valor) {
-
-    if (valor === null || valor === undefined) {
-
-        return null;
-
-    }
-
-    if (typeof valor !== 'string') {
-
-        return valor;
-
-    }
-
-    const valorNormalizado = valor.trim();
-
-    if (valorNormalizado.length === 0) {
-
-        return null;
-
-    }
-
-    return valorNormalizado;
-
-}
-
-
-function normalizarMatricula(valor) {
-
-    if (typeof valor === 'number') {
-
-        return String(valor).trim();
-
-    }
-
-    if (typeof valor === 'string') {
-
-        return valor.trim();
-
-    }
-
-    return valor;
-
-}
-
-
-function normalizarCpf(valor) {
-
-    if (typeof valor === 'number') {
-
-        return String(valor).trim();
-
-    }
-
-    if (typeof valor === 'string') {
-
-        return valor.replace(
-            /\D/g,
-            ''
-        ).trim();
-
-    }
-
-    return valor;
-
-}
-
-
-function normalizarBusca(valor) {
-
-    if (valor === undefined || valor === null) {
-
-        return '';
-
-    }
-
-    if (typeof valor !== 'string') {
-
-        return valor;
-
-    }
-
-    return valor.trim();
-
-}
-
-
-function buscaEhValida(busca) {
-
-    if (typeof busca !== 'string') {
-
-        return false;
-
-    }
-
-    if (busca.length > 150) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function matriculaEhValida(matricula) {
-
-    if (typeof matricula !== 'string') {
-
-        return false;
-
-    }
-
-    if (matricula.length < 1) {
-
-        return false;
-
-    }
-
-    if (matricula.length > 20) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function nomeEhValido(nome) {
-
-    if (typeof nome !== 'string') {
-
-        return false;
-
-    }
-
-    if (nome.length < 2) {
-
-        return false;
-
-    }
-
-    if (nome.length > 150) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function cpfEhValido(cpf) {
-
-    if (typeof cpf !== 'string') {
-
-        return false;
-
-    }
-
-    if (!/^\d{11}$/.test(cpf)) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function textoOpcionalEhValido(valor, tamanhoMaximo) {
-
-    if (valor === null) {
-
-        return true;
-
-    }
-
-    if (typeof valor !== 'string') {
-
-        return false;
-
-    }
-
-    if (valor.length > tamanhoMaximo) {
-
-        return false;
-
-    }
-
-    return true;
-
-}
-
-
-function criarFiltroBusca(busca) {
-
-    const filtros = [
-        {
-            matricula: {
-                [Op.like]: `%${busca}%`
-            }
-        },
-        {
-            nome: {
-                [Op.like]: `%${busca}%`
-            }
-        },
-        {
-            cargo: {
-                [Op.like]: `%${busca}%`
-            }
-        },
-        {
-            setor: {
-                [Op.like]: `%${busca}%`
-            }
-        },
-        {
-            nucleo: {
-                [Op.like]: `%${busca}%`
-            }
-        }
-    ];
-
-    const cpfBusca = busca.replace(
-        /\D/g,
-        ''
-    );
-
-    if (cpfBusca.length > 0) {
-
-        filtros.push({
-            cpf: {
-                [Op.like]: `%${cpfBusca}%`
-            }
-        });
-
-    }
-
-    return {
-        [Op.or]: filtros
-    };
-
-}
-
-
-function responderErroInterno(res, mensagem, erro) {
-
-    console.error(
-        mensagem,
-        erro
-    );
-
-    if (erro.name === 'SequelizeValidationError') {
-
-        const detalhes = erro.errors.map(item => {
-
-            return item.message;
-
-        });
-
-        return res.status(400).json({
-            erro: 'Os dados do funcionário são inválidos.',
-            detalhes
-        });
-
-    }
-
-    if (erro.name === 'SequelizeUniqueConstraintError') {
-
-        return res.status(409).json({
-            erro: 'Já existe um funcionário com os dados informados.'
-        });
-
-    }
-
-    if (erro.name === 'SequelizeForeignKeyConstraintError') {
-
-        return res.status(409).json({
-            erro: 'O funcionário não pode ser excluído porque possui registros vinculados.'
-        });
-
-    }
-
-    return res.status(500).json({
-        erro: 'Ocorreu um erro interno no servidor.'
-    });
-
-}
-
-
-// Cadastrar funcionário
 export async function cadastrarFuncionario(req, res) {
-
     try {
-
+        // Primeiro, eu verifico se o corpo da requisição é um objeto JSON válido.
         if (!corpoEhObjetoValido(req.body)) {
-
             return res.status(400).json({
                 erro: 'O corpo da requisição deve ser um objeto JSON válido.'
             });
-
         }
 
-        const camposPermitidos = [
-            'matricula',
-            'nome',
-            'cpf',
-            'cargo',
-            'setor',
-            'nucleo',
-            'supervisor',
-            'coordenador',
-            'gerente'
-        ];
+        // Eu pego a matrícula, nome e CPF e os normalizo para um formato padrão.
+        const matricula = normalizarMatricula(req.body.matricula);
+        const nome = normalizarTexto(req.body.nome);
+        const cpf = normalizarCpf(req.body.cpf);
 
-        const camposRecebidos = Object.keys(req.body);
-
-        const camposNaoPermitidos = camposRecebidos.filter(campo => {
-
-            return !camposPermitidos.includes(campo);
-
-        });
-
-        if (camposNaoPermitidos.length > 0) {
-
-            return res.status(400).json({
-                erro: 'A requisição contém campos não permitidos.',
-                camposNaoPermitidos
-            });
-
-        }
-
-        const matricula = normalizarMatricula(
-            req.body.matricula
-        );
-
-        const nome = normalizarTexto(
-            req.body.nome
-        );
-
-        const cpf = normalizarCpf(
-            req.body.cpf
-        );
-
-        const cargo = normalizarTextoOpcional(
-            req.body.cargo
-        );
-
-        const setor = normalizarTextoOpcional(
-            req.body.setor
-        );
-
-        const nucleo = normalizarTextoOpcional(
-            req.body.nucleo
-        );
-
-        const supervisor = normalizarTextoOpcional(
-            req.body.supervisor
-        );
-
-        const coordenador = normalizarTextoOpcional(
-            req.body.coordenador
-        );
-
-        const gerente = normalizarTextoOpcional(
-            req.body.gerente
-        );
-
-        if (!matriculaEhValida(matricula)) {
-
-            return res.status(400).json({
-                erro: 'A matrícula é obrigatória e deve possuir no máximo 20 caracteres.'
-            });
-
-        }
-
-        if (!nomeEhValido(nome)) {
-
-            return res.status(400).json({
-                erro: 'O nome é obrigatório e deve possuir entre 2 e 150 caracteres.'
-            });
-
-        }
-
-        if (!cpfEhValido(cpf)) {
-
-            return res.status(400).json({
-                erro: 'O CPF é obrigatório e deve possuir exatamente 11 números.'
-            });
-
-        }
-
-        if (!textoOpcionalEhValido(cargo, 100)) {
-
-            return res.status(400).json({
-                erro: 'O cargo deve possuir no máximo 100 caracteres.'
-            });
-
-        }
-
-        if (!textoOpcionalEhValido(setor, 100)) {
-
-            return res.status(400).json({
-                erro: 'O setor deve possuir no máximo 100 caracteres.'
-            });
-
-        }
-
-        if (!textoOpcionalEhValido(nucleo, 100)) {
-
-            return res.status(400).json({
-                erro: 'O núcleo deve possuir no máximo 100 caracteres.'
-            });
-
-        }
-
-        if (!textoOpcionalEhValido(supervisor, 100)) {
-
-            return res.status(400).json({
-                erro: 'O supervisor deve possuir no máximo 100 caracteres.'
-            });
-
-        }
-
-        if (!textoOpcionalEhValido(coordenador, 100)) {
-
-            return res.status(400).json({
-                erro: 'O coordenador deve possuir no máximo 100 caracteres.'
-            });
-
-        }
-
-        if (!textoOpcionalEhValido(gerente, 100)) {
-
-            return res.status(400).json({
-                erro: 'O gerente deve possuir no máximo 100 caracteres.'
-            });
-
-        }
-
-        const funcionarioExistente = await Funcionario.findByPk(
-            matricula
-        );
-
-        if (funcionarioExistente) {
-
-            return res.status(409).json({
-                erro: 'Já existe um funcionário com esta matrícula.'
-            });
-
-        }
-
-        const novoFuncionario = await Funcionario.create({
+        // Eu junto todos os dados do funcionário que recebi, normalizando os campos opcionais também.
+        const dadosFuncionario = {
             matricula,
             nome,
             cpf,
-            cargo,
-            setor,
-            nucleo,
-            supervisor,
-            coordenador,
-            gerente
-        });
+            // Para os campos opcionais, eu uso uma normalização que aceita valores nulos ou vazios.
+            cargo: normalizarTextoOpcional(req.body.cargo),
+            setor: normalizarTextoOpcional(req.body.setor),
+            nucleo: normalizarTextoOpcional(req.body.nucleo),
+            supervisor: normalizarTextoOpcional(req.body.supervisor),
+            coordenador: normalizarTextoOpcional(req.body.coordenador),
+            gerente: normalizarTextoOpcional(req.body.gerente)
+        };
 
-        return res.status(201).json(novoFuncionario);
+        // Depois, eu valido se a matrícula está em um formato correto.
+        if (!matriculaEhValida(matricula)) {
+            return res.status(400).json({
+                erro: 'A matrícula é obrigatória e deve possuir até 20 caracteres.'
+            });
+        }
+
+        // Também valido o CPF para garantir que ele tem o tamanho certo.
+        if (!cpfEhValido(cpf)) {
+            return res.status(400).json({
+                erro: 'O CPF deve possuir exatamente 11 números.'
+            });
+        }
+
+        // Com tudo validado, eu chamo o serviço para criar o novo funcionário no banco de dados.
+        const funcionario = await criarFuncionario(
+            dadosFuncionario
+        );
+
+        // Se tudo der certo, eu retorno o funcionário que foi criado.
+        return res.status(201).json(funcionario);
 
     } catch (erro) {
-
+        // Se algo der errado durante o processo, eu capturo o erro e envio uma resposta adequada.
         return responderErroInterno(
             res,
             'Erro ao cadastrar funcionário:',
             erro
         );
-
     }
-
 }
 
 
-// Buscar funcionários
 export async function buscarFuncionarios(req, res) {
-
     try {
+        // Eu pego o termo de busca que pode ter vindo na URL. Se não veio, uso uma string vazia.
+        const busca = req.query.busca || '';
 
-        const busca = normalizarBusca(
-            req.query.busca
-        );
-
+        // Valido se o termo de busca é aceitável.
         if (!buscaEhValida(busca)) {
-
             return res.status(400).json({
-                erro: 'O termo de busca deve ser um texto com no máximo 150 caracteres.'
+                erro: 'O termo de busca é inválido.'
             });
-
         }
 
-        const opcoesConsulta = {
-            order: [
-                [
-                    'nome',
-                    'ASC'
-                ]
-            ]
-        };
+        // Eu chamo o serviço que busca no banco de dados todos os funcionários que correspondem à busca.
+        const funcionarios = await buscarTodosFuncionarios({
+            busca
+        });
 
-        if (busca.length > 0) {
-
-            opcoesConsulta.where = criarFiltroBusca(
-                busca
-            );
-
-        }
-
-        const funcionarios = await Funcionario.findAll(
-            opcoesConsulta
-        );
-
+        // E retorno a lista de funcionários que encontrei.
         return res.status(200).json(funcionarios);
 
     } catch (erro) {
-
+        // Se houver erro, eu o capturo e respondo adequadamente.
         return responderErroInterno(
             res,
             'Erro ao buscar funcionários:',
             erro
         );
-
     }
-
 }
 
-
-// Buscar funcionário pela matrícula
 export async function buscarFuncionarioPorMatricula(req, res) {
-
     try {
-
+        // Eu pego a matrícula do funcionário que veio como parâmetro na URL e a normalizo.
         const matricula = normalizarMatricula(
             req.params.matricula
         );
 
+        // Valido se a matrícula é um dado aceitável.
         if (!matriculaEhValida(matricula)) {
-
             return res.status(400).json({
                 erro: 'A matrícula informada é inválida.'
             });
-
         }
 
-        const funcionario = await Funcionario.findByPk(
+        // Eu busco o funcionário específico no banco de dados usando a matrícula.
+        const funcionario = await buscarFuncionarioService(
             matricula
         );
 
+        // Se não encontrar, eu aviso que o funcionário não existe.
         if (!funcionario) {
-
             return res.status(404).json({
                 erro: 'Funcionário não encontrado.'
             });
-
         }
 
+        // Se encontrar, eu retorno os dados do funcionário.
         return res.status(200).json(funcionario);
 
     } catch (erro) {
-
+        // Se algo der errado, eu lido com o erro.
         return responderErroInterno(
             res,
-            'Erro ao buscar funcionário pela matrícula:',
+            'Erro ao buscar funcionário:',
             erro
         );
-
     }
-
 }
 
 
-// Atualizar funcionário
-export async function atualizarFuncionario(req, res) {
 
+export async function buscarPerfilFuncionario(req, res) {
     try {
-
+        // Eu pego a matrícula do funcionário pela URL e a normalizo para um formato padrão.
         const matricula = normalizarMatricula(
             req.params.matricula
         );
 
+        // Valido se a matrícula é um dado aceitável.
         if (!matriculaEhValida(matricula)) {
-
             return res.status(400).json({
                 erro: 'A matrícula informada é inválida.'
             });
-
         }
 
-        if (!corpoEhObjetoValido(req.body)) {
+        // Eu busco o prontuário completo do funcionário, que inclui seus dados e histórico.
+        const prontuario = await buscarProntuarioFuncionario(
+            matricula
+        );
 
+        // Se não encontrar, eu aviso que o funcionário não existe.
+        if (!prontuario) {
+            return res.status(404).json({
+                erro: 'Funcionário não encontrado.'
+            });
+        }
+
+        // Se encontrar, eu retorno o prontuário completo.
+        return res.status(200).json(prontuario);
+
+    } catch (erro) {
+        // Se algo der errado, eu lido com o erro.
+        return responderErroInterno(
+            res,
+            'Erro ao buscar perfil do funcionário:',
+            erro
+        );
+    }
+}
+
+
+
+export async function atualizarFuncionario(req, res) {
+    try {
+        // Verifico se recebi um objeto JSON válido no corpo da requisição.
+        if (!corpoEhObjetoValido(req.body)) {
             return res.status(400).json({
                 erro: 'O corpo da requisição deve ser um objeto JSON válido.'
             });
-
         }
 
-        const camposPermitidos = [
-            'nome',
-            'cpf',
+        // Pego a matrícula do funcionário que veio na URL e a normalizo.
+        const matricula = normalizarMatricula(
+            req.params.matricula
+        );
+
+        // Valido se a matrícula é um identificador correto.
+        if (!matriculaEhValida(matricula)) {
+            return res.status(400).json({
+                erro: 'A matrícula informada é inválida.'
+            });
+        }
+
+        // Busco o funcionário que será atualizado para garantir que ele existe.
+        const funcionario = await buscarFuncionarioService(
+            matricula
+        );
+
+        // Se não existir, eu retorno um erro 404.
+        if (!funcionario) {
+            return res.status(404).json({
+                erro: 'Funcionário não encontrado.'
+            });
+        }
+
+        // Preparo um objeto para guardar os dados que serão atualizados.
+        const dadosAtualizacao = {};
+
+        // Se o nome foi enviado na requisição, eu o normalizo e adiciono para atualização.
+        if (req.body.nome !== undefined) {
+            dadosAtualizacao.nome = normalizarTexto(
+                req.body.nome
+            );
+        }
+
+        // Se o CPF foi enviado, eu o normalizo, valido e adiciono para atualização.
+        if (req.body.cpf !== undefined) {
+            const cpf = normalizarCpf(
+                req.body.cpf
+            );
+
+            if (!cpfEhValido(cpf)) {
+                return res.status(400).json({
+                    erro: 'O CPF deve possuir exatamente 11 números.'
+                });
+            }
+
+            dadosAtualizacao.cpf = cpf;
+        }
+
+        // Eu defino uma lista de outros campos que também podem ser atualizados.
+        const camposOpcionais = [
             'cargo',
             'setor',
             'nucleo',
@@ -669,257 +271,85 @@ export async function atualizarFuncionario(req, res) {
             'gerente'
         ];
 
-        const camposRecebidos = Object.keys(req.body);
+        // Eu passo por cada um desses campos opcionais.
+        for (const campo of camposOpcionais) {
+            if (req.body[campo] !== undefined) {
+                const valor = normalizarTextoOpcional(
+                    req.body[campo]
+                );
 
-        if (camposRecebidos.length === 0) {
+                if (!textoOpcionalEhValido(valor, 150)) {
+                    // Se o valor for inválido, eu retorno um erro.
+                    return res.status(400).json({
+                        erro: `O campo ${campo} possui tamanho inválido.`
+                    });
+                }
 
-            return res.status(400).json({
-                erro: 'Informe ao menos um campo para atualização.'
-            });
-
+                dadosAtualizacao[campo] = valor;
+            }
         }
 
-        const camposNaoPermitidos = camposRecebidos.filter(campo => {
-
-            return !camposPermitidos.includes(campo);
-
-        });
-
-        if (camposNaoPermitidos.length > 0) {
-
-            return res.status(400).json({
-                erro: 'A requisição contém campos que não podem ser atualizados.',
-                camposNaoPermitidos
-            });
-
-        }
-
-        const funcionario = await Funcionario.findByPk(
-            matricula
+        // Chamo o serviço que vai de fato atualizar os dados do funcionário no banco.
+        const atualizado = await atualizarFuncionarioService(
+            funcionario,
+            dadosAtualizacao
         );
 
-        if (!funcionario) {
-
-            return res.status(404).json({
-                erro: 'Funcionário não encontrado.'
-            });
-
-        }
-
-        const dadosParaAtualizar = {};
-
-        if (campoFoiEnviado(req.body, 'nome')) {
-
-            const nome = normalizarTexto(
-                req.body.nome
-            );
-
-            if (!nomeEhValido(nome)) {
-
-                return res.status(400).json({
-                    erro: 'O nome deve possuir entre 2 e 150 caracteres.'
-                });
-
-            }
-
-            dadosParaAtualizar.nome = nome;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'cpf')) {
-
-            const cpf = normalizarCpf(
-                req.body.cpf
-            );
-
-            if (!cpfEhValido(cpf)) {
-
-                return res.status(400).json({
-                    erro: 'O CPF deve possuir exatamente 11 números.'
-                });
-
-            }
-
-            dadosParaAtualizar.cpf = cpf;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'cargo')) {
-
-            const cargo = normalizarTextoOpcional(
-                req.body.cargo
-            );
-
-            if (!textoOpcionalEhValido(cargo, 100)) {
-
-                return res.status(400).json({
-                    erro: 'O cargo deve possuir no máximo 100 caracteres.'
-                });
-
-            }
-
-            dadosParaAtualizar.cargo = cargo;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'setor')) {
-
-            const setor = normalizarTextoOpcional(
-                req.body.setor
-            );
-
-            if (!textoOpcionalEhValido(setor, 100)) {
-
-                return res.status(400).json({
-                    erro: 'O setor deve possuir no máximo 100 caracteres.'
-                });
-
-            }
-
-            dadosParaAtualizar.setor = setor;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'nucleo')) {
-
-            const nucleo = normalizarTextoOpcional(
-                req.body.nucleo
-            );
-
-            if (!textoOpcionalEhValido(nucleo, 100)) {
-
-                return res.status(400).json({
-                    erro: 'O núcleo deve possuir no máximo 100 caracteres.'
-                });
-
-            }
-
-            dadosParaAtualizar.nucleo = nucleo;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'supervisor')) {
-
-            const supervisor = normalizarTextoOpcional(
-                req.body.supervisor
-            );
-
-            if (!textoOpcionalEhValido(supervisor, 100)) {
-
-                return res.status(400).json({
-                    erro: 'O supervisor deve possuir no máximo 100 caracteres.'
-                });
-
-            }
-
-            dadosParaAtualizar.supervisor = supervisor;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'coordenador')) {
-
-            const coordenador = normalizarTextoOpcional(
-                req.body.coordenador
-            );
-
-            if (!textoOpcionalEhValido(coordenador, 100)) {
-
-                return res.status(400).json({
-                    erro: 'O coordenador deve possuir no máximo 100 caracteres.'
-                });
-
-            }
-
-            dadosParaAtualizar.coordenador = coordenador;
-
-        }
-
-        if (campoFoiEnviado(req.body, 'gerente')) {
-
-            const gerente = normalizarTextoOpcional(
-                req.body.gerente
-            );
-
-            if (!textoOpcionalEhValido(gerente, 100)) {
-
-                return res.status(400).json({
-                    erro: 'O gerente deve possuir no máximo 100 caracteres.'
-                });
-
-            }
-
-            dadosParaAtualizar.gerente = gerente;
-
-        }
-
-        if (Object.keys(dadosParaAtualizar).length === 0) {
-
-            return res.status(400).json({
-                erro: 'Informe ao menos um campo válido para atualização.'
-            });
-
-        }
-
-        await funcionario.update(
-            dadosParaAtualizar
-        );
-
-        return res.status(200).json(funcionario);
+        // Retorno o funcionário com os dados atualizados.
+        return res.status(200).json(atualizado);
 
     } catch (erro) {
-
+        // Trato qualquer erro que possa acontecer durante a atualização.
         return responderErroInterno(
             res,
             'Erro ao atualizar funcionário:',
             erro
         );
-
     }
-
 }
 
-
-// Deletar funcionário
 export async function deletarFuncionario(req, res) {
-
     try {
-
+        // Pego a matrícula do funcionário que quero deletar a partir da URL e a normalizo.
         const matricula = normalizarMatricula(
             req.params.matricula
         );
 
+        // Faço a validação da matrícula.
         if (!matriculaEhValida(matricula)) {
-
             return res.status(400).json({
                 erro: 'A matrícula informada é inválida.'
             });
-
         }
 
-        const funcionario = await Funcionario.findByPk(
+        // Busco o funcionário no banco de dados.
+        const funcionario = await buscarFuncionarioService(
             matricula
         );
 
+        // Se o funcionário não for encontrado, eu informo.
         if (!funcionario) {
-
             return res.status(404).json({
                 erro: 'Funcionário não encontrado.'
             });
-
         }
 
-        await funcionario.destroy();
-
-        return res.status(204).send();
-
-    } catch (erro) {
-
-        return responderErroInterno(
-            res,
-            'Erro ao deletar funcionário:',
-            erro
+        // Se encontrei, eu chamo o serviço para removê-lo do banco de dados.
+        await deletarFuncionarioService(
+            funcionario
         );
 
-    }
+        // Retorno uma mensagem de sucesso.
+        return res.status(200).json({
+            mensagem: 'Funcionário excluído com sucesso.'
+        });
 
+    } catch (erro) {
+        // Se ocorrer algum erro, eu o trato.
+        return responderErroInterno(
+            res,
+            'Erro ao excluir funcionário:',
+            erro
+        );
+    }
 }

@@ -10,26 +10,17 @@
         <a href="/dashboard" class="flex items-center gap-3">
 
             <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
-
-                <i data-lucide="shield-plus" class="h-7 w-7">
-                </i>
-
+                <i data-lucide="shield-plus" class="h-7 w-7"></i>
             </div>
 
             <div>
-
                 <span class="block text-xl font-bold tracking-wide">
-
                     Nexa Logos
-
                 </span>
 
                 <span class="block text-xs text-blue-200">
-
                     Sistema Ambulatorial
-
                 </span>
-
             </div>
 
         </a>
@@ -39,8 +30,7 @@
             class="flex h-10 w-10 items-center justify-center rounded-lg text-blue-200 transition-all hover:bg-white/10 hover:text-white md:hidden"
             aria-label="Fechar menu">
 
-            <i data-lucide="x" class="h-5 w-5">
-            </i>
+            <i data-lucide="x" class="h-5 w-5"></i>
 
         </button>
 
@@ -50,17 +40,14 @@
     <nav class="flex-1 space-y-2 overflow-y-auto p-4">
 
         <p class="mb-3 px-4 text-xs font-bold uppercase tracking-wider text-blue-300">
-
             Navegação
-
         </p>
 
 
         <a href="/dashboard" data-menu="dashboard"
             class="item-menu-sidebar flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-blue-100 transition-all hover:bg-blue-800/60 hover:text-white">
 
-            <i data-lucide="layout-dashboard" class="h-5 w-5 shrink-0">
-            </i>
+            <i data-lucide="layout-dashboard" class="h-5 w-5 shrink-0"></i>
 
             <span>
                 Dashboard
@@ -72,8 +59,7 @@
         <a href="/consultar-paciente" data-menu="funcionarios"
             class="item-menu-sidebar flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-blue-100 transition-all hover:bg-blue-800/60 hover:text-white">
 
-            <i data-lucide="users" class="h-5 w-5 shrink-0">
-            </i>
+            <i data-lucide="users" class="h-5 w-5 shrink-0"></i>
 
             <span>
                 Funcionários
@@ -82,31 +68,23 @@
         </a>
 
 
-        <div class="my-4 border-t border-blue-800/60">
-        </div>
+        <div class="my-4 border-t border-blue-800/60"></div>
 
 
         <div class="rounded-xl border border-blue-700/50 bg-blue-900/30 p-4">
 
             <div class="flex items-start gap-3">
 
-                <i data-lucide="heart-pulse" class="mt-0.5 h-5 w-5 shrink-0 text-blue-200">
-                </i>
+                <i data-lucide="heart-pulse" class="mt-0.5 h-5 w-5 shrink-0 text-blue-200"></i>
 
                 <div>
-
                     <p class="text-sm font-semibold text-white">
-
                         Ambulatório
-
                     </p>
 
                     <p class="mt-1 text-xs leading-relaxed text-blue-200">
-
-                        Gerencie funcionários, alertas médicos e atendimentos.
-
+                        Gerencie funcionários, comunicados médicos e atendimentos.
                     </p>
-
                 </div>
 
             </div>
@@ -118,11 +96,10 @@
 
     <div class="border-t border-blue-800/60 p-4">
 
-        <button type="button" onclick="fazerLogout()"
+        <button type="button" id="botao-logout-sidebar"
             class="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-semibold text-red-300 transition-all hover:bg-red-500/20 hover:text-red-200">
 
-            <i data-lucide="log-out" class="h-5 w-5">
-            </i>
+            <i data-lucide="log-out" class="h-5 w-5"></i>
 
             <span>
                 Sair do sistema
@@ -139,40 +116,31 @@
     class="fixed bottom-5 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-azulEscuro text-white shadow-xl transition-all hover:bg-blue-800 md:hidden"
     aria-label="Abrir menu">
 
-    <i data-lucide="menu" class="h-6 w-6">
-    </i>
+    <i data-lucide="menu" class="h-6 w-6"></i>
 
 </button>
 
 
 <script>
-
     function obterSidebar() {
-
         return document.getElementById(
             'sidebar-principal'
         );
-
     }
 
 
     function obterBackdropSidebar() {
-
         return document.getElementById(
             'sidebar-backdrop'
         );
-
     }
 
 
     function abrirSidebar() {
-
         const sidebar = obterSidebar();
-
         const backdrop = obterBackdropSidebar();
 
         if (sidebar) {
-
             sidebar.classList.remove(
                 '-translate-x-full'
             );
@@ -180,32 +148,25 @@
             sidebar.classList.add(
                 'translate-x-0'
             );
-
         }
 
         if (backdrop) {
-
             backdrop.classList.remove(
                 'hidden'
             );
-
         }
 
         document.body.classList.add(
             'overflow-hidden'
         );
-
     }
 
 
     function fecharSidebar() {
-
         const sidebar = obterSidebar();
-
         const backdrop = obterBackdropSidebar();
 
         if (sidebar) {
-
             sidebar.classList.remove(
                 'translate-x-0'
             );
@@ -213,144 +174,141 @@
             sidebar.classList.add(
                 '-translate-x-full'
             );
-
         }
 
         if (backdrop) {
-
             backdrop.classList.add(
                 'hidden'
             );
-
         }
 
         document.body.classList.remove(
             'overflow-hidden'
         );
-
     }
 
 
-    function fazerLogout() {
-
-        localStorage.removeItem(
-            'token'
+    async function executarLogoutSidebar() {
+        const botaoLogout = document.getElementById(
+            'botao-logout-sidebar'
         );
 
-        window.location.href = '/login';
+        if (botaoLogout) {
+            botaoLogout.disabled = true;
 
+            botaoLogout.classList.add(
+                'opacity-70',
+                'cursor-not-allowed'
+            );
+        }
+
+        if (
+            window.AuthSession &&
+            typeof window.AuthSession.fazerLogout === 'function'
+        ) {
+            await window.AuthSession.fazerLogout();
+            return;
+        }
+
+        console.error(
+            'O módulo de autenticação não foi carregado.'
+        );
+
+        window.location.replace('/login');
     }
-
-
-    window.abrirSidebar = abrirSidebar;
-
-    window.fecharSidebar = fecharSidebar;
-
-    window.fazerLogout = fazerLogout;
 
 
     function itemMenuEstaAtivo(tipoMenu, caminhoAtual) {
-
         if (tipoMenu === 'dashboard') {
-
-            if (caminhoAtual === '/dashboard') {
-
-                return true;
-
-            }
-
+            return caminhoAtual === '/dashboard';
         }
 
         if (tipoMenu === 'funcionarios') {
-
             if (caminhoAtual === '/consultar-paciente') {
-
                 return true;
-
             }
 
             if (caminhoAtual === '/ficha-paciente') {
-
                 return true;
-
             }
 
+            if (caminhoAtual === '/funcionarios') {
+                return true;
+            }
+
+            if (caminhoAtual.startsWith('/funcionarios/')) {
+                return true;
+            }
         }
 
         return false;
-
     }
 
 
     function destacarMenuAtual() {
-
         const caminhoAtual = window.location.pathname;
 
         const itensMenu = document.querySelectorAll(
             '.item-menu-sidebar'
         );
 
-        itensMenu.forEach(
-            function (item) {
+        itensMenu.forEach(function (item) {
+            const tipoMenu = item.getAttribute(
+                'data-menu'
+            );
 
-                const tipoMenu = item.getAttribute(
-                    'data-menu'
+            const menuAtivo = itemMenuEstaAtivo(
+                tipoMenu,
+                caminhoAtual
+            );
+
+            if (menuAtivo) {
+                item.classList.remove(
+                    'text-blue-100'
                 );
 
-                const menuAtivo = itemMenuEstaAtivo(
-                    tipoMenu,
-                    caminhoAtual
+                item.classList.add(
+                    'bg-blue-800',
+                    'text-white',
+                    'shadow-inner'
                 );
 
-                if (menuAtivo) {
+                item.setAttribute(
+                    'aria-current',
+                    'page'
+                );
 
-                    item.classList.remove(
-                        'text-blue-100'
-                    );
-
-                    item.classList.add(
-                        'bg-blue-800',
-                        'text-white',
-                        'shadow-inner'
-                    );
-
-                    item.setAttribute(
-                        'aria-current',
-                        'page'
-                    );
-
-                } else {
-
-                    item.classList.remove(
-                        'bg-blue-800',
-                        'text-white',
-                        'shadow-inner'
-                    );
-
-                    item.classList.add(
-                        'text-blue-100'
-                    );
-
-                    item.removeAttribute(
-                        'aria-current'
-                    );
-
-                }
-
+                return;
             }
-        );
 
+            item.classList.remove(
+                'bg-blue-800',
+                'text-white',
+                'shadow-inner'
+            );
+
+            item.classList.add(
+                'text-blue-100'
+            );
+
+            item.removeAttribute(
+                'aria-current'
+            );
+        });
     }
 
 
     function configurarEventosSidebar() {
-
         const botaoAbrir = document.getElementById(
             'botao-abrir-sidebar'
         );
 
         const botaoFechar = document.getElementById(
             'botao-fechar-sidebar'
+        );
+
+        const botaoLogout = document.getElementById(
+            'botao-logout-sidebar'
         );
 
         const backdrop = obterBackdropSidebar();
@@ -360,107 +318,85 @@
         );
 
         if (botaoAbrir) {
-
             botaoAbrir.addEventListener(
                 'click',
                 abrirSidebar
             );
-
         }
 
         if (botaoFechar) {
-
             botaoFechar.addEventListener(
                 'click',
                 fecharSidebar
             );
+        }
 
+        if (botaoLogout) {
+            botaoLogout.addEventListener(
+                'click',
+                executarLogoutSidebar
+            );
         }
 
         if (backdrop) {
-
             backdrop.addEventListener(
                 'click',
                 fecharSidebar
             );
-
         }
 
-        itensMenu.forEach(
-            function (item) {
-
-                item.addEventListener(
-                    'click',
-                    function () {
-
-                        if (window.innerWidth < 768) {
-
-                            fecharSidebar();
-
-                        }
-
+        itensMenu.forEach(function (item) {
+            item.addEventListener(
+                'click',
+                function () {
+                    if (window.innerWidth < 768) {
+                        fecharSidebar();
                     }
-                );
-
-            }
-        );
+                }
+            );
+        });
 
         document.addEventListener(
             'keydown',
             function (evento) {
-
                 if (evento.key === 'Escape') {
-
                     fecharSidebar();
-
                 }
-
             }
         );
 
         window.addEventListener(
             'resize',
             function () {
-
-                if (window.innerWidth >= 768) {
-
-                    const backdropAtual = obterBackdropSidebar();
-
-                    document.body.classList.remove(
-                        'overflow-hidden'
-                    );
-
-                    if (backdropAtual) {
-
-                        backdropAtual.classList.add(
-                            'hidden'
-                        );
-
-                    }
-
+                if (window.innerWidth < 768) {
+                    return;
                 }
 
+                const backdropAtual = obterBackdropSidebar();
+
+                document.body.classList.remove(
+                    'overflow-hidden'
+                );
+
+                if (backdropAtual) {
+                    backdropAtual.classList.add(
+                        'hidden'
+                    );
+                }
             }
         );
-
     }
 
 
     document.addEventListener(
         'DOMContentLoaded',
         function () {
-
             destacarMenuAtual();
-
             configurarEventosSidebar();
 
             if (window.lucide) {
-
                 window.lucide.createIcons();
-
             }
-
         }
     );
-
 </script>

@@ -1,7 +1,7 @@
 {
   "name": "system-amb",
-  "version": "1.0.0",
-  "description": "sistema de ambulatório básico",
+  "version": "1.1.0",
+  "description": "Sistema de gerenciamento ambulatorial",
   "homepage": "https://github.com/nathan-santoss/System-AMB#readme",
   "bugs": {
     "url": "https://github.com/nathan-santoss/System-AMB/issues"
@@ -14,16 +14,21 @@
   "author": "nathan-santos",
   "type": "module",
   "main": "server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "check": "node --check server.js && node --check src/controllers/authController.js && node --check src/middlewares/authMiddleware.js && node --check src/routes/authRoutes.js && node --check src/config/masterUser.js",
+    "test": "npm run check"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.6.0",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.22.3",
     "sequelize": "^6.37.8"

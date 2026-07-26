@@ -5,10 +5,13 @@ import {
     buscarFuncionarios,
     atualizarFuncionario,
     deletarFuncionario,
-    buscarFuncionarioPorMatricula
+    buscarFuncionarioPorMatricula,
+    buscarPerfilFuncionario
 } from '../controllers/funcionarioController.js';
 
-import { verificarToken } from '../middlewares/authMiddleware.js';
+import {
+    verificarToken
+} from '../middlewares/authMiddleware.js';
 
 
 const router = express.Router();
@@ -29,6 +32,17 @@ router.get(
     '/',
     verificarToken,
     buscarFuncionarios
+);
+
+
+// Buscar perfil ambulatorial consolidado do funcionário
+// GET /api/funcionarios/:matricula/perfil
+//
+// Esta rota deve permanecer antes de "/:matricula".
+router.get(
+    '/:matricula/perfil',
+    verificarToken,
+    buscarPerfilFuncionario
 );
 
 
