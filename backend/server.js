@@ -20,7 +20,7 @@ import atendimentoRoutes from './src/routes/atendimentoRoutes.js';
 
 const app = express();
 
-const __filename = fileURLToString(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let porta = 3000;
@@ -30,20 +30,27 @@ if (process.env.PORT) {
 }
 
 
+// configurações
+
 app.disable('x-powered-by');
 
 app.set('view engine', 'ejs');
+
 app.set(
     'views',
     path.join(__dirname, '..', 'frontend', 'views')
 );
 
 
+// middlewares
+
 app.use(express.json());
 
-app.use(express.urlencoded({
-    extended: true
-}));
+app.use(
+    express.urlencoded({
+        extended: true
+    })
+);
 
 app.use(
     express.static(
@@ -54,56 +61,81 @@ app.use(
 
 // páginas
 
-app.get('/', (req, res) => res.redirect('/login'));
+app.get('/', (req, res) => {
+    res.redirect('/login');
+});
 
-app.get('/login', (req, res) => res.render('login'));
+app.get('/login', (req, res) => {
+    res.render('login');
+});
 
-app.get('/dashboard', (req, res) => res.render('dashboard'));
+app.get('/dashboard', (req, res) => {
+    res.render('dashboard');
+});
 
-app.get('/consultar-paciente', (req, res) =>
-    res.render('consultar-paciente')
-);
+app.get('/consultar-paciente', (req, res) => {
+    res.render('consultar-paciente');
+});
 
-app.get('/ficha-paciente', (req, res) =>
-    res.render('ficha-paciente')
-);
+app.get('/ficha-paciente', (req, res) => {
+    res.render('ficha-paciente');
+});
 
 
 // APIs
 
 app.use('/api/auth', authRoutes);
 
-app.use('/api/funcionarios', funcionarioRoutes);
+app.use(
+    '/api/funcionarios',
+    funcionarioRoutes
+);
 
-app.use('/api/alergias', alergiaRoutes);
+app.use(
+    '/api/alergias',
+    alergiaRoutes
+);
 
-app.use('/api/atendimentos', atendimentoRoutes);
+app.use(
+    '/api/atendimentos',
+    atendimentoRoutes
+);
 
 
-// erros
+// erros de rota
 
 app.use('/api', (req, res) => {
+
     res.status(404).json({
         message: 'Rota não encontrada.'
     });
+
 });
 
+
 app.use((req, res) => {
+
     res.status(404).send(
         'Página não encontrada.'
     );
+
 });
 
+
+// erro geral
+
 app.use((erro, req, res, next) => {
+
     console.error(erro);
 
     res.status(500).json({
         message: 'Erro interno do servidor.'
     });
+
 });
 
 
-// iniciar
+// iniciar servidor
 
 const iniciarServidor = async () => {
 
@@ -113,11 +145,14 @@ const iniciarServidor = async () => {
 
         await criarUsuarioMaster();
 
-        app.listen(porta, () => {
-            console.log(
-                `Servidor rodando na porta ${porta}`
-            );
-        });
+        app.listen(
+            porta,
+            () => {
+                console.log(
+                    `Servidor rodando na porta ${porta}`
+                );
+            }
+        );
 
     } catch (erro) {
 
