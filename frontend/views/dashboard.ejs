@@ -2,111 +2,102 @@
 <html lang="pt-BR">
 
 <head>
+
     <%- include('partials/head') %>
 
-        <title>Dashboard - Sistema de Ambulatório</title>
+        <title>
+            Dashboard - Sistema de Ambulatório
+        </title>
+
 </head>
 
-<body class="bg-gray-100 text-slate-700 flex min-h-screen">
+<body class="flex min-h-screen bg-slate-100 text-slate-700">
 
     <%- include('partials/sidebar') %>
 
-        <main class="flex-1 w-full overflow-y-auto">
+        <main class="min-w-0 flex-1 overflow-y-auto">
 
             <div class="p-4 sm:p-6 lg:p-8">
 
-                <header class="flex flex-col gap-5 mb-8 lg:flex-row lg:items-center lg:justify-between">
+                <header class="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
-                    <div>
+                    <div class="flex items-center gap-3">
 
-                        <div class="flex items-center gap-3">
+                        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100"
+                            aria-hidden="true">
 
-                            <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                            <i data-lucide="layout-dashboard" class="h-7 w-7 text-azulEscuro">
+                            </i>
 
-                                <i data-lucide="layout-dashboard" class="w-7 h-7 text-azulEscuro">
-                                </i>
+                        </div>
 
-                            </div>
+                        <div>
 
-                            <div>
+                            <h1 class="text-2xl font-bold text-slate-800 sm:text-3xl">
 
-                                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
+                                Painel do Ambulatório
 
-                                    Painel do Ambulatório
+                            </h1>
 
-                                </h1>
+                            <p class="mt-1 text-sm text-slate-500">
 
-                                <p class="text-sm text-slate-500 mt-1">
+                                Resumo dos atendimentos e atividades do sistema.
 
-                                    Resumo dos atendimentos e atividades do sistema.
-
-                                </p>
-
-                            </div>
+                            </p>
 
                         </div>
 
                     </div>
 
-                    <div class="flex flex-col gap-3 sm:flex-row">
+                    <button type="button" id="botao-atualizar-dashboard"
+                        class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto">
 
-                        <button type="button" id="botao-atualizar-dashboard"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold px-5 py-3 rounded-xl shadow-sm transition-all">
+                        <i data-lucide="refresh-cw" class="h-5 w-5" aria-hidden="true">
+                        </i>
 
-                            <i data-lucide="refresh-cw" class="w-5 h-5">
-                            </i>
-
+                        <span id="texto-botao-atualizar-dashboard">
                             Atualizar painel
+                        </span>
 
-                        </button>
-
-                        <button type="button" onclick="abrirModalUsuario()"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-azulEscuro hover:bg-blue-800 text-white font-bold px-5 py-3 rounded-xl shadow-md transition-all">
-
-                            <i data-lucide="user-plus" class="w-5 h-5">
-                            </i>
-
-                            Cadastrar usuário
-
-                        </button>
-
-                    </div>
+                    </button>
 
                 </header>
 
+                <section class="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4"
+                    aria-label="Indicadores de atendimentos do dia">
 
-                <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
-
-                    <article class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6">
+                    <article class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
 
                         <div class="flex items-start justify-between gap-4">
 
                             <div>
 
-                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">
 
                                     Atendimentos hoje
 
                                 </p>
 
-                                <h2 id="contador-hoje" class="text-4xl font-bold text-azulEscuro mt-3">
+                                <p id="contador-hoje" class="mt-3 text-4xl font-bold text-azulEscuro"
+                                    aria-live="polite">
 
                                     0
 
-                                </h2>
+                                </p>
 
                             </div>
 
-                            <div class="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100"
+                                aria-hidden="true">
 
-                                <i data-lucide="stethoscope" class="w-6 h-6 text-azulEscuro">
+                                <i data-lucide="stethoscope" class="h-6 w-6 text-azulEscuro">
                                 </i>
 
                             </div>
 
                         </div>
 
-                        <p class="text-xs text-slate-400 mt-4">
+                        <p class="mt-4 text-xs text-slate-400">
 
                             Registros realizados desde o início do dia.
 
@@ -114,37 +105,37 @@
 
                     </article>
 
-
-                    <article class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6">
+                    <article class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
 
                         <div class="flex items-start justify-between gap-4">
 
                             <div>
 
-                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">
 
                                     Gravidade baixa
 
                                 </p>
 
-                                <h2 id="count-normal" class="text-4xl font-bold text-green-600 mt-3">
+                                <p id="count-normal" class="mt-3 text-4xl font-bold text-green-600" aria-live="polite">
 
                                     0
 
-                                </h2>
+                                </p>
 
                             </div>
 
-                            <div class="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-100"
+                                aria-hidden="true">
 
-                                <i data-lucide="circle-check-big" class="w-6 h-6 text-green-600">
+                                <i data-lucide="circle-check-big" class="h-6 w-6 text-green-600">
                                 </i>
 
                             </div>
 
                         </div>
 
-                        <p class="text-xs text-slate-400 mt-4">
+                        <p class="mt-4 text-xs text-slate-400">
 
                             Atendimentos classificados como baixa gravidade.
 
@@ -152,37 +143,37 @@
 
                     </article>
 
-
-                    <article class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6">
+                    <article class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
 
                         <div class="flex items-start justify-between gap-4">
 
                             <div>
 
-                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">
 
                                     Gravidade média
 
                                 </p>
 
-                                <h2 id="count-medio" class="text-4xl font-bold text-yellow-600 mt-3">
+                                <p id="count-medio" class="mt-3 text-4xl font-bold text-yellow-600" aria-live="polite">
 
                                     0
 
-                                </h2>
+                                </p>
 
                             </div>
 
-                            <div class="w-11 h-11 rounded-xl bg-yellow-100 flex items-center justify-center">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-yellow-100"
+                                aria-hidden="true">
 
-                                <i data-lucide="triangle-alert" class="w-6 h-6 text-yellow-600">
+                                <i data-lucide="triangle-alert" class="h-6 w-6 text-yellow-600">
                                 </i>
 
                             </div>
 
                         </div>
 
-                        <p class="text-xs text-slate-400 mt-4">
+                        <p class="mt-4 text-xs text-slate-400">
 
                             Atendimentos classificados como média gravidade.
 
@@ -190,37 +181,37 @@
 
                     </article>
 
-
-                    <article class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6">
+                    <article class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
 
                         <div class="flex items-start justify-between gap-4">
 
                             <div>
 
-                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">
 
                                     Gravidade alta
 
                                 </p>
 
-                                <h2 id="count-grave" class="text-4xl font-bold text-red-600 mt-3">
+                                <p id="count-grave" class="mt-3 text-4xl font-bold text-red-600" aria-live="polite">
 
                                     0
 
-                                </h2>
+                                </p>
 
                             </div>
 
-                            <div class="w-11 h-11 rounded-xl bg-red-100 flex items-center justify-center">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-100"
+                                aria-hidden="true">
 
-                                <i data-lucide="siren" class="w-6 h-6 text-red-600">
+                                <i data-lucide="siren" class="h-6 w-6 text-red-600">
                                 </i>
 
                             </div>
 
                         </div>
 
-                        <p class="text-xs text-slate-400 mt-4">
+                        <p class="mt-4 text-xs text-slate-400">
 
                             Atendimentos classificados como alta gravidade.
 
@@ -230,26 +221,26 @@
 
                 </section>
 
+                <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-                <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <article
+                        class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm lg:col-span-2">
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden lg:col-span-2">
-
-                        <div
-                            class="px-5 sm:px-6 py-5 border-b border-slate-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <header
+                            class="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
 
                             <div>
 
-                                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <h2 class="flex items-center gap-2 text-lg font-bold text-slate-800">
 
-                                    <i data-lucide="clock-3" class="w-5 h-5 text-azulEscuro">
+                                    <i data-lucide="clock-3" class="h-5 w-5 text-azulEscuro" aria-hidden="true">
                                     </i>
 
                                     Últimos atendimentos
 
                                 </h2>
 
-                                <p class="text-sm text-slate-500 mt-1">
+                                <p class="mt-1 text-sm text-slate-500">
 
                                     Registros mais recentes realizados no ambulatório.
 
@@ -258,45 +249,45 @@
                             </div>
 
                             <a href="/consultar-paciente"
-                                class="inline-flex items-center justify-center gap-2 text-azulEscuro hover:bg-blue-50 font-semibold px-4 py-2 rounded-lg transition-all">
+                                class="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold text-azulEscuro transition-all hover:bg-blue-50">
 
-                                <i data-lucide="plus" class="w-4 h-4">
+                                <i data-lucide="users" class="h-4 w-4" aria-hidden="true">
                                 </i>
 
-                                Novo atendimento
+                                Consultar funcionários
 
                             </a>
 
-                        </div>
+                        </header>
 
-                        <div class="overflow-x-auto">
+                        <div class="table-container">
 
                             <table class="w-full min-w-[760px] text-left">
 
                                 <thead>
 
                                     <tr
-                                        class="bg-slate-50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500">
+                                        class="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
 
-                                        <th class="py-4 px-6 font-semibold">
+                                        <th scope="col" class="px-6 py-4 font-semibold">
 
                                             Funcionário
 
                                         </th>
 
-                                        <th class="py-4 px-6 font-semibold">
+                                        <th scope="col" class="px-6 py-4 font-semibold">
 
                                             Queixa
 
                                         </th>
 
-                                        <th class="py-4 px-6 font-semibold text-center">
+                                        <th scope="col" class="px-6 py-4 text-center font-semibold">
 
                                             Gravidade
 
                                         </th>
 
-                                        <th class="py-4 px-6 font-semibold text-center">
+                                        <th scope="col" class="px-6 py-4 text-center font-semibold">
 
                                             Data e hora
 
@@ -306,14 +297,15 @@
 
                                 </thead>
 
-                                <tbody id="lista-ultimos-atendimentos" class="divide-y divide-slate-100">
+                                <tbody id="lista-ultimos-atendimentos" class="divide-y divide-slate-100"
+                                    aria-live="polite">
 
                                     <tr>
 
-                                        <td colspan="4" class="py-12 px-6 text-center text-slate-400">
+                                        <td colspan="4" class="px-6 py-12 text-center text-slate-400">
 
                                             <i data-lucide="loader-circle"
-                                                class="w-9 h-9 mx-auto mb-3 animate-spin opacity-60">
+                                                class="mx-auto mb-3 h-9 w-9 animate-spin opacity-60" aria-hidden="true">
                                             </i>
 
                                             <p>
@@ -330,35 +322,35 @@
 
                         </div>
 
-                    </div>
+                    </article>
 
+                    <article class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                        <header class="border-b border-slate-100 px-5 py-5 sm:px-6">
 
-                        <div class="px-5 sm:px-6 py-5 border-b border-slate-100">
+                            <h2 class="flex items-center gap-2 text-lg font-bold text-slate-800">
 
-                            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-
-                                <i data-lucide="chart-no-axes-column-increasing" class="w-5 h-5 text-azulEscuro">
+                                <i data-lucide="chart-no-axes-column-increasing" class="h-5 w-5 text-azulEscuro"
+                                    aria-hidden="true">
                                 </i>
 
                                 Ranking de setores
 
                             </h2>
 
-                            <p class="text-sm text-slate-500 mt-1">
+                            <p class="mt-1 text-sm text-slate-500">
 
                                 Setores com mais atendimentos no mês.
 
                             </p>
 
-                        </div>
+                        </header>
 
-                        <div id="lista-setores" class="p-5 sm:p-6 space-y-3">
+                        <div id="lista-setores" class="space-y-3 p-5 sm:p-6" aria-live="polite">
 
-                            <div class="text-slate-400 flex items-center justify-center gap-2 py-6">
+                            <div class="flex items-center justify-center gap-2 py-6 text-slate-400">
 
-                                <i data-lucide="loader-circle" class="w-5 h-5 animate-spin">
+                                <i data-lucide="loader-circle" class="h-5 w-5 animate-spin" aria-hidden="true">
                                 </i>
 
                                 <span class="text-sm">
@@ -369,7 +361,7 @@
 
                         </div>
 
-                    </div>
+                    </article>
 
                 </section>
 
@@ -377,181 +369,9 @@
 
         </main>
 
-
-        <div id="modal-cadastrar-usuario"
-            class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog"
-            aria-modal="true" aria-labelledby="titulo-modal-usuario">
-
-            <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-
-                <div class="flex justify-between items-center px-6 py-5 border-b border-slate-100">
-
-                    <div>
-
-                        <h2 id="titulo-modal-usuario" class="text-xl font-bold text-azulEscuro flex items-center gap-2">
-
-                            <i data-lucide="user-plus" class="w-6 h-6">
-                            </i>
-
-                            Cadastrar usuário
-
-                        </h2>
-
-                        <p class="text-sm text-slate-500 mt-1">
-
-                            Crie um novo acesso para o sistema.
-
-                        </p>
-
-                    </div>
-
-                    <button type="button" onclick="fecharModalUsuario()"
-                        class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
-                        aria-label="Fechar modal">
-
-                        <i data-lucide="x" class="w-5 h-5">
-                        </i>
-
-                    </button>
-
-                </div>
-
-                <form id="form-cadastrar-usuario" class="p-6 space-y-5">
-
-                    <div>
-
-                        <label for="usuario-email" class="block text-sm font-semibold text-slate-700 mb-1">
-
-                            E-mail
-
-                            <span class="text-red-600">
-                                *
-                            </span>
-
-                        </label>
-
-                        <div class="relative">
-
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-
-                                <i data-lucide="mail" class="w-5 h-5 text-slate-400">
-                                </i>
-
-                            </div>
-
-                            <input type="email" id="usuario-email" maxlength="150" autocomplete="off" required
-                                placeholder="usuario@empresa.com"
-                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
-
-                        </div>
-
-                    </div>
-
-
-                    <div>
-
-                        <label for="usuario-senha" class="block text-sm font-semibold text-slate-700 mb-1">
-
-                            Senha
-
-                            <span class="text-red-600">
-                                *
-                            </span>
-
-                        </label>
-
-                        <div class="relative">
-
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-
-                                <i data-lucide="lock-keyhole" class="w-5 h-5 text-slate-400">
-                                </i>
-
-                            </div>
-
-                            <input type="password" id="usuario-senha" minlength="8" maxlength="255"
-                                autocomplete="new-password" required placeholder="Mínimo de 8 caracteres"
-                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
-
-                        </div>
-
-                    </div>
-
-
-                    <div>
-
-                        <label for="usuario-confirmar-senha" class="block text-sm font-semibold text-slate-700 mb-1">
-
-                            Confirmar senha
-
-                            <span class="text-red-600">
-                                *
-                            </span>
-
-                        </label>
-
-                        <div class="relative">
-
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-
-                                <i data-lucide="shield-check" class="w-5 h-5 text-slate-400">
-                                </i>
-
-                            </div>
-
-                            <input type="password" id="usuario-confirmar-senha" minlength="8" maxlength="255"
-                                autocomplete="new-password" required placeholder="Digite novamente a senha"
-                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
-
-                        <p class="text-sm text-blue-800 leading-relaxed">
-
-                            O novo usuário poderá acessar as funcionalidades protegidas do sistema utilizando o e-mail e
-                            a senha cadastrados.
-
-                        </p>
-
-                    </div>
-
-
-                    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-1">
-
-                        <button type="button" onclick="fecharModalUsuario()"
-                            class="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">
-
-                            Cancelar
-
-                        </button>
-
-                        <button type="submit" id="botao-salvar-usuario"
-                            class="px-5 py-3 rounded-xl bg-azulEscuro hover:bg-blue-800 text-white font-bold shadow-md transition-all flex items-center justify-center gap-2">
-
-                            <i data-lucide="save" class="w-5 h-5">
-                            </i>
-
-                            Salvar usuário
-
-                        </button>
-
-                    </div>
-
-                </form>
-
-            </div>
-
+        <div id="mensagem-dashboard" class="fixed right-5 top-5 z-[70] hidden max-w-sm rounded-xl px-5 py-4 shadow-xl"
+            role="alert" aria-live="assertive" aria-atomic="true">
         </div>
-
-
-        <div id="mensagem-dashboard" class="fixed top-5 right-5 z-[70] hidden max-w-sm rounded-xl shadow-xl px-5 py-4"
-            role="alert">
-        </div>
-
 
         <script src="/js/dashboard.js"></script>
 

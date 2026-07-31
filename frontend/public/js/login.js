@@ -1,40 +1,74 @@
 const LOGIN_BASE_URL = '/api/auth';
 
+let loginEmAndamento = false;
 
 function atualizarIcones() {
-    if (window.lucide) {
-        window.lucide.createIcons();
+    if (!window.lucide) {
+        return;
     }
-}
 
+    window.lucide.createIcons();
+}
 
 function authSessionEstaDisponivel() {
     if (!window.AuthSession) {
         return false;
     }
 
-    return typeof window.AuthSession.verificarSessaoNaTelaLogin === 'function';
-}
+    if (
+        typeof window.AuthSession
+            .verificarSessaoNaTelaLogin !==
+        'function'
+    ) {
+        return false;
+    }
 
+    return true;
+}
 
 function emailEhValido(email) {
     if (typeof email !== 'string') {
         return false;
     }
 
-    const emailNormalizado = email.trim();
+    const emailNormalizado =
+        email.trim();
 
-    if (emailNormalizado.length < 3 || emailNormalizado.length > 150) {
+    if (emailNormalizado.length < 3) {
         return false;
     }
 
-    const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailNormalizado.length > 150) {
+        return false;
+    }
 
-    return formatoEmail.test(emailNormalizado);
+    const formatoEmail =
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    return formatoEmail.test(
+        emailNormalizado
+    );
 }
 
+function senhaEhValida(senha) {
+    if (typeof senha !== 'string') {
+        return false;
+    }
 
-async function lerRespostaJson(resposta) {
+    if (senha.length < 8) {
+        return false;
+    }
+
+    if (senha.length > 255) {
+        return false;
+    }
+
+    return true;
+}
+
+async function lerRespostaJson(
+    resposta
+) {
     try {
         return await resposta.json();
     } catch (erro) {
@@ -42,19 +76,17 @@ async function lerRespostaJson(resposta) {
     }
 }
 
-
-function obterMensagemErro(dados, mensagemPadrao) {
+function obterMensagemErro(
+    dados,
+    mensagemPadrao
+) {
     if (dados) {
-        if (typeof dados.message === 'string') {
-            const mensagem = dados.message.trim();
-
-            if (mensagem.length > 0) {
-                return mensagem;
-            }
-        }
-
-        if (typeof dados.erro === 'string') {
-            const mensagem = dados.erro.trim();
+        if (
+            typeof dados.message ===
+            'string'
+        ) {
+            const mensagem =
+                dados.message.trim();
 
             if (mensagem.length > 0) {
                 return mensagem;
@@ -62,123 +94,240 @@ function obterMensagemErro(dados, mensagemPadrao) {
         }
 
         if (
-            Array.isArray(dados.detalhes) &&
-            dados.detalhes.length > 0
+            typeof dados.erro ===
+            'string'
         ) {
-            return dados.detalhes.join(' ');
+            const mensagem =
+                dados.erro.trim();
+
+            if (mensagem.length > 0) {
+                return mensagem;
+            }
+        }
+
+        if (
+            Array.isArray(
+                dados.detalhes
+            )
+        ) {
+            if (
+                dados.detalhes.length >
+                0
+            ) {
+                return dados.detalhes.join(
+                    ' '
+                );
+            }
         }
     }
 
     return mensagemPadrao;
 }
 
+function obterMensagemExcecao(
+    erro,
+    mensagemPadrao
+) {
+    if (!erro) {
+        return mensagemPadrao;
+    }
 
-function obterElementoMensagem() {
-    return document.getElementById('mensagem-login');
+    if (typeof erro !== 'object') {
+        return mensagemPadrao;
+    }
+
+    if (
+        typeof erro.message !==
+        'string'
+    ) {
+        return mensagemPadrao;
+    }
+
+    const mensagem =
+        erro.message.trim();
+
+    if (mensagem.length === 0) {
+        return mensagemPadrao;
+    }
+
+    return mensagem;
 }
 
+function obterElementoMensagem() {
+    return document.getElementById(
+        'mensagem-login'
+    );
+}
 
 function esconderMensagemLogin() {
-    const elemento = obterElementoMensagem();
+    const elemento =
+        obterElementoMensagem();
 
     if (!elemento) {
         return;
     }
 
-    elemento.classList.add('hidden');
+    elemento.classList.add(
+        'hidden'
+    );
+
     elemento.innerHTML = '';
 }
 
+function obterConfiguracaoMensagem(
+    tipo
+) {
+    const configuracao = {
+        classes:
+            'bg-blue-50 border-blue-200 text-blue-800',
 
-function mostrarMensagemLogin(mensagem, tipo) {
-    const elemento = obterElementoMensagem();
+        icone:
+            'info'
+    };
+
+    if (tipo === 'erro') {
+        configuracao.classes =
+            'bg-red-50 border-red-200 text-red-700';
+
+        configuracao.icone =
+            'circle-alert';
+
+        return configuracao;
+    }
+
+    if (tipo === 'sucesso') {
+        configuracao.classes =
+            'bg-green-50 border-green-200 text-green-700';
+
+        configuracao.icone =
+            'circle-check-big';
+
+        return configuracao;
+    }
+
+    if (tipo === 'aviso') {
+        configuracao.classes =
+            'bg-yellow-50 border-yellow-200 text-yellow-800';
+
+        configuracao.icone =
+            'triangle-alert';
+
+        return configuracao;
+    }
+
+    return configuracao;
+}
+
+function mostrarMensagemLogin(
+    mensagem,
+    tipo
+) {
+    const elemento =
+        obterElementoMensagem();
 
     if (!elemento) {
-        window.alert(mensagem);
+        window.alert(
+            mensagem
+        );
+
         return;
     }
+
+    const configuracao =
+        obterConfiguracaoMensagem(
+            tipo
+        );
 
     elemento.className =
         'mb-5 rounded-xl border px-4 py-3 text-sm flex items-start gap-3';
 
-    let classesTipo =
-        'bg-blue-50 border-blue-200 text-blue-800';
+    elemento.className +=
+        ' ' +
+        configuracao.classes;
 
-    let nomeIcone = 'info';
-
-    if (tipo === 'erro') {
-        classesTipo =
-            'bg-red-50 border-red-200 text-red-700';
-
-        nomeIcone = 'circle-alert';
-    }
-
-    if (tipo === 'sucesso') {
-        classesTipo =
-            'bg-green-50 border-green-200 text-green-700';
-
-        nomeIcone = 'circle-check-big';
-    }
-
-    if (tipo === 'aviso') {
-        classesTipo =
-            'bg-yellow-50 border-yellow-200 text-yellow-800';
-
-        nomeIcone = 'triangle-alert';
-    }
-
-    elemento.className += ' ' + classesTipo;
     elemento.innerHTML = '';
 
-    const icone = document.createElement('i');
+    const icone =
+        document.createElement(
+            'i'
+        );
 
     icone.setAttribute(
         'data-lucide',
-        nomeIcone
+        configuracao.icone
     );
 
-    icone.className = 'w-5 h-5 shrink-0 mt-0.5';
+    icone.className =
+        'w-5 h-5 shrink-0 mt-0.5';
 
-    const texto = document.createElement('p');
+    const texto =
+        document.createElement(
+            'p'
+        );
 
-    texto.className = 'font-medium leading-relaxed';
-    texto.textContent = mensagem;
+    texto.className =
+        'font-medium leading-relaxed';
 
-    elemento.appendChild(icone);
-    elemento.appendChild(texto);
-    elemento.classList.remove('hidden');
+    texto.textContent =
+        mensagem;
+
+    elemento.appendChild(
+        icone
+    );
+
+    elemento.appendChild(
+        texto
+    );
+
+    elemento.classList.remove(
+        'hidden'
+    );
 
     atualizarIcones();
 }
 
-
 function obterBotaoEntrar() {
-    const botao = document.getElementById('botao-entrar');
+    const botao =
+        document.getElementById(
+            'botao-entrar'
+        );
 
     if (botao) {
         return botao;
     }
 
-    const formulario = document.getElementById('loginForm');
+    const formulario =
+        document.getElementById(
+            'loginForm'
+        );
 
     if (!formulario) {
         return null;
     }
 
-    return formulario.querySelector('button[type="submit"]');
+    return formulario.querySelector(
+        'button[type="submit"]'
+    );
 }
 
-
-function definirBotaoCarregando(carregando) {
-    const botao = obterBotaoEntrar();
+function definirBotaoCarregando(
+    carregando
+) {
+    const botao =
+        obterBotaoEntrar();
 
     if (!botao) {
         return;
     }
 
     if (carregando) {
-        if (!botao.dataset.conteudoOriginal) {
-            botao.dataset.conteudoOriginal = botao.innerHTML;
+        if (
+            !botao.dataset
+                .conteudoOriginal
+        ) {
+            botao.dataset
+                .conteudoOriginal =
+                botao.innerHTML;
         }
 
         botao.disabled = true;
@@ -200,6 +349,7 @@ function definirBotaoCarregando(carregando) {
         `;
 
         atualizarIcones();
+
         return;
     }
 
@@ -210,45 +360,90 @@ function definirBotaoCarregando(carregando) {
         'cursor-not-allowed'
     );
 
-    if (botao.dataset.conteudoOriginal) {
-        botao.innerHTML = botao.dataset.conteudoOriginal;
+    if (
+        botao.dataset
+            .conteudoOriginal
+    ) {
+        botao.innerHTML =
+            botao.dataset
+                .conteudoOriginal;
     }
 
     atualizarIcones();
 }
 
+function obterConfiguracaoSenha(
+    senhaEstaVisivel
+) {
+    if (senhaEstaVisivel) {
+        return {
+            tipoCampo:
+                'password',
+
+            rotulo:
+                'Mostrar senha',
+
+            icone:
+                'eye'
+        };
+    }
+
+    return {
+        tipoCampo:
+            'text',
+
+        rotulo:
+            'Ocultar senha',
+
+        icone:
+            'eye-off'
+    };
+}
 
 function alternarVisibilidadeSenha() {
-    const campoSenha = document.getElementById('senha');
-    const botao = document.getElementById('botao-alternar-senha');
+    const campoSenha =
+        document.getElementById(
+            'senha'
+        );
 
-    if (!campoSenha || !botao) {
+    const botao =
+        document.getElementById(
+            'botao-alternar-senha'
+        );
+
+    if (!campoSenha) {
         return;
     }
 
-    const senhaEstaVisivel = campoSenha.type === 'text';
+    if (!botao) {
+        return;
+    }
 
-    campoSenha.type = senhaEstaVisivel
-        ? 'password'
-        : 'text';
+    const senhaEstaVisivel =
+        campoSenha.type ===
+        'text';
+
+    const configuracao =
+        obterConfiguracaoSenha(
+            senhaEstaVisivel
+        );
+
+    campoSenha.type =
+        configuracao.tipoCampo;
 
     botao.setAttribute(
         'aria-label',
-        senhaEstaVisivel
-            ? 'Mostrar senha'
-            : 'Ocultar senha'
+        configuracao.rotulo
     );
 
     botao.setAttribute(
         'title',
-        senhaEstaVisivel
-            ? 'Mostrar senha'
-            : 'Ocultar senha'
+        configuracao.rotulo
     );
 
     botao.innerHTML = `
         <i
-            data-lucide="${senhaEstaVisivel ? 'eye' : 'eye-off'}"
+            data-lucide="${configuracao.icone}"
             class="h-5 w-5">
         </i>
     `;
@@ -256,95 +451,168 @@ function alternarVisibilidadeSenha() {
     atualizarIcones();
 }
 
-
-async function realizarLogin(evento) {
-    evento.preventDefault();
-
-    esconderMensagemLogin();
-
-    const campoEmail = document.getElementById('email');
-    const campoSenha = document.getElementById('senha');
-
-    if (!campoEmail || !campoSenha) {
-        mostrarMensagemLogin(
-            'Não foi possível localizar os campos de acesso.',
-            'erro'
+function obterDadosFormulario() {
+    const campoEmail =
+        document.getElementById(
+            'email'
         );
 
-        return;
+    const campoSenha =
+        document.getElementById(
+            'senha'
+        );
+
+    if (!campoEmail) {
+        return {
+            erro:
+                'Não foi possível localizar o campo de e-mail.'
+        };
     }
 
-    const email = campoEmail.value
-        .trim()
-        .toLowerCase();
+    if (!campoSenha) {
+        return {
+            erro:
+                'Não foi possível localizar o campo de senha.'
+        };
+    }
 
-    const senha = campoSenha.value;
+    const email =
+        campoEmail.value
+            .trim()
+            .toLowerCase();
+
+    const senha =
+        campoSenha.value;
 
     if (!emailEhValido(email)) {
-        mostrarMensagemLogin(
-            'Informe um endereço de e-mail válido.',
-            'aviso'
-        );
+        return {
+            erro:
+                'Informe um endereço de e-mail válido.',
 
-        campoEmail.focus();
-        return;
+            campo:
+                campoEmail
+        };
     }
 
-    if (typeof senha !== 'string' || senha.length === 0) {
-        mostrarMensagemLogin(
-            'Informe a senha.',
-            'aviso'
-        );
+    if (!senhaEhValida(senha)) {
+        return {
+            erro:
+                'A senha deve possuir entre 8 e 255 caracteres.',
 
-        campoSenha.focus();
-        return;
+            campo:
+                campoSenha
+        };
     }
 
-    if (senha.length < 8 || senha.length > 255) {
-        mostrarMensagemLogin(
-            'A senha deve possuir entre 8 e 255 caracteres.',
-            'aviso'
-        );
+    return {
+        email,
+        senha
+    };
+}
 
-        campoSenha.focus();
-        return;
-    }
-
-    definirBotaoCarregando(true);
-
-    try {
-        const resposta = await fetch(
-            LOGIN_BASE_URL + '/login',
+async function enviarLogin(
+    email,
+    senha
+) {
+    const resposta =
+        await fetch(
+            LOGIN_BASE_URL +
+            '/login',
             {
                 method: 'POST',
+
                 headers: {
-                    'Content-Type': 'application/json'
+                    Accept:
+                        'application/json',
+
+                    'Content-Type':
+                        'application/json'
                 },
-                credentials: 'same-origin',
-                cache: 'no-store',
-                body: JSON.stringify({
-                    email,
-                    senha
-                })
+
+                credentials:
+                    'same-origin',
+
+                cache:
+                    'no-store',
+
+                body:
+                    JSON.stringify({
+                        email,
+                        senha
+                    })
             }
         );
 
-        const dados = await lerRespostaJson(resposta);
+    const dados =
+        await lerRespostaJson(
+            resposta
+        );
 
-        if (!resposta.ok) {
-            throw new Error(
-                obterMensagemErro(
-                    dados,
-                    'E-mail ou senha inválidos.'
-                )
-            );
+    if (!resposta.ok) {
+        throw new Error(
+            obterMensagemErro(
+                dados,
+                'E-mail ou senha inválidos.'
+            )
+        );
+    }
+
+    if (!dados.usuario) {
+        throw new Error(
+            'O servidor não retornou os dados da sessão.'
+        );
+    }
+
+    if (
+        !dados.usuario
+            .id_usuario
+    ) {
+        throw new Error(
+            'O servidor não retornou o identificador do usuário.'
+        );
+    }
+
+    return dados;
+}
+
+async function realizarLogin(
+    evento
+) {
+    evento.preventDefault();
+
+    if (loginEmAndamento) {
+        return;
+    }
+
+    esconderMensagemLogin();
+
+    const dadosFormulario =
+        obterDadosFormulario();
+
+    if (dadosFormulario.erro) {
+        mostrarMensagemLogin(
+            dadosFormulario.erro,
+            'aviso'
+        );
+
+        if (dadosFormulario.campo) {
+            dadosFormulario.campo.focus();
         }
 
-        if (!dados.usuario || !dados.usuario.id_usuario) {
-            throw new Error(
-                'O servidor não retornou os dados da sessão.'
-            );
-        }
+        return;
+    }
+
+    loginEmAndamento = true;
+
+    definirBotaoCarregando(
+        true
+    );
+
+    try {
+        await enviarLogin(
+            dadosFormulario.email,
+            dadosFormulario.senha
+        );
 
         mostrarMensagemLogin(
             'Login realizado com sucesso. Redirecionando...',
@@ -353,7 +621,9 @@ async function realizarLogin(evento) {
 
         window.setTimeout(
             function () {
-                window.location.replace('/dashboard');
+                window.location.replace(
+                    '/dashboard'
+                );
             },
             400
         );
@@ -364,20 +634,41 @@ async function realizarLogin(evento) {
         );
 
         mostrarMensagemLogin(
-            erro.message,
+            obterMensagemExcecao(
+                erro,
+                'Não foi possível realizar o login.'
+            ),
             'erro'
         );
-    } finally {
-        definirBotaoCarregando(false);
+
+        loginEmAndamento = false;
+
+        definirBotaoCarregando(
+            false
+        );
     }
 }
 
-
 function configurarEventos() {
-    const formulario = document.getElementById('loginForm');
-    const botaoAlternarSenha = document.getElementById('botao-alternar-senha');
-    const campoEmail = document.getElementById('email');
-    const campoSenha = document.getElementById('senha');
+    const formulario =
+        document.getElementById(
+            'loginForm'
+        );
+
+    const botaoAlternarSenha =
+        document.getElementById(
+            'botao-alternar-senha'
+        );
+
+    const campoEmail =
+        document.getElementById(
+            'email'
+        );
+
+    const campoSenha =
+        document.getElementById(
+            'senha'
+        );
 
     if (formulario) {
         formulario.addEventListener(
@@ -387,10 +678,11 @@ function configurarEventos() {
     }
 
     if (botaoAlternarSenha) {
-        botaoAlternarSenha.addEventListener(
-            'click',
-            alternarVisibilidadeSenha
-        );
+        botaoAlternarSenha
+            .addEventListener(
+                'click',
+                alternarVisibilidadeSenha
+            );
     }
 
     if (campoEmail) {
@@ -408,11 +700,17 @@ function configurarEventos() {
     }
 }
 
-
 async function verificarSessaoExistente() {
-    if (!authSessionEstaDisponivel()) {
+    if (
+        !authSessionEstaDisponivel()
+    ) {
         console.error(
             'O arquivo auth-session.js não foi carregado.'
+        );
+
+        mostrarMensagemLogin(
+            'Não foi possível inicializar a verificação de sessão.',
+            'erro'
         );
 
         return false;
@@ -424,15 +722,22 @@ async function verificarSessaoExistente() {
     );
 
     const resultadoSessao =
-        await window.AuthSession.verificarSessaoNaTelaLogin();
+        await window.AuthSession
+            .verificarSessaoNaTelaLogin();
 
-    if (resultadoSessao.autenticado) {
+    if (
+        resultadoSessao
+            .autenticado
+    ) {
         return true;
     }
 
     esconderMensagemLogin();
 
-    if (resultadoSessao.status === 0) {
+    if (
+        resultadoSessao.status ===
+        0
+    ) {
         mostrarMensagemLogin(
             resultadoSessao.mensagem,
             'erro'
@@ -442,27 +747,34 @@ async function verificarSessaoExistente() {
     return false;
 }
 
-
 async function inicializarLogin() {
     atualizarIcones();
     configurarEventos();
-    definirBotaoCarregando(true);
 
-    const sessaoExistente = await verificarSessaoExistente();
+    definirBotaoCarregando(
+        true
+    );
+
+    const sessaoExistente =
+        await verificarSessaoExistente();
 
     if (sessaoExistente) {
         return;
     }
 
-    definirBotaoCarregando(false);
+    definirBotaoCarregando(
+        false
+    );
 
-    const campoEmail = document.getElementById('email');
+    const campoEmail =
+        document.getElementById(
+            'email'
+        );
 
     if (campoEmail) {
         campoEmail.focus();
     }
 }
-
 
 document.addEventListener(
     'DOMContentLoaded',

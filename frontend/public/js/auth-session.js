@@ -2,19 +2,6 @@ const AUTH_BASE_URL = '/api/auth';
 
 let logoutEmAndamento = false;
 
-
-function limparTokenLegado() {
-    try {
-        localStorage.removeItem('token');
-    } catch (erro) {
-        console.warn(
-            'Não foi possível limpar o token legado do navegador.',
-            erro
-        );
-    }
-}
-
-
 async function lerRespostaJson(resposta) {
     try {
         return await resposta.json();
@@ -23,8 +10,10 @@ async function lerRespostaJson(resposta) {
     }
 }
 
-
-function obterMensagemResposta(dados, mensagemPadrao) {
+function obterMensagemResposta(
+    dados,
+    mensagemPadrao
+) {
     if (dados) {
         if (typeof dados.message === 'string') {
             const mensagem = dados.message.trim();
@@ -53,82 +42,132 @@ function obterMensagemResposta(dados, mensagemPadrao) {
     return mensagemPadrao;
 }
 
-
 function prepararOpcoesFetch(opcoes) {
     const configuracao = {};
 
-    if (opcoes && typeof opcoes === 'object') {
+    if (
+        opcoes &&
+        typeof opcoes === 'object' &&
+        !Array.isArray(opcoes)
+    ) {
         Object.assign(
             configuracao,
             opcoes
         );
     }
 
+    let cabecalhosRecebidos = {};
+
+    if (configuracao.headers) {
+        cabecalhosRecebidos =
+            configuracao.headers;
+    }
+
     configuracao.headers = new Headers(
-        configuracao.headers || {}
+        cabecalhosRecebidos
     );
 
-    configuracao.credentials = 'same-origin';
+    if (
+        !configuracao.headers.has(
+            'Accept'
+        )
+    ) {
+        configuracao.headers.set(
+            'Accept',
+            'application/json'
+        );
+    }
+
+    configuracao.credentials =
+        'same-origin';
 
     return configuracao;
 }
 
-
-function respostaNaoAutorizada(resposta) {
+function respostaNaoAutorizada(
+    resposta
+) {
     if (!resposta) {
         return false;
     }
 
-    return resposta.status === 401 || resposta.status === 403;
+    if (resposta.status === 401) {
+        return true;
+    }
+
+    if (resposta.status === 403) {
+        return true;
+    }
+
+    return false;
 }
 
-
-async function fetchAutenticado(url, opcoes) {
+async function fetchAutenticado(
+    url,
+    opcoes
+) {
     return fetch(
         url,
         prepararOpcoesFetch(opcoes)
     );
 }
 
-
 function redirecionarParaLogin() {
-    if (window.location.pathname === '/login') {
+    if (
+        window.location.pathname ===
+        '/login'
+    ) {
         return;
     }
 
-    window.location.replace('/login');
+    window.location.replace(
+        '/login'
+    );
 }
-
 
 function redirecionarParaDashboard() {
-    if (window.location.pathname === '/dashboard') {
+    if (
+        window.location.pathname ===
+        '/dashboard'
+    ) {
         return;
     }
 
-    window.location.replace('/dashboard');
+    window.location.replace(
+        '/dashboard'
+    );
 }
-
 
 async function verificarSessao() {
     try {
-        const resposta = await fetchAutenticado(
-            AUTH_BASE_URL + '/verificar',
-            {
-                method: 'GET',
-                cache: 'no-store'
-            }
-        );
+        const resposta =
+            await fetchAutenticado(
+                AUTH_BASE_URL +
+                '/verificar',
+                {
+                    method: 'GET',
+                    cache: 'no-store'
+                }
+            );
 
-        const dados = await lerRespostaJson(resposta);
+        const dados =
+            await lerRespostaJson(
+                resposta
+            );
 
-        if (respostaNaoAutorizada(resposta)) {
+        if (
+            respostaNaoAutorizada(
+                resposta
+            )
+        ) {
             return {
                 autenticado: false,
                 status: resposta.status,
-                mensagem: obterMensagemResposta(
-                    dados,
-                    'Sua sessão não está autenticada.'
-                )
+                mensagem:
+                    obterMensagemResposta(
+                        dados,
+                        'Sua sessão não está autenticada.'
+                    )
             };
         }
 
@@ -136,18 +175,22 @@ async function verificarSessao() {
             return {
                 autenticado: false,
                 status: resposta.status,
-                mensagem: obterMensagemResposta(
-                    dados,
-                    'Não foi possível verificar a sessão.'
-                )
+                mensagem:
+                    obterMensagemResposta(
+                        dados,
+                        'Não foi possível verificar a sessão.'
+                    )
             };
         }
 
-        if (!dados.autenticado) {
+        if (
+            dados.autenticado !== true
+        ) {
             return {
                 autenticado: false,
                 status: resposta.status,
-                mensagem: 'A sessão não está autenticada.'
+                mensagem:
+                    'A sessão não está autenticada.'
             };
         }
 
@@ -165,28 +208,31 @@ async function verificarSessao() {
         return {
             autenticado: false,
             status: 0,
-            mensagem: 'Não foi possível comunicar com o servidor.'
+            mensagem:
+                'Não foi possível comunicar com o servidor.'
         };
     }
 }
 
-
 async function exigirSessao() {
-    const resultado = await verificarSessao();
+    const resultado =
+        await verificarSessao();
 
-    if (
-        !resultado.autenticado &&
-        (resultado.status === 401 || resultado.status === 403)
-    ) {
-        redirecionarParaLogin();
+    if (!resultado.autenticado) {
+        if (
+            resultado.status === 401 ||
+            resultado.status === 403
+        ) {
+            redirecionarParaLogin();
+        }
     }
 
     return resultado;
 }
 
-
 async function verificarSessaoNaTelaLogin() {
-    const resultado = await verificarSessao();
+    const resultado =
+        await verificarSessao();
 
     if (resultado.autenticado) {
         redirecionarParaDashboard();
@@ -194,7 +240,6 @@ async function verificarSessaoNaTelaLogin() {
 
     return resultado;
 }
-
 
 async function fazerLogout() {
     if (logoutEmAndamento) {
@@ -205,7 +250,8 @@ async function fazerLogout() {
 
     try {
         await fetchAutenticado(
-            AUTH_BASE_URL + '/logout',
+            AUTH_BASE_URL +
+            '/logout',
             {
                 method: 'POST',
                 cache: 'no-store'
@@ -217,20 +263,16 @@ async function fazerLogout() {
             erro
         );
     } finally {
-        limparTokenLegado();
-        window.location.replace('/login');
+        window.location.replace(
+            '/login'
+        );
     }
 }
-
-
-limparTokenLegado();
-
 
 window.AuthSession = {
     fetchAutenticado,
     verificarSessao,
     exigirSessao,
     verificarSessaoNaTelaLogin,
-    fazerLogout,
-    removerTokenLegado: limparTokenLegado
+    fazerLogout
 };

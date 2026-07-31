@@ -1,19 +1,23 @@
-<div id="sidebar-backdrop" class="fixed inset-0 z-40 hidden bg-black/60 backdrop-blur-sm md:hidden">
+<div id="sidebar-backdrop" class="fixed inset-0 z-40 hidden bg-black/60 backdrop-blur-sm md:hidden" aria-hidden="true">
 </div>
 
-
 <aside id="sidebar-principal"
-    class="fixed inset-y-0 left-0 z-50 flex h-screen w-72 -translate-x-full flex-col bg-azulEscuro text-white shadow-2xl transition-transform duration-200 md:sticky md:top-0 md:z-auto md:w-64 md:translate-x-0">
+    class="fixed inset-y-0 left-0 z-50 flex h-screen w-72 -translate-x-full flex-col bg-azulEscuro text-white shadow-2xl transition-transform duration-200 md:sticky md:top-0 md:z-auto md:w-64 md:translate-x-0"
+    aria-label="Menu principal">
 
     <div class="flex items-center justify-between border-b border-blue-800/60 p-6">
 
-        <a href="/dashboard" class="flex items-center gap-3">
+        <a href="/dashboard" class="flex items-center gap-3" aria-label="Ir para o dashboard">
 
-            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
-                <i data-lucide="shield-plus" class="h-7 w-7"></i>
+            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10" aria-hidden="true">
+
+                <i data-lucide="shield-plus" class="h-7 w-7">
+                </i>
+
             </div>
 
             <div>
+
                 <span class="block text-xl font-bold tracking-wide">
                     Nexa Logos
                 </span>
@@ -21,21 +25,21 @@
                 <span class="block text-xs text-blue-200">
                     Sistema Ambulatorial
                 </span>
+
             </div>
 
         </a>
 
-
         <button type="button" id="botao-fechar-sidebar"
             class="flex h-10 w-10 items-center justify-center rounded-lg text-blue-200 transition-all hover:bg-white/10 hover:text-white md:hidden"
-            aria-label="Fechar menu">
+            aria-label="Fechar menu" aria-controls="sidebar-principal">
 
-            <i data-lucide="x" class="h-5 w-5"></i>
+            <i data-lucide="x" class="h-5 w-5" aria-hidden="true">
+            </i>
 
         </button>
 
     </div>
-
 
     <nav class="flex-1 space-y-2 overflow-y-auto p-4">
 
@@ -43,11 +47,11 @@
             Navegação
         </p>
 
-
         <a href="/dashboard" data-menu="dashboard"
             class="item-menu-sidebar flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-blue-100 transition-all hover:bg-blue-800/60 hover:text-white">
 
-            <i data-lucide="layout-dashboard" class="h-5 w-5 shrink-0"></i>
+            <i data-lucide="layout-dashboard" class="h-5 w-5 shrink-0" aria-hidden="true">
+            </i>
 
             <span>
                 Dashboard
@@ -55,11 +59,11 @@
 
         </a>
 
-
         <a href="/consultar-paciente" data-menu="funcionarios"
             class="item-menu-sidebar flex items-center gap-3 rounded-xl px-4 py-3 font-medium text-blue-100 transition-all hover:bg-blue-800/60 hover:text-white">
 
-            <i data-lucide="users" class="h-5 w-5 shrink-0"></i>
+            <i data-lucide="users" class="h-5 w-5 shrink-0" aria-hidden="true">
+            </i>
 
             <span>
                 Funcionários
@@ -67,24 +71,25 @@
 
         </a>
 
-
         <div class="my-4 border-t border-blue-800/60"></div>
-
 
         <div class="rounded-xl border border-blue-700/50 bg-blue-900/30 p-4">
 
             <div class="flex items-start gap-3">
 
-                <i data-lucide="heart-pulse" class="mt-0.5 h-5 w-5 shrink-0 text-blue-200"></i>
+                <i data-lucide="heart-pulse" class="mt-0.5 h-5 w-5 shrink-0 text-blue-200" aria-hidden="true">
+                </i>
 
                 <div>
+
                     <p class="text-sm font-semibold text-white">
                         Ambulatório
                     </p>
 
                     <p class="mt-1 text-xs leading-relaxed text-blue-200">
-                        Gerencie funcionários, comunicados médicos e atendimentos.
+                        Gerencie funcionários, alergias e atendimentos ambulatoriais.
                     </p>
+
                 </div>
 
             </div>
@@ -93,15 +98,15 @@
 
     </nav>
 
-
     <div class="border-t border-blue-800/60 p-4">
 
         <button type="button" id="botao-logout-sidebar"
-            class="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-semibold text-red-300 transition-all hover:bg-red-500/20 hover:text-red-200">
+            class="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-semibold text-red-300 transition-all hover:bg-red-500/20 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-70">
 
-            <i data-lucide="log-out" class="h-5 w-5"></i>
+            <i data-lucide="log-out" class="h-5 w-5" aria-hidden="true">
+            </i>
 
-            <span>
+            <span id="texto-logout-sidebar">
                 Sair do sistema
             </span>
 
@@ -111,23 +116,23 @@
 
 </aside>
 
-
 <button type="button" id="botao-abrir-sidebar"
     class="fixed bottom-5 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-azulEscuro text-white shadow-xl transition-all hover:bg-blue-800 md:hidden"
-    aria-label="Abrir menu">
+    aria-label="Abrir menu" aria-controls="sidebar-principal" aria-expanded="false">
 
-    <i data-lucide="menu" class="h-6 w-6"></i>
+    <i data-lucide="menu" class="h-6 w-6" aria-hidden="true">
+    </i>
 
 </button>
 
-
 <script>
+    let logoutSidebarEmAndamento = false;
+
     function obterSidebar() {
         return document.getElementById(
             'sidebar-principal'
         );
     }
-
 
     function obterBackdropSidebar() {
         return document.getElementById(
@@ -135,10 +140,56 @@
         );
     }
 
+    function obterBotaoAbrirSidebar() {
+        return document.getElementById(
+            'botao-abrir-sidebar'
+        );
+    }
+
+    function atualizarEstadoAcessibilidadeSidebar(
+        aberto
+    ) {
+        const botaoAbrir =
+            obterBotaoAbrirSidebar();
+
+        const backdrop =
+            obterBackdropSidebar();
+
+        if (botaoAbrir) {
+            if (aberto) {
+                botaoAbrir.setAttribute(
+                    'aria-expanded',
+                    'true'
+                );
+            } else {
+                botaoAbrir.setAttribute(
+                    'aria-expanded',
+                    'false'
+                );
+            }
+        }
+
+        if (backdrop) {
+            if (aberto) {
+                backdrop.setAttribute(
+                    'aria-hidden',
+                    'false'
+                );
+            } else {
+                backdrop.setAttribute(
+                    'aria-hidden',
+                    'true'
+                );
+            }
+        }
+    }
 
     function abrirSidebar() {
-        const sidebar = obterSidebar();
-        const backdrop = obterBackdropSidebar();
+        const sidebar =
+            obterSidebar();
+
+        const backdrop =
+            obterBackdropSidebar();
 
         if (sidebar) {
             sidebar.classList.remove(
@@ -159,12 +210,18 @@
         document.body.classList.add(
             'overflow-hidden'
         );
+
+        atualizarEstadoAcessibilidadeSidebar(
+            true
+        );
     }
 
-
     function fecharSidebar() {
-        const sidebar = obterSidebar();
-        const backdrop = obterBackdropSidebar();
+        const sidebar =
+            obterSidebar();
+
+        const backdrop =
+            obterBackdropSidebar();
 
         if (sidebar) {
             sidebar.classList.remove(
@@ -185,58 +242,109 @@
         document.body.classList.remove(
             'overflow-hidden'
         );
+
+        atualizarEstadoAcessibilidadeSidebar(
+            false
+        );
     }
 
+    function definirLogoutCarregando(
+        carregando
+    ) {
+        const botaoLogout =
+            document.getElementById(
+                'botao-logout-sidebar'
+            );
 
-    async function executarLogoutSidebar() {
-        const botaoLogout = document.getElementById(
-            'botao-logout-sidebar'
-        );
+        const textoLogout =
+            document.getElementById(
+                'texto-logout-sidebar'
+            );
 
         if (botaoLogout) {
-            botaoLogout.disabled = true;
-
-            botaoLogout.classList.add(
-                'opacity-70',
-                'cursor-not-allowed'
-            );
+            botaoLogout.disabled =
+                carregando;
         }
 
-        if (
-            window.AuthSession &&
-            typeof window.AuthSession.fazerLogout === 'function'
-        ) {
-            await window.AuthSession.fazerLogout();
+        if (!textoLogout) {
             return;
         }
 
-        console.error(
-            'O módulo de autenticação não foi carregado.'
-        );
+        if (carregando) {
+            textoLogout.textContent =
+                'Saindo...';
 
-        window.location.replace('/login');
+            return;
+        }
+
+        textoLogout.textContent =
+            'Sair do sistema';
     }
 
+    function moduloAutenticacaoEstaDisponivel() {
+        if (!window.AuthSession) {
+            return false;
+        }
 
-    function itemMenuEstaAtivo(tipoMenu, caminhoAtual) {
+        if (
+            typeof window.AuthSession.fazerLogout !==
+            'function'
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    async function executarLogoutSidebar() {
+        if (logoutSidebarEmAndamento) {
+            return;
+        }
+
+        logoutSidebarEmAndamento = true;
+
+        definirLogoutCarregando(
+            true
+        );
+
+        if (
+            !moduloAutenticacaoEstaDisponivel()
+        ) {
+            console.error(
+                'O módulo de autenticação não foi carregado.'
+            );
+
+            window.location.replace(
+                '/login'
+            );
+
+            return;
+        }
+
+        await window.AuthSession.fazerLogout();
+    }
+
+    function itemMenuEstaAtivo(
+        tipoMenu,
+        caminhoAtual
+    ) {
         if (tipoMenu === 'dashboard') {
-            return caminhoAtual === '/dashboard';
+            return caminhoAtual ===
+                '/dashboard';
         }
 
         if (tipoMenu === 'funcionarios') {
-            if (caminhoAtual === '/consultar-paciente') {
+            if (
+                caminhoAtual ===
+                '/consultar-paciente'
+            ) {
                 return true;
             }
 
-            if (caminhoAtual === '/ficha-paciente') {
-                return true;
-            }
-
-            if (caminhoAtual === '/funcionarios') {
-                return true;
-            }
-
-            if (caminhoAtual.startsWith('/funcionarios/')) {
+            if (
+                caminhoAtual ===
+                '/ficha-paciente'
+            ) {
                 return true;
             }
         }
@@ -244,78 +352,85 @@
         return false;
     }
 
-
     function destacarMenuAtual() {
-        const caminhoAtual = window.location.pathname;
+        const caminhoAtual =
+            window.location.pathname;
 
-        const itensMenu = document.querySelectorAll(
-            '.item-menu-sidebar'
-        );
-
-        itensMenu.forEach(function (item) {
-            const tipoMenu = item.getAttribute(
-                'data-menu'
+        const itensMenu =
+            document.querySelectorAll(
+                '.item-menu-sidebar'
             );
 
-            const menuAtivo = itemMenuEstaAtivo(
-                tipoMenu,
-                caminhoAtual
-            );
+        itensMenu.forEach(
+            function (item) {
+                const tipoMenu =
+                    item.getAttribute(
+                        'data-menu'
+                    );
 
-            if (menuAtivo) {
+                const menuAtivo =
+                    itemMenuEstaAtivo(
+                        tipoMenu,
+                        caminhoAtual
+                    );
+
+                if (menuAtivo) {
+                    item.classList.remove(
+                        'text-blue-100'
+                    );
+
+                    item.classList.add(
+                        'bg-blue-800',
+                        'text-white',
+                        'shadow-inner'
+                    );
+
+                    item.setAttribute(
+                        'aria-current',
+                        'page'
+                    );
+
+                    return;
+                }
+
                 item.classList.remove(
-                    'text-blue-100'
-                );
-
-                item.classList.add(
                     'bg-blue-800',
                     'text-white',
                     'shadow-inner'
                 );
 
-                item.setAttribute(
-                    'aria-current',
-                    'page'
+                item.classList.add(
+                    'text-blue-100'
                 );
 
-                return;
+                item.removeAttribute(
+                    'aria-current'
+                );
             }
-
-            item.classList.remove(
-                'bg-blue-800',
-                'text-white',
-                'shadow-inner'
-            );
-
-            item.classList.add(
-                'text-blue-100'
-            );
-
-            item.removeAttribute(
-                'aria-current'
-            );
-        });
+        );
     }
 
-
     function configurarEventosSidebar() {
-        const botaoAbrir = document.getElementById(
-            'botao-abrir-sidebar'
-        );
+        const botaoAbrir =
+            obterBotaoAbrirSidebar();
 
-        const botaoFechar = document.getElementById(
-            'botao-fechar-sidebar'
-        );
+        const botaoFechar =
+            document.getElementById(
+                'botao-fechar-sidebar'
+            );
 
-        const botaoLogout = document.getElementById(
-            'botao-logout-sidebar'
-        );
+        const botaoLogout =
+            document.getElementById(
+                'botao-logout-sidebar'
+            );
 
-        const backdrop = obterBackdropSidebar();
+        const backdrop =
+            obterBackdropSidebar();
 
-        const itensMenu = document.querySelectorAll(
-            '.item-menu-sidebar'
-        );
+        const itensMenu =
+            document.querySelectorAll(
+                '.item-menu-sidebar'
+            );
 
         if (botaoAbrir) {
             botaoAbrir.addEventListener(
@@ -345,21 +460,29 @@
             );
         }
 
-        itensMenu.forEach(function (item) {
-            item.addEventListener(
-                'click',
-                function () {
-                    if (window.innerWidth < 768) {
-                        fecharSidebar();
+        itensMenu.forEach(
+            function (item) {
+                item.addEventListener(
+                    'click',
+                    function () {
+                        if (
+                            window.innerWidth <
+                            768
+                        ) {
+                            fecharSidebar();
+                        }
                     }
-                }
-            );
-        });
+                );
+            }
+        );
 
         document.addEventListener(
             'keydown',
             function (evento) {
-                if (evento.key === 'Escape') {
+                if (
+                    evento.key ===
+                    'Escape'
+                ) {
                     fecharSidebar();
                 }
             }
@@ -368,11 +491,15 @@
         window.addEventListener(
             'resize',
             function () {
-                if (window.innerWidth < 768) {
+                if (
+                    window.innerWidth <
+                    768
+                ) {
                     return;
                 }
 
-                const backdropAtual = obterBackdropSidebar();
+                const backdropAtual =
+                    obterBackdropSidebar();
 
                 document.body.classList.remove(
                     'overflow-hidden'
@@ -382,17 +509,28 @@
                     backdropAtual.classList.add(
                         'hidden'
                     );
+
+                    backdropAtual.setAttribute(
+                        'aria-hidden',
+                        'true'
+                    );
                 }
+
+                atualizarEstadoAcessibilidadeSidebar(
+                    false
+                );
             }
         );
     }
-
 
     document.addEventListener(
         'DOMContentLoaded',
         function () {
             destacarMenuAtual();
             configurarEventosSidebar();
+            atualizarEstadoAcessibilidadeSidebar(
+                false
+            );
 
             if (window.lucide) {
                 window.lucide.createIcons();

@@ -1,8 +1,6 @@
 import {
     criarAtendimento as criarAtendimentoService,
-    buscarAtendimentoPorId,
     buscarAtendimentosPorFuncionario as buscarHistoricoService,
-    atualizarAtendimento as atualizarAtendimentoService,
     buscarAtendimentosPorPeriodo,
     buscarUltimosAtendimentos
 } from '../services/atendimentoService.js';
@@ -14,17 +12,13 @@ import {
 
 import {
     normalizarMatricula,
-    normalizarTexto,
-    normalizarTextoOpcional
+    normalizarTexto
 } from '../utils/normalizadores.js';
 
 import {
     corpoEhObjetoValido,
-    campoFoiEnviado,
     matriculaEhValida,
-    identificadorEhValido,
     textoObrigatorioEhValido,
-    textoOpcionalEhValido,
     temperaturaEhValida
 } from '../utils/validadores.js';
 
@@ -39,25 +33,37 @@ import {
     responderErroInterno
 } from '../utils/respostas.js';
 
-
-const GRAVIDADES = [
+const GRAVIDADES_PERMITIDAS = [
     'Baixa',
     'Média',
     'Alta'
 ];
 
-const ACOES = [
+const ACOES_PERMITIDAS = [
     'Medicação no Local',
     'Encaminhado UPA',
     'Liberado'
 ];
 
+const TAMANHO_MINIMO_QUEIXA = 2;
+const TAMANHO_MAXIMO_QUEIXA = 5000;
+const TAMANHO_MAXIMO_PRESSAO = 20;
+
+function responderErroValidacao(
+    res,
+    mensagem
+) {
+    return res.status(400).json({
+        erro: mensagem
+    });
+}
 
 function normalizarTemperatura(valor) {
-    if (
-        valor === null ||
-        valor === undefined
-    ) {
+    if (valor === null) {
+        return null;
+    }
+
+    if (valor === undefined) {
         return null;
     }
 
@@ -76,207 +82,176 @@ function normalizarTemperatura(valor) {
     return valor;
 }
 
-
-function validarDadosAtendimento(
-    corpo,
-    parcial
-) {
-    const dados = {};
+function validarDadosAtendimento(corpo) {
+    const queixaPrincipal = normalizarTexto(
+        corpo.queixa_principal
+    );
 
     if (
-        !parcial ||
-        campoFoiEnviado(
-            corpo,
-            'queixa_principal'
+        !textoObrigatorioEhValido(
+            queixaPrincipal,
+            TAMANHO_MAXIMO_QUEIXA
         )
     ) {
-        const queixa = normalizarTexto(
-            corpo.queixa_principal
-        );
-
-        if (
-            !textoObrigatorioEhValido(
-                queixa,
-                5000
-            )
-        ) {
-            return {
-                erro:
-                    'A queixa principal é obrigatória e deve possuir até 5000 caracteres.'
-            };
-        }
-
-        dados.queixa_principal = queixa;
+        return {
+            erro: 'A queixa principal é obrigatória e deve possuir entre 2 e 5000 caracteres.'
+        };
     }
 
     if (
-        !parcial ||
-        campoFoiEnviado(
-            corpo,
-            'gravidade'
-        )
+        queixaPrincipal.length <
+        TAMANHO_MINIMO_QUEIXA
     ) {
-        const gravidade = normalizarTexto(
-            corpo.gravidade
-        );
-
-        if (!GRAVIDADES.includes(gravidade)) {
-            return {
-                erro:
-                    'A gravidade deve ser Baixa, Média ou Alta.'
-            };
-        }
-
-        dados.gravidade = gravidade;
+        return {
+            erro: 'A queixa principal é obrigatória e deve possuir entre 2 e 5000 caracteres.'
+        };
     }
 
+    const pressaoArterial = normalizarTexto(
+        corpo.pressao_arterial
+    );
+
     if (
-        !parcial ||
-        campoFoiEnviado(
-            corpo,
-            'acao_tomada'
+        !textoObrigatorioEhValido(
+            pressaoArterial,
+            TAMANHO_MAXIMO_PRESSAO
         )
     ) {
-        const acao = normalizarTexto(
-            corpo.acao_tomada
-        );
-
-        if (!ACOES.includes(acao)) {
-            return {
-                erro:
-                    'A ação tomada informada não é permitida.'
-            };
-        }
-
-        dados.acao_tomada = acao;
+        return {
+            erro: 'A pressão arterial é obrigatória e deve possuir até 20 caracteres.'
+        };
     }
 
-    if (
-        !parcial ||
-        campoFoiEnviado(
-            corpo,
-            'pressao_arterial'
-        )
-    ) {
-        const pressao = normalizarTextoOpcional(
-            corpo.pressao_arterial
-        );
+    const temperatura = normalizarTemperatura(
+        corpo.temperatura
+    );
 
-        if (
-            !textoOpcionalEhValido(
-                pressao,
-                20
-            )
-        ) {
-            return {
-                erro:
-                    'A pressão arterial deve possuir até 20 caracteres.'
-            };
-        }
-
-        dados.pressao_arterial = pressao;
+    if (temperatura === null) {
+        return {
+            erro: 'A temperatura é obrigatória.'
+        };
     }
 
-    if (
-        !parcial ||
-        campoFoiEnviado(
-            corpo,
-            'temperatura'
-        )
-    ) {
-        const temperatura = normalizarTemperatura(
-            corpo.temperatura
-        );
-
-        if (!temperaturaEhValida(temperatura)) {
-            return {
-                erro:
-                    'A temperatura deve ser um número entre 0 e 100.'
-            };
-        }
-
-        dados.temperatura = temperatura;
+    if (!temperaturaEhValida(temperatura)) {
+        return {
+            erro: 'A temperatura deve ser um número entre 0 e 100.'
+        };
     }
 
+    const gravidade = normalizarTexto(
+        corpo.gravidade
+    );
+
     if (
-        !parcial ||
-        campoFoiEnviado(
-            corpo,
-            'local_encaminhamento'
+        !GRAVIDADES_PERMITIDAS.includes(
+            gravidade
         )
     ) {
-        const local = normalizarTextoOpcional(
-            corpo.local_encaminhamento
-        );
+        return {
+            erro: 'A gravidade deve ser Baixa, Média ou Alta.'
+        };
+    }
 
-        if (
-            !textoOpcionalEhValido(
-                local,
-                100
-            )
-        ) {
-            return {
-                erro:
-                    'O local de encaminhamento deve possuir até 100 caracteres.'
-            };
-        }
+    const acaoTomada = normalizarTexto(
+        corpo.acao_tomada
+    );
 
-        dados.local_encaminhamento = local;
+    if (
+        !ACOES_PERMITIDAS.includes(
+            acaoTomada
+        )
+    ) {
+        return {
+            erro: 'A ação tomada informada não é permitida.'
+        };
     }
 
     return {
-        dados
+        dados: {
+            queixa_principal: queixaPrincipal,
+            pressao_arterial: pressaoArterial,
+            temperatura,
+            gravidade,
+            acao_tomada: acaoTomada
+        }
     };
 }
 
+function converterRegistroParaObjeto(registro) {
+    if (!registro) {
+        return {};
+    }
+
+    if (typeof registro.toJSON === 'function') {
+        return registro.toJSON();
+    }
+
+    return {
+        ...registro
+    };
+}
 
 function criarMapaFuncionarios(funcionarios) {
     const mapa = new Map();
 
-    funcionarios.forEach(
-        function (funcionario) {
-            mapa.set(
-                String(funcionario.matricula),
+    for (const funcionario of funcionarios) {
+        const dadosFuncionario =
+            converterRegistroParaObjeto(
                 funcionario
             );
-        }
-    );
+
+        const chave = String(
+            dadosFuncionario.matricula
+        );
+
+        mapa.set(
+            chave,
+            dadosFuncionario
+        );
+    }
 
     return mapa;
 }
-
 
 function montarUltimosAtendimentos(
     atendimentos,
     funcionarios
 ) {
-    return atendimentos.map(
-        function (atendimento) {
-            const dados = atendimento.toJSON();
+    const resultado = [];
 
-            const funcionario = funcionarios.get(
-                String(
-                    dados.funcionario_matricula
-                )
+    for (const atendimento of atendimentos) {
+        const dadosAtendimento =
+            converterRegistroParaObjeto(
+                atendimento
             );
 
-            let nome = 'Funcionário sem nome';
+        const chaveFuncionario = String(
+            dadosAtendimento.funcionario_matricula
+        );
 
+        const funcionario = funcionarios.get(
+            chaveFuncionario
+        );
+
+        let nome = 'Funcionário sem nome';
+
+        if (funcionario) {
             if (
-                funcionario &&
-                funcionario.nome
+                typeof funcionario.nome === 'string' &&
+                funcionario.nome.trim().length > 0
             ) {
                 nome = funcionario.nome;
             }
-
-            return {
-                ...dados,
-                nome
-            };
         }
-    );
-}
 
+        resultado.push({
+            ...dadosAtendimento,
+            nome
+        });
+    }
+
+    return resultado;
+}
 
 function montarRankingSetores(
     atendimentos,
@@ -284,42 +259,55 @@ function montarRankingSetores(
 ) {
     const totais = new Map();
 
-    atendimentos.forEach(
-        function (atendimento) {
-            const funcionario = funcionarios.get(
-                String(
-                    atendimento.funcionario_matricula
-                )
+    for (const atendimento of atendimentos) {
+        const dadosAtendimento =
+            converterRegistroParaObjeto(
+                atendimento
             );
 
-            let setor = 'Não informado';
+        const chaveFuncionario = String(
+            dadosAtendimento.funcionario_matricula
+        );
 
+        const funcionario = funcionarios.get(
+            chaveFuncionario
+        );
+
+        let setor = 'Não informado';
+
+        if (funcionario) {
             if (
-                funcionario &&
-                funcionario.setor
+                typeof funcionario.setor === 'string' &&
+                funcionario.setor.trim().length > 0
             ) {
                 setor = funcionario.setor;
             }
+        }
 
-            const quantidadeAtual =
-                totais.get(setor) || 0;
+        let quantidadeAtual = 0;
 
-            totais.set(
-                setor,
-                quantidadeAtual + 1
+        if (totais.has(setor)) {
+            quantidadeAtual = totais.get(
+                setor
             );
         }
-    );
 
-    return Array.from(
-        totais,
-        function (item) {
-            return {
-                setor: item[0],
-                quantidade: item[1]
-            };
-        }
-    ).sort(
+        totais.set(
+            setor,
+            quantidadeAtual + 1
+        );
+    }
+
+    const ranking = [];
+
+    for (const item of totais) {
+        ranking.push({
+            setor: item[0],
+            quantidade: item[1]
+        });
+    }
+
+    ranking.sort(
         function (primeiro, segundo) {
             return (
                 segundo.quantidade -
@@ -327,8 +315,38 @@ function montarRankingSetores(
             );
         }
     );
+
+    return ranking;
 }
 
+function contarGravidades(atendimentos) {
+    const totais = {
+        baixa: 0,
+        media: 0,
+        alta: 0
+    };
+
+    for (const atendimento of atendimentos) {
+        const dadosAtendimento =
+            converterRegistroParaObjeto(
+                atendimento
+            );
+
+        if (dadosAtendimento.gravidade === 'Baixa') {
+            totais.baixa += 1;
+        }
+
+        if (dadosAtendimento.gravidade === 'Média') {
+            totais.media += 1;
+        }
+
+        if (dadosAtendimento.gravidade === 'Alta') {
+            totais.alta += 1;
+        }
+    }
+
+    return totais;
+}
 
 export async function registrarAtendimento(
     req,
@@ -336,10 +354,10 @@ export async function registrarAtendimento(
 ) {
     try {
         if (!corpoEhObjetoValido(req.body)) {
-            return res.status(400).json({
-                erro:
-                    'O corpo da requisição deve ser um objeto JSON válido.'
-            });
+            return responderErroValidacao(
+                res,
+                'O corpo da requisição deve ser um objeto JSON válido.'
+            );
         }
 
         const matricula = normalizarMatricula(
@@ -347,10 +365,10 @@ export async function registrarAtendimento(
         );
 
         if (!matriculaEhValida(matricula)) {
-            return res.status(400).json({
-                erro:
-                    'A matrícula do funcionário é obrigatória.'
-            });
+            return responderErroValidacao(
+                res,
+                'A matrícula do funcionário é obrigatória e deve possuir até 20 caracteres.'
+            );
         }
 
         const funcionario =
@@ -360,35 +378,29 @@ export async function registrarAtendimento(
 
         if (!funcionario) {
             return res.status(404).json({
-                erro:
-                    'Funcionário não encontrado.'
+                erro: 'Funcionário não encontrado.'
             });
         }
 
         const validacao = validarDadosAtendimento(
-            req.body,
-            false
+            req.body
         );
 
         if (validacao.erro) {
-            return res.status(400).json({
-                erro: validacao.erro
-            });
+            return responderErroValidacao(
+                res,
+                validacao.erro
+            );
         }
 
         const atendimento =
             await criarAtendimentoService({
                 ...validacao.dados,
-
-                funcionario_matricula:
-                    matricula,
-
+                funcionario_matricula: matricula,
                 supervisor_na_epoca:
                     funcionario.supervisor,
-
                 coordenador_na_epoca:
                     funcionario.coordenador,
-
                 gerente_na_epoca:
                     funcionario.gerente
             });
@@ -405,7 +417,6 @@ export async function registrarAtendimento(
     }
 }
 
-
 export async function buscarAtendimentosPorFuncionario(
     req,
     res
@@ -416,10 +427,10 @@ export async function buscarAtendimentosPorFuncionario(
         );
 
         if (!matriculaEhValida(matricula)) {
-            return res.status(400).json({
-                erro:
-                    'A matrícula informada é inválida.'
-            });
+            return responderErroValidacao(
+                res,
+                'A matrícula informada é inválida.'
+            );
         }
 
         const funcionario =
@@ -429,8 +440,7 @@ export async function buscarAtendimentosPorFuncionario(
 
         if (!funcionario) {
             return res.status(404).json({
-                erro:
-                    'Funcionário não encontrado.'
+                erro: 'Funcionário não encontrado.'
             });
         }
 
@@ -450,124 +460,6 @@ export async function buscarAtendimentosPorFuncionario(
         );
     }
 }
-
-
-export async function atualizarAtendimento(
-    req,
-    res
-) {
-    try {
-        if (
-            !identificadorEhValido(
-                req.params.id
-            )
-        ) {
-            return res.status(400).json({
-                erro:
-                    'O identificador do atendimento é inválido.'
-            });
-        }
-
-        if (!corpoEhObjetoValido(req.body)) {
-            return res.status(400).json({
-                erro:
-                    'O corpo da requisição deve ser um objeto JSON válido.'
-            });
-        }
-
-        const atendimento =
-            await buscarAtendimentoPorId(
-                req.params.id
-            );
-
-        if (!atendimento) {
-            return res.status(404).json({
-                erro:
-                    'Atendimento não encontrado.'
-            });
-        }
-
-        const validacao = validarDadosAtendimento(
-            req.body,
-            true
-        );
-
-        if (validacao.erro) {
-            return res.status(400).json({
-                erro: validacao.erro
-            });
-        }
-
-        if (
-            Object.keys(
-                validacao.dados
-            ).length === 0
-        ) {
-            return res.status(400).json({
-                erro:
-                    'Informe ao menos um campo válido para atualização.'
-            });
-        }
-
-        const atualizado =
-            await atualizarAtendimentoService(
-                atendimento,
-                validacao.dados
-            );
-
-        return res.status(200).json(
-            atualizado
-        );
-    } catch (erro) {
-        return responderErroInterno(
-            res,
-            'Erro ao atualizar atendimento:',
-            erro
-        );
-    }
-}
-
-
-export async function deletarAtendimento(
-    req,
-    res
-) {
-    try {
-        if (
-            !identificadorEhValido(
-                req.params.id
-            )
-        ) {
-            return res.status(400).json({
-                erro:
-                    'O identificador do atendimento é inválido.'
-            });
-        }
-
-        const atendimento =
-            await buscarAtendimentoPorId(
-                req.params.id
-            );
-
-        if (!atendimento) {
-            return res.status(404).json({
-                erro:
-                    'Atendimento não encontrado.'
-            });
-        }
-
-        await atendimento.destroy();
-
-        return res.status(204).send();
-    } catch (erro) {
-        return responderErroInterno(
-            res,
-            'Erro ao excluir atendimento:',
-            erro
-        );
-    }
-}
-
 
 export async function obterDadosDashboard(
     req,
@@ -603,7 +495,9 @@ export async function obterDadosDashboard(
                 fimMes
             ),
 
-            buscarUltimosAtendimentos(5),
+            buscarUltimosAtendimentos(
+                5
+            ),
 
             buscarTodosFuncionarios()
         ]);
@@ -622,42 +516,14 @@ export async function obterDadosDashboard(
                 resultados[3]
             );
 
-        const gravidadeHoje = {
-            baixa: 0,
-            media: 0,
-            alta: 0
-        };
-
-        atendimentosHoje.forEach(
-            function (atendimento) {
-                if (
-                    atendimento.gravidade ===
-                    'Baixa'
-                ) {
-                    gravidadeHoje.baixa += 1;
-                }
-
-                if (
-                    atendimento.gravidade ===
-                    'Média'
-                ) {
-                    gravidadeHoje.media += 1;
-                }
-
-                if (
-                    atendimento.gravidade ===
-                    'Alta'
-                ) {
-                    gravidadeHoje.alta += 1;
-                }
-            }
-        );
-
         return res.status(200).json({
             totalHoje:
                 atendimentosHoje.length,
 
-            gravidadeHoje,
+            gravidadeHoje:
+                contarGravidades(
+                    atendimentosHoje
+                ),
 
             ultimosAtendimentos:
                 montarUltimosAtendimentos(
