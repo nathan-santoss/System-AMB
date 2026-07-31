@@ -2,15 +2,12 @@ import jwt from 'jsonwebtoken';
 
 import Usuario from '../models/usuarios.js';
 
-
 const EMISSOR_TOKEN = 'system-amb';
 const PUBLICO_TOKEN = 'system-amb-web';
-
 
 function ambienteEhProducao() {
     return process.env.NODE_ENV === 'production';
 }
-
 
 function obterOpcoesLimpezaCookie() {
     return {
@@ -21,6 +18,17 @@ function obterOpcoesLimpezaCookie() {
     };
 }
 
+function impedirCache(res) {
+    res.setHeader(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate, private'
+    );
+
+    res.setHeader(
+        'Pragma',
+        'no-cache'
+    );
+}
 
 function extrairCookies(cabecalhoCookie) {
     const cookies = {};
@@ -29,11 +37,13 @@ function extrairCookies(cabecalhoCookie) {
         return cookies;
     }
 
-    cabecalhoCookie.split(';').forEach(parteCookie => {
+    const partesCookie = cabecalhoCookie.split(';');
+
+    for (const parteCookie of partesCookie) {
         const indiceSeparador = parteCookie.indexOf('=');
 
         if (indiceSeparador === -1) {
-            return;
+            continue;
         }
 
         const nome = parteCookie
@@ -45,7 +55,7 @@ function extrairCookies(cabecalhoCookie) {
             .trim();
 
         if (nome.length === 0) {
-            return;
+            continue;
         }
 
         try {
@@ -53,15 +63,20 @@ function extrairCookies(cabecalhoCookie) {
         } catch (erro) {
             cookies[nome] = valor;
         }
-    });
+    }
 
     return cookies;
 }
 
-
 function extrairTokenCookie(req) {
+    let cabecalhoCookie;
+
+    if (req.headers) {
+        cabecalhoCookie = req.headers.cookie;
+    }
+
     const cookies = extrairCookies(
-        req.headers?.cookie
+        cabecalhoCookie
     );
 
     if (typeof cookies.token !== 'string') {
@@ -77,7 +92,6 @@ function extrairTokenCookie(req) {
     return token;
 }
 
-
 function obterJwtSecret() {
     if (typeof process.env.JWT_SECRET !== 'string') {
         return null;
@@ -92,14 +106,12 @@ function obterJwtSecret() {
     return jwtSecret;
 }
 
-
 function limparCookieToken(res) {
     res.clearCookie(
         'token',
         obterOpcoesLimpezaCookie()
     );
 }
-
 
 function identificadorUsuarioEhValido(valor) {
     const idUsuario = Number(valor);
@@ -115,8 +127,105 @@ function identificadorUsuarioEhValido(valor) {
     return true;
 }
 
+function normalizarEmail(email) {
+    if (typeof email !== 'string') {
+        return '';
+    }
 
-export async function verificarToken(req, res, next) {
+    return email
+        .trim()
+        .toLowerCase();
+}
+
+function dadosTokenSaoValidos(usuarioDecodificado) {
+    if (!usuarioDecodificado) {
+        return false;
+    }
+
+    if (typeof usuarioDecodificado !== 'object') {
+        return false;
+    }
+
+    if (
+        !identificadorUsuarioEhValido(
+            usuarioDecodificado.id_usuario
+        )
+    ) {
+        return false;
+    }
+
+    if (
+        !identificadorUsuarioEhValido(
+            usuarioDecodificado.sub
+        )
+    ) {
+        return false;
+    }
+
+    if (
+        Number(usuarioDecodificado.id_usuario) !==
+        Number(usuarioDecodificado.sub)
+    ) {
+        return false;
+    }
+
+    const email = normalizarEmail(
+        usuarioDecodificado.email
+    );
+
+    if (email.length === 0) {
+        return false;
+    }
+
+    return true;
+}
+
+function responderSessaoInvalida(
+    res,
+    mensagem
+) {
+    limparCookieToken(res);
+
+    return res.status(401).json({
+        message: mensagem
+    });
+}
+
+function obterMensagemErroToken(erro) {
+    if (erro.name === 'TokenExpiredError') {
+        return 'Sessão expirada. Faça login novamente.';
+    }
+
+    if (erro.name === 'NotBeforeError') {
+        return 'A sessão ainda não está válida.';
+    }
+
+    return 'Sessão inválida. Faça login novamente.';
+}
+
+function erroEhDeToken(erro) {
+    if (erro.name === 'TokenExpiredError') {
+        return true;
+    }
+
+    if (erro.name === 'JsonWebTokenError') {
+        return true;
+    }
+
+    if (erro.name === 'NotBeforeError') {
+        return true;
+    }
+
+    return false;
+}
+
+export async function verificarToken(
+    req,
+    res,
+    next
+) {
+    impedirCache(res);
+
     try {
         const jwtSecret = obterJwtSecret();
 
@@ -151,37 +260,22 @@ export async function verificarToken(req, res, next) {
         );
 
         if (
-            !usuarioDecodificado ||
-            typeof usuarioDecodificado !== 'object'
+            !dadosTokenSaoValidos(
+                usuarioDecodificado
+            )
         ) {
-            limparCookieToken(res);
-
-            return res.status(401).json({
-                message: 'Sessão inválida.'
-            });
+            return responderSessaoInvalida(
+                res,
+                'Sessão inválida.'
+            );
         }
 
-        if (!identificadorUsuarioEhValido(usuarioDecodificado.id_usuario)) {
-            limparCookieToken(res);
-
-            return res.status(401).json({
-                message: 'A sessão não possui um usuário válido.'
-            });
-        }
-
-        if (
-            typeof usuarioDecodificado.email !== 'string' ||
-            usuarioDecodificado.email.trim().length === 0
-        ) {
-            limparCookieToken(res);
-
-            return res.status(401).json({
-                message: 'A sessão não possui um e-mail válido.'
-            });
-        }
+        const idUsuario = Number(
+            usuarioDecodificado.id_usuario
+        );
 
         const usuario = await Usuario.findByPk(
-            Number(usuarioDecodificado.id_usuario),
+            idUsuario,
             {
                 attributes: [
                     'id_usuario',
@@ -191,22 +285,25 @@ export async function verificarToken(req, res, next) {
         );
 
         if (!usuario) {
-            limparCookieToken(res);
-
-            return res.status(401).json({
-                message: 'O usuário da sessão não existe mais.'
-            });
+            return responderSessaoInvalida(
+                res,
+                'O usuário da sessão não existe mais.'
+            );
         }
 
-        if (
-            usuario.email.toLowerCase() !==
-            usuarioDecodificado.email.trim().toLowerCase()
-        ) {
-            limparCookieToken(res);
+        const emailUsuario = normalizarEmail(
+            usuario.email
+        );
 
-            return res.status(401).json({
-                message: 'Os dados da sessão não correspondem ao usuário atual.'
-            });
+        const emailToken = normalizarEmail(
+            usuarioDecodificado.email
+        );
+
+        if (emailUsuario !== emailToken) {
+            return responderSessaoInvalida(
+                res,
+                'Os dados da sessão não correspondem ao usuário atual.'
+            );
         }
 
         req.usuario = {
@@ -216,26 +313,15 @@ export async function verificarToken(req, res, next) {
 
         return next();
     } catch (erro) {
-        if (
-            erro.name === 'TokenExpiredError' ||
-            erro.name === 'JsonWebTokenError' ||
-            erro.name === 'NotBeforeError'
-        ) {
-            limparCookieToken(res);
+        if (erroEhDeToken(erro)) {
+            const mensagem = obterMensagemErroToken(
+                erro
+            );
 
-            let mensagem = 'Sessão inválida. Faça login novamente.';
-
-            if (erro.name === 'TokenExpiredError') {
-                mensagem = 'Sessão expirada. Faça login novamente.';
-            }
-
-            if (erro.name === 'NotBeforeError') {
-                mensagem = 'A sessão ainda não está válida.';
-            }
-
-            return res.status(401).json({
-                message: mensagem
-            });
+            return responderSessaoInvalida(
+                res,
+                mensagem
+            );
         }
 
         console.error(

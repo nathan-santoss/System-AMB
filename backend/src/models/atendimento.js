@@ -1,7 +1,51 @@
-import { DataTypes } from 'sequelize';
+import {
+    DataTypes
+} from 'sequelize';
+
 import database from '../config/database.js';
+
 import Funcionario from './funcionarios.js';
 
+import {
+    normalizarTexto,
+    normalizarTextoOpcional
+} from '../utils/normalizadores.js';
+
+const GRAVIDADES_PERMITIDAS = [
+    'Baixa',
+    'Média',
+    'Alta'
+];
+
+const ACOES_PERMITIDAS = [
+    'Medicação no Local',
+    'Encaminhado UPA',
+    'Liberado'
+];
+
+function normalizarTemperatura(valor) {
+    if (valor === null) {
+        return null;
+    }
+
+    if (valor === undefined) {
+        return valor;
+    }
+
+    if (typeof valor === 'string') {
+        const temperaturaNormalizada = valor
+            .trim()
+            .replace(',', '.');
+
+        if (temperaturaNormalizada.length === 0) {
+            return null;
+        }
+
+        return temperaturaNormalizada;
+    }
+
+    return valor;
+}
 
 const Atendimento = database.define(
     'Atendimento',
@@ -13,7 +57,6 @@ const Atendimento = database.define(
             allowNull: false
         },
 
-
         funcionario_matricula: {
             type: DataTypes.STRING(20),
             allowNull: false,
@@ -24,7 +67,6 @@ const Atendimento = database.define(
             },
 
             onUpdate: 'CASCADE',
-
             onDelete: 'RESTRICT',
 
             validate: {
@@ -41,42 +83,35 @@ const Atendimento = database.define(
                         1,
                         20
                     ],
-                    msg: 'A matrícula do funcionário deve possuir entre 1 e 20 caracteres.'
+                    msg: 'A matrícula deve possuir entre 1 e 20 caracteres.'
                 }
             },
 
             set(valor) {
-
                 if (typeof valor === 'number') {
-
                     this.setDataValue(
                         'funcionario_matricula',
                         String(valor).trim()
                     );
 
                     return;
-
                 }
 
                 if (typeof valor === 'string') {
-
                     this.setDataValue(
                         'funcionario_matricula',
                         valor.trim()
                     );
 
                     return;
-
                 }
 
                 this.setDataValue(
                     'funcionario_matricula',
                     valor
                 );
-
             }
         },
-
 
         queixa_principal: {
             type: DataTypes.TEXT,
@@ -89,96 +124,64 @@ const Atendimento = database.define(
 
                 notEmpty: {
                     msg: 'A queixa principal é obrigatória.'
+                },
+
+                len: {
+                    args: [
+                        2,
+                        5000
+                    ],
+                    msg: 'A queixa principal deve possuir entre 2 e 5000 caracteres.'
                 }
             },
 
             set(valor) {
-
-                if (typeof valor === 'string') {
-
-                    this.setDataValue(
-                        'queixa_principal',
-                        valor.trim()
-                    );
-
-                    return;
-
-                }
-
                 this.setDataValue(
                     'queixa_principal',
-                    valor
+                    normalizarTexto(valor)
                 );
-
             }
         },
-
 
         pressao_arterial: {
             type: DataTypes.STRING(20),
-            allowNull: true,
+            allowNull: false,
 
             validate: {
+                notNull: {
+                    msg: 'A pressão arterial é obrigatória.'
+                },
+
+                notEmpty: {
+                    msg: 'A pressão arterial é obrigatória.'
+                },
+
                 len: {
                     args: [
-                        0,
+                        1,
                         20
                     ],
-                    msg: 'A pressão arterial deve possuir no máximo 20 caracteres.'
+                    msg: 'A pressão arterial deve possuir entre 1 e 20 caracteres.'
                 }
             },
 
             set(valor) {
-
-                if (valor === null || valor === undefined) {
-
-                    this.setDataValue(
-                        'pressao_arterial',
-                        null
-                    );
-
-                    return;
-
-                }
-
-                if (typeof valor === 'string') {
-
-                    const valorNormalizado = valor.trim();
-
-                    if (valorNormalizado.length === 0) {
-
-                        this.setDataValue(
-                            'pressao_arterial',
-                            null
-                        );
-
-                        return;
-
-                    }
-
-                    this.setDataValue(
-                        'pressao_arterial',
-                        valorNormalizado
-                    );
-
-                    return;
-
-                }
-
                 this.setDataValue(
                     'pressao_arterial',
-                    valor
+                    normalizarTexto(valor)
                 );
-
             }
         },
 
-
         temperatura: {
             type: DataTypes.DECIMAL(5, 2),
-            allowNull: true,
+            allowNull: false,
 
             validate: {
+                notNull: {
+                    msg: 'A temperatura é obrigatória.'
+                },
+
                 isDecimal: {
                     msg: 'A temperatura deve ser um número válido.'
                 },
@@ -199,50 +202,12 @@ const Atendimento = database.define(
             },
 
             set(valor) {
-
-                if (valor === null || valor === undefined) {
-
-                    this.setDataValue(
-                        'temperatura',
-                        null
-                    );
-
-                    return;
-
-                }
-
-                if (typeof valor === 'string') {
-
-                    const valorNormalizado = valor.trim();
-
-                    if (valorNormalizado.length === 0) {
-
-                        this.setDataValue(
-                            'temperatura',
-                            null
-                        );
-
-                        return;
-
-                    }
-
-                    this.setDataValue(
-                        'temperatura',
-                        Number(valorNormalizado)
-                    );
-
-                    return;
-
-                }
-
                 this.setDataValue(
                     'temperatura',
-                    valor
+                    normalizarTemperatura(valor)
                 );
-
             }
         },
-
 
         gravidade: {
             type: DataTypes.STRING(20),
@@ -259,37 +224,19 @@ const Atendimento = database.define(
 
                 isIn: {
                     args: [
-                        [
-                            'Baixa',
-                            'Média',
-                            'Alta'
-                        ]
+                        GRAVIDADES_PERMITIDAS
                     ],
                     msg: 'A gravidade deve ser Baixa, Média ou Alta.'
                 }
             },
 
             set(valor) {
-
-                if (typeof valor === 'string') {
-
-                    this.setDataValue(
-                        'gravidade',
-                        valor.trim()
-                    );
-
-                    return;
-
-                }
-
                 this.setDataValue(
                     'gravidade',
-                    valor
+                    normalizarTexto(valor)
                 );
-
             }
         },
-
 
         acao_tomada: {
             type: DataTypes.STRING(100),
@@ -304,339 +251,119 @@ const Atendimento = database.define(
                     msg: 'A ação tomada é obrigatória.'
                 },
 
-                len: {
+                isIn: {
                     args: [
-                        1,
-                        100
+                        ACOES_PERMITIDAS
                     ],
-                    msg: 'A ação tomada deve possuir entre 1 e 100 caracteres.'
+                    msg: 'A ação tomada informada não é permitida.'
                 }
             },
 
             set(valor) {
-
-                if (typeof valor === 'string') {
-
-                    this.setDataValue(
-                        'acao_tomada',
-                        valor.trim()
-                    );
-
-                    return;
-
-                }
-
                 this.setDataValue(
                     'acao_tomada',
-                    valor
+                    normalizarTexto(valor)
                 );
-
             }
         },
-
 
         local_encaminhamento: {
-            type: DataTypes.STRING(100),
+            type: DataTypes.STRING(150),
             allowNull: true,
 
             validate: {
                 len: {
                     args: [
                         0,
-                        100
+                        150
                     ],
-                    msg: 'O local de encaminhamento deve possuir no máximo 100 caracteres.'
+                    msg: 'O local de encaminhamento deve possuir no máximo 150 caracteres.'
                 }
             },
 
             set(valor) {
-
-                if (valor === null || valor === undefined) {
-
-                    this.setDataValue(
-                        'local_encaminhamento',
-                        null
-                    );
-
-                    return;
-
-                }
-
-                if (typeof valor === 'string') {
-
-                    const valorNormalizado = valor.trim();
-
-                    if (valorNormalizado.length === 0) {
-
-                        this.setDataValue(
-                            'local_encaminhamento',
-                            null
-                        );
-
-                        return;
-
-                    }
-
-                    this.setDataValue(
-                        'local_encaminhamento',
-                        valorNormalizado
-                    );
-
-                    return;
-
-                }
-
                 this.setDataValue(
                     'local_encaminhamento',
-                    valor
+                    normalizarTextoOpcional(valor)
                 );
-
             }
         },
-
 
         supervisor_na_epoca: {
-            type: DataTypes.STRING(100),
+            type: DataTypes.STRING(150),
             allowNull: true,
 
             validate: {
                 len: {
                     args: [
                         0,
-                        100
+                        150
                     ],
-                    msg: 'O supervisor deve possuir no máximo 100 caracteres.'
+                    msg: 'O supervisor deve possuir no máximo 150 caracteres.'
                 }
             },
 
             set(valor) {
-
-                if (valor === null || valor === undefined) {
-
-                    this.setDataValue(
-                        'supervisor_na_epoca',
-                        null
-                    );
-
-                    return;
-
-                }
-
-                if (typeof valor === 'string') {
-
-                    const valorNormalizado = valor.trim();
-
-                    if (valorNormalizado.length === 0) {
-
-                        this.setDataValue(
-                            'supervisor_na_epoca',
-                            null
-                        );
-
-                        return;
-
-                    }
-
-                    this.setDataValue(
-                        'supervisor_na_epoca',
-                        valorNormalizado
-                    );
-
-                    return;
-
-                }
-
                 this.setDataValue(
                     'supervisor_na_epoca',
-                    valor
+                    normalizarTextoOpcional(valor)
                 );
-
             }
         },
-
 
         coordenador_na_epoca: {
-            type: DataTypes.STRING(100),
+            type: DataTypes.STRING(150),
             allowNull: true,
 
             validate: {
                 len: {
                     args: [
                         0,
-                        100
+                        150
                     ],
-                    msg: 'O coordenador deve possuir no máximo 100 caracteres.'
+                    msg: 'O coordenador deve possuir no máximo 150 caracteres.'
                 }
             },
 
             set(valor) {
-
-                if (valor === null || valor === undefined) {
-
-                    this.setDataValue(
-                        'coordenador_na_epoca',
-                        null
-                    );
-
-                    return;
-
-                }
-
-                if (typeof valor === 'string') {
-
-                    const valorNormalizado = valor.trim();
-
-                    if (valorNormalizado.length === 0) {
-
-                        this.setDataValue(
-                            'coordenador_na_epoca',
-                            null
-                        );
-
-                        return;
-
-                    }
-
-                    this.setDataValue(
-                        'coordenador_na_epoca',
-                        valorNormalizado
-                    );
-
-                    return;
-
-                }
-
                 this.setDataValue(
                     'coordenador_na_epoca',
-                    valor
+                    normalizarTextoOpcional(valor)
                 );
-
             }
         },
 
-
         gerente_na_epoca: {
-            type: DataTypes.STRING(100),
+            type: DataTypes.STRING(150),
             allowNull: true,
 
             validate: {
                 len: {
                     args: [
                         0,
-                        100
+                        150
                     ],
-                    msg: 'O gerente deve possuir no máximo 100 caracteres.'
+                    msg: 'O gerente deve possuir no máximo 150 caracteres.'
                 }
             },
 
             set(valor) {
-
-                if (valor === null || valor === undefined) {
-
-                    this.setDataValue(
-                        'gerente_na_epoca',
-                        null
-                    );
-
-                    return;
-
-                }
-
-                if (typeof valor === 'string') {
-
-                    const valorNormalizado = valor.trim();
-
-                    if (valorNormalizado.length === 0) {
-
-                        this.setDataValue(
-                            'gerente_na_epoca',
-                            null
-                        );
-
-                        return;
-
-                    }
-
-                    this.setDataValue(
-                        'gerente_na_epoca',
-                        valorNormalizado
-                    );
-
-                    return;
-
-                }
-
                 this.setDataValue(
                     'gerente_na_epoca',
-                    valor
+                    normalizarTextoOpcional(valor)
                 );
-
             }
         },
-
 
         data_hora_saida: {
             type: DataTypes.DATE,
-            allowNull: true,
-
-            validate: {
-                isDate: {
-                    msg: 'A data e hora de saída devem ser válidas.'
-                }
-            },
-
-            set(valor) {
-
-                if (valor === null || valor === undefined) {
-
-                    this.setDataValue(
-                        'data_hora_saida',
-                        null
-                    );
-
-                    return;
-
-                }
-
-                if (typeof valor === 'string') {
-
-                    const valorNormalizado = valor.trim();
-
-                    if (valorNormalizado.length === 0) {
-
-                        this.setDataValue(
-                            'data_hora_saida',
-                            null
-                        );
-
-                        return;
-
-                    }
-
-                    this.setDataValue(
-                        'data_hora_saida',
-                        new Date(valorNormalizado)
-                    );
-
-                    return;
-
-                }
-
-                this.setDataValue(
-                    'data_hora_saida',
-                    valor
-                );
-
-            }
+            allowNull: true
         }
     },
     {
         tableName: 'tb_atendimento',
-
         timestamps: true,
-
         createdAt: 'data_hora_entrada',
-
         updatedAt: 'atualizado_em',
 
         indexes: [
@@ -646,18 +373,21 @@ const Atendimento = database.define(
                     'funcionario_matricula'
                 ]
             },
+
             {
                 name: 'idx_atendimento_data_hora_entrada',
                 fields: [
                     'data_hora_entrada'
                 ]
             },
+
             {
                 name: 'idx_atendimento_gravidade',
                 fields: [
                     'gravidade'
                 ]
             },
+
             {
                 name: 'idx_atendimento_funcionario_data',
                 fields: [
@@ -669,8 +399,6 @@ const Atendimento = database.define(
     }
 );
 
-
-// Um funcionário pode possuir vários atendimentos
 Funcionario.hasMany(
     Atendimento,
     {
@@ -680,17 +408,12 @@ Funcionario.hasMany(
         },
 
         sourceKey: 'matricula',
-
         as: 'atendimentos',
-
         onUpdate: 'CASCADE',
-
         onDelete: 'RESTRICT'
     }
 );
 
-
-// Cada atendimento pertence a um funcionário
 Atendimento.belongsTo(
     Funcionario,
     {
@@ -700,14 +423,10 @@ Atendimento.belongsTo(
         },
 
         targetKey: 'matricula',
-
         as: 'funcionario',
-
         onUpdate: 'CASCADE',
-
         onDelete: 'RESTRICT'
     }
 );
-
 
 export default Atendimento;

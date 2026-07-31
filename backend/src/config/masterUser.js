@@ -2,18 +2,28 @@ import bcrypt from 'bcryptjs';
 
 import Usuario from '../models/usuarios.js';
 
+const CUSTO_BCRYPT = 12;
 
 function normalizarEmail(email) {
     if (typeof email !== 'string') {
         return '';
     }
 
-    return email.trim().toLowerCase();
+    return email
+        .trim()
+        .toLowerCase();
 }
 
-
 function emailEhValido(email) {
-    if (email.length < 3 || email.length > 150) {
+    if (typeof email !== 'string') {
+        return false;
+    }
+
+    if (email.length < 3) {
+        return false;
+    }
+
+    if (email.length > 150) {
         return false;
     }
 
@@ -22,30 +32,67 @@ function emailEhValido(email) {
     return formatoEmail.test(email);
 }
 
+function senhaEhValida(senha) {
+    if (typeof senha !== 'string') {
+        return false;
+    }
+
+    if (senha.length < 12) {
+        return false;
+    }
+
+    if (senha.length > 255) {
+        return false;
+    }
+
+    return true;
+}
+
+function valorFoiInformado(valor) {
+    if (typeof valor !== 'string') {
+        return false;
+    }
+
+    if (valor.trim().length === 0) {
+        return false;
+    }
+
+    return true;
+}
 
 function obterCredenciaisIniciais() {
-    const emailRecebido = process.env.BOOTSTRAP_ADMIN_EMAIL;
-    const senhaRecebida = process.env.BOOTSTRAP_ADMIN_PASSWORD;
+    const emailRecebido =
+        process.env.BOOTSTRAP_ADMIN_EMAIL;
+
+    const senhaRecebida =
+        process.env.BOOTSTRAP_ADMIN_PASSWORD;
 
     const emailFoiInformado =
-        typeof emailRecebido === 'string' &&
-        emailRecebido.trim().length > 0;
+        valorFoiInformado(emailRecebido);
 
     const senhaFoiInformada =
-        typeof senhaRecebida === 'string' &&
-        senhaRecebida.length > 0;
+        valorFoiInformado(senhaRecebida);
 
-    if (!emailFoiInformado && !senhaFoiInformada) {
+    if (
+        !emailFoiInformado &&
+        !senhaFoiInformada
+    ) {
         return null;
     }
 
-    if (!emailFoiInformado || !senhaFoiInformada) {
+    if (
+        !emailFoiInformado ||
+        !senhaFoiInformada
+    ) {
         throw new Error(
             'BOOTSTRAP_ADMIN_EMAIL e BOOTSTRAP_ADMIN_PASSWORD devem ser informados juntos.'
         );
     }
 
-    const email = normalizarEmail(emailRecebido);
+    const email = normalizarEmail(
+        emailRecebido
+    );
+
     const senha = senhaRecebida;
 
     if (!emailEhValido(email)) {
@@ -54,7 +101,7 @@ function obterCredenciaisIniciais() {
         );
     }
 
-    if (senha.length < 12 || senha.length > 255) {
+    if (!senhaEhValida(senha)) {
         throw new Error(
             'BOOTSTRAP_ADMIN_PASSWORD deve possuir entre 12 e 255 caracteres.'
         );
@@ -66,11 +113,38 @@ function obterCredenciaisIniciais() {
     };
 }
 
+async function buscarUsuarioPorEmail(email) {
+    return Usuario.unscoped().findOne({
+        where: {
+            email
+        },
+        attributes: [
+            'id_usuario',
+            'email',
+            'senha'
+        ]
+    });
+}
+
+async function criarUsuarioInicial(
+    credenciais
+) {
+    const senhaHash = await bcrypt.hash(
+        credenciais.senha,
+        CUSTO_BCRYPT
+    );
+
+    return Usuario.create({
+        email: credenciais.email,
+        senha: senhaHash
+    });
+}
 
 export async function criarUsuarioMaster() {
-    const credenciais = obterCredenciaisIniciais();
+    const credenciais =
+        obterCredenciaisIniciais();
 
-    if (!credenciais) {
+    if (credenciais === null) {
         console.log(
             'Criação automática do usuário inicial desativada.'
         );
@@ -78,32 +152,26 @@ export async function criarUsuarioMaster() {
         return null;
     }
 
-    const usuarioExistente = await Usuario.unscoped().findOne({
-        where: {
-            email: credenciais.email
-        }
-    });
+    const usuarioExistente =
+        await buscarUsuarioPorEmail(
+            credenciais.email
+        );
 
     if (usuarioExistente) {
         console.log(
-            'O usuário administrativo inicial já existe. A senha não foi alterada.'
+            'O usuário inicial já existe. A senha não foi alterada.'
         );
 
         return usuarioExistente;
     }
 
-    const senhaHash = await bcrypt.hash(
-        credenciais.senha,
-        12
-    );
-
-    const novoUsuario = await Usuario.create({
-        email: credenciais.email,
-        senha: senhaHash
-    });
+    const novoUsuario =
+        await criarUsuarioInicial(
+            credenciais
+        );
 
     console.log(
-        'Usuário administrativo inicial criado com sucesso.'
+        'Usuário inicial criado com sucesso.'
     );
 
     return novoUsuario;

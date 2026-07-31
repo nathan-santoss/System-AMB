@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
-import database from '../config/database.js';
 
+import database from '../config/database.js';
 
 const Usuario = database.define(
     'Usuario',
@@ -12,95 +12,77 @@ const Usuario = database.define(
             allowNull: false
         },
 
-
         email: {
             type: DataTypes.STRING(150),
             allowNull: false,
             unique: {
                 name: 'usuarios_email_unique',
-                msg: 'Este email já está cadastrado.'
+                msg: 'Este e-mail já está cadastrado.'
             },
-
             validate: {
                 notNull: {
-                    msg: 'O email é obrigatório.'
+                    msg: 'O e-mail é obrigatório.'
                 },
-
                 notEmpty: {
-                    msg: 'O email é obrigatório.'
+                    msg: 'O e-mail é obrigatório.'
                 },
-
                 isEmail: {
-                    msg: 'Informe um email válido.'
+                    msg: 'Informe um e-mail válido.'
                 },
-
                 len: {
                     args: [
                         3,
                         150
                     ],
-                    msg: 'O email deve possuir entre 3 e 150 caracteres.'
+                    msg: 'O e-mail deve possuir entre 3 e 150 caracteres.'
                 }
             },
-
             set(valor) {
-
-                if (typeof valor === 'string') {
-
-                    const emailNormalizado = valor
-                        .trim()
-                        .toLowerCase();
-
+                if (typeof valor !== 'string') {
                     this.setDataValue(
                         'email',
-                        emailNormalizado
+                        valor
                     );
 
                     return;
-
                 }
+
+                const emailNormalizado = valor
+                    .trim()
+                    .toLowerCase();
 
                 this.setDataValue(
                     'email',
-                    valor
+                    emailNormalizado
                 );
-
             }
         },
-
 
         senha: {
             type: DataTypes.STRING(255),
             allowNull: false,
-
             validate: {
                 notNull: {
                     msg: 'A senha é obrigatória.'
                 },
-
                 notEmpty: {
                     msg: 'A senha é obrigatória.'
                 },
-
                 len: {
                     args: [
-                        8,
+                        1,
                         255
                     ],
-                    msg: 'A senha deve possuir entre 8 e 255 caracteres.'
+                    msg: 'A senha armazenada é inválida.'
                 }
             }
         }
     },
     {
         tableName: 'tb_usuarios',
-
         timestamps: true,
-
         createdAt: 'criado_em',
-
         updatedAt: 'atualizado_em',
-
         defaultScope: {
             attributes: {
                 exclude: [
@@ -108,17 +90,6 @@ const Usuario = database.define(
                 ]
             }
         },
-
-        scopes: {
-            comSenha: {
-                attributes: {
-                    include: [
-                        'senha'
-                    ]
-                }
-            }
-        },
-
         indexes: [
             {
                 name: 'idx_usuarios_email',
@@ -130,6 +101,5 @@ const Usuario = database.define(
         ]
     }
 );
-
 
 export default Usuario;

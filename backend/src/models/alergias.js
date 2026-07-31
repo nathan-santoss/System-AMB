@@ -1,8 +1,10 @@
-import { DataTypes } from 'sequelize';
+import {
+    DataTypes
+} from 'sequelize';
 
 import database from '../config/database.js';
-import Funcionario from './funcionarios.js';
 
+import Funcionario from './funcionarios.js';
 
 const Alergia = database.define(
     'Alergia',
@@ -14,7 +16,6 @@ const Alergia = database.define(
             allowNull: false
         },
 
-
         funcionario_matricula: {
             type: DataTypes.STRING(20),
             allowNull: false,
@@ -25,7 +26,6 @@ const Alergia = database.define(
             },
 
             onUpdate: 'CASCADE',
-
             onDelete: 'RESTRICT',
 
             validate: {
@@ -47,37 +47,30 @@ const Alergia = database.define(
             },
 
             set(valor) {
-
                 if (typeof valor === 'number') {
-
                     this.setDataValue(
                         'funcionario_matricula',
                         String(valor).trim()
                     );
 
                     return;
-
                 }
 
                 if (typeof valor === 'string') {
-
                     this.setDataValue(
                         'funcionario_matricula',
                         valor.trim()
                     );
 
                     return;
-
                 }
 
                 this.setDataValue(
                     'funcionario_matricula',
                     valor
                 );
-
             }
         },
-
 
         descricao_alergia: {
             type: DataTypes.STRING(255),
@@ -102,29 +95,24 @@ const Alergia = database.define(
             },
 
             set(valor) {
-
                 if (typeof valor === 'string') {
-
                     this.setDataValue(
                         'descricao_alergia',
                         valor.trim()
                     );
 
                     return;
-
                 }
 
                 this.setDataValue(
                     'descricao_alergia',
                     valor
                 );
-
             }
         }
     },
     {
         tableName: 'tb_alergias',
-
         timestamps: false,
 
         indexes: [
@@ -133,20 +121,11 @@ const Alergia = database.define(
                 fields: [
                     'funcionario_matricula'
                 ]
-            },
-
-            {
-                name: 'idx_alergias_descricao',
-                fields: [
-                    'descricao_alergia'
-                ]
             }
         ]
     }
 );
 
-
-// Um funcionário pode possuir várias alergias
 Funcionario.hasMany(
     Alergia,
     {
@@ -156,17 +135,12 @@ Funcionario.hasMany(
         },
 
         sourceKey: 'matricula',
-
         as: 'alergias',
-
         onUpdate: 'CASCADE',
-
         onDelete: 'RESTRICT'
     }
 );
 
-
-// Cada alergia pertence a um funcionário
 Alergia.belongsTo(
     Funcionario,
     {
@@ -176,14 +150,10 @@ Alergia.belongsTo(
         },
 
         targetKey: 'matricula',
-
         as: 'funcionario',
-
         onUpdate: 'CASCADE',
-
         onDelete: 'RESTRICT'
     }
 );
-
 
 export default Alergia;

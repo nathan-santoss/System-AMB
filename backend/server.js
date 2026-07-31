@@ -1,306 +1,245 @@
+import 'dotenv/config';
+
 import express from 'express';
-import helmet from 'helmet';
-import { rateLimit } from 'express-rate-limit';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import database, {
-    testarConexaoBanco
-} from './src/config/database.js';
-
-import './src/models/funcionarios.js';
-import './src/models/atendimento.js';
-import './src/models/alergias.js';
 import './src/models/usuarios.js';
+import './src/models/funcionarios.js';
+import './src/models/alergias.js';
+import './src/models/atendimento.js';
 
-import funcionarioRoutes from './src/routes/funcionarioRoutes.js';
-import atendimentoRoutes from './src/routes/atendimentoRoutes.js';
-import alergiaRoutes from './src/routes/alergiaRoutes.js';
-import authRoutes from './src/routes/authRoutes.js';
+import {
+    sincronizarBanco
+} from './src/config/database.js';
 
 import {
     criarUsuarioMaster
 } from './src/config/masterUser.js';
 
+import authRoutes from './src/routes/authRoutes.js';
+import funcionarioRoutes from './src/routes/funcionarioRoutes.js';
+import alergiaRoutes from './src/routes/alergiaRoutes.js';
+import atendimentoRoutes from './src/routes/atendimentoRoutes.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const caminhoArquivoAtual = fileURLToPath(
+    import.meta.url
+);
+
+const diretorioRaiz = path.dirname(
+    caminhoArquivoAtual
+);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-const frontendDir = path.join(
-    __dirname,
-    '../frontend'
+function obterPortaServidor() {
+    const portaPadrao = 3000;
+    const portaConfigurada = process.env.PORT;
+
+    if (
+        typeof portaConfigurada !== 'string' ||
+        portaConfigurada.trim().length === 0
+    ) {
+        return portaPadrao;
+    }
+
+    const porta = Number(
+        portaConfigurada
+    );
+
+    if (
+        !Number.isInteger(porta) ||
+        porta <= 0 ||
+        porta > 65535
+    ) {
+        throw new Error(
+            'PORT deve possuir uma porta numérica válida.'
+        );
+    }
+
+    return porta;
+}
+
+function renderizarPagina(nomePagina) {
+    return function (req, res) {
+        res.set(
+            'Cache-Control',
+            'no-store'
+        );
+
+        return res.render(
+            nomePagina
+        );
+    };
+}
+
+app.disable(
+    'x-powered-by'
 );
 
-
-function ambienteEhProducao() {
-    return process.env.NODE_ENV === 'production';
-}
-
-
-function criarLimitador(configuracao) {
-    const {
-        mensagem,
-        ...opcoesLimitador
-    } = configuracao;
-
-    return rateLimit({
-        standardHeaders: 'draft-8',
-        legacyHeaders: false,
-        ...opcoesLimitador,
-        handler: function (req, res) {
-            return res.status(429).json({
-                message: mensagem
-            });
-        }
-    });
-}
-
-
-if (ambienteEhProducao()) {
-    app.set('trust proxy', 1);
-}
-
-app.disable('x-powered-by');
-
-
-app.use(
-    helmet({
-        crossOriginEmbedderPolicy: false,
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: [
-                    "'self'"
-                ],
-                scriptSrc: [
-                    "'self'",
-                    "'unsafe-inline'",
-                    "'unsafe-eval'",
-                    'https://cdn.tailwindcss.com',
-                    'https://unpkg.com'
-                ],
-                styleSrc: [
-                    "'self'",
-                    "'unsafe-inline'",
-                    'https://fonts.googleapis.com'
-                ],
-                fontSrc: [
-                    "'self'",
-                    'https://fonts.gstatic.com',
-                    'data:'
-                ],
-                imgSrc: [
-                    "'self'",
-                    'data:'
-                ],
-                connectSrc: [
-                    "'self'"
-                ],
-                objectSrc: [
-                    "'none'"
-                ],
-                baseUri: [
-                    "'self'"
-                ],
-                formAction: [
-                    "'self'"
-                ],
-                frameAncestors: [
-                    "'none'"
-                ]
-            }
-        }
-    })
+app.set(
+    'view engine',
+    'ejs'
 );
 
+app.set(
+    'views',
+    path.join(
+        diretorioRaiz,
+        'src',
+        'views'
+    )
+);
 
 app.use(
     express.json({
-        limit: '100kb'
+        limit: '1mb'
     })
 );
 
 app.use(
     express.urlencoded({
-        extended: true,
-        limit: '100kb'
+        extended: false,
+        limit: '1mb'
     })
-);
-
-
-const limitadorApi = criarLimitador({
-    windowMs: 15 * 60 * 1000,
-    limit: 300,
-    mensagem: 'Muitas requisições foram realizadas. Aguarde alguns minutos e tente novamente.'
-});
-
-const limitadorLogin = criarLimitador({
-    windowMs: 15 * 60 * 1000,
-    limit: 10,
-    skipSuccessfulRequests: true,
-    mensagem: 'Muitas tentativas de login foram realizadas. Aguarde 15 minutos e tente novamente.'
-});
-
-const limitadorCadastroUsuario = criarLimitador({
-    windowMs: 60 * 60 * 1000,
-    limit: 20,
-    mensagem: 'Muitos cadastros de usuário foram solicitados. Aguarde e tente novamente.'
-});
-
-
-app.use(
-    '/api/auth/login',
-    limitadorLogin
-);
-
-app.use(
-    '/api/auth/cadastrar',
-    limitadorCadastroUsuario
-);
-
-app.use(
-    '/api',
-    limitadorApi
-);
-
-
-app.set('view engine', 'ejs');
-
-app.set(
-    'views',
-    path.join(frontendDir, 'views')
 );
 
 app.use(
     express.static(
-        path.join(frontendDir, 'public'),
-        {
-            maxAge: ambienteEhProducao()
-                ? '1d'
-                : 0,
-            etag: true
-        }
+        path.join(
+            diretorioRaiz,
+            'public'
+        )
     )
 );
 
-
-app.get('/api/status', function (req, res) {
-    return res.status(200).json({
-        status: 'online',
-        message: 'API do Sistema AMB funcionando.'
-    });
-});
-
-
-app.use('/api/auth', authRoutes);
-app.use('/api/funcionarios', funcionarioRoutes);
-app.use('/api/atendimentos', atendimentoRoutes);
-app.use('/api/alergias', alergiaRoutes);
-
-app.get('/', function (req, res) {
-    return res.redirect('/login');
-});
-
-
-app.get('/login', function (req, res) {
-    return res.render('login');
-});
-
-
-app.get('/dashboard', function (req, res) {
-    return res.render('dashboard');
-});
-
-
-app.get('/consultar-paciente', function (req, res) {
-    return res.render('consultar-paciente');
-});
-
-
-app.get('/ficha-paciente', function (req, res) {
-    return res.render('ficha-paciente');
-});
-
-
-app.use('/api', function (req, res) {
-    return res.status(404).json({
-        message: 'A rota da API não existe.',
-        metodo: req.method,
-        rota: req.originalUrl
-    });
-});
-
-
-app.use(function (req, res) {
-    return res.status(404).send(
-        'Página não encontrada.'
-    );
-});
-
-
-app.use(function (erro, req, res, next) {
-    console.error(
-        'Erro interno:',
-        erro
-    );
-
-    if (res.headersSent) {
-        return next(erro);
+app.get(
+    '/',
+    function (req, res) {
+        return res.redirect(
+            '/login'
+        );
     }
+);
 
-    if (erro.type === 'entity.parse.failed') {
-        return res.status(400).json({
-            message: 'O JSON enviado é inválido.'
+app.get(
+    '/login',
+    renderizarPagina(
+        'login'
+    )
+);
+
+app.get(
+    '/dashboard',
+    renderizarPagina(
+        'dashboard'
+    )
+);
+
+app.get(
+    '/consultar-paciente',
+    renderizarPagina(
+        'consultar-paciente'
+    )
+);
+
+app.get(
+    '/ficha-paciente',
+    renderizarPagina(
+        'ficha-paciente'
+    )
+);
+
+app.use(
+    '/api/auth',
+    authRoutes
+);
+
+app.use(
+    '/api/funcionarios',
+    funcionarioRoutes
+);
+
+app.use(
+    '/api/alergias',
+    alergiaRoutes
+);
+
+app.use(
+    '/api/atendimentos',
+    atendimentoRoutes
+);
+
+app.use(
+    '/api',
+    function (req, res) {
+        return res.status(404).json({
+            message: 'Rota da API não encontrada.'
         });
     }
+);
 
-    if (erro.type === 'entity.too.large') {
-        return res.status(413).json({
-            message: 'O conteúdo enviado ultrapassa o limite permitido.'
-        });
+app.use(
+    function (req, res) {
+        return res.status(404).send(
+            'Página não encontrada.'
+        );
     }
+);
 
-    return res.status(500).json({
-        message: 'Ocorreu um erro interno no servidor.'
-    });
-});
+app.use(
+    function (erro, req, res, next) {
+        console.error(
+            'Erro não tratado na aplicação:',
+            erro
+        );
 
+        if (res.headersSent) {
+            return next(
+                erro
+            );
+        }
+
+        if (
+            req.originalUrl.startsWith(
+                '/api/'
+            )
+        ) {
+            return res.status(500).json({
+                message: 'Erro interno do servidor.'
+            });
+        }
+
+        return res.status(500).send(
+            'Erro interno do servidor.'
+        );
+    }
+);
 
 async function iniciarServidor() {
     try {
-        await testarConexaoBanco();
+        const porta = obterPortaServidor();
 
-        console.log(
-            'Sincronizando modelos com o banco de dados...'
-        );
-
-        await database.sync({
-            alter: false,
-            force: false
-        });
-
-        console.log(
-            'Modelos sincronizados com sucesso.'
-        );
+        await sincronizarBanco();
 
         await criarUsuarioMaster();
 
-        app.listen(PORT, function () {
-            console.log(
-                `Servidor rodando na porta ${PORT}.`
-            );
-        });
+        app.listen(
+            porta,
+            function () {
+                console.log(
+                    `Servidor executando na porta ${porta}.`
+                );
+            }
+        );
     } catch (erro) {
         console.error(
-            'Falha ao iniciar o servidor:',
-            erro.message
+            'Erro ao iniciar o servidor:',
+            erro
         );
 
         process.exit(1);
     }
 }
-
 
 iniciarServidor();

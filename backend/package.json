@@ -19,7 +19,9 @@
   },
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check src/controllers/authController.js && node --check src/middlewares/authMiddleware.js && node --check src/routes/authRoutes.js && node --check src/config/masterUser.js",
+    "check:backend": "node --check server.js && node --check src/config/database.js && node --check src/config/masterUser.js && node --check src/controllers/authController.js && node --check src/controllers/funcionarioController.js && node --check src/controllers/alergiaController.js && node --check src/controllers/atendimentoController.js && node --check src/middlewares/authMiddleware.js && node --check src/models/usuarios.js && node --check src/models/funcionarios.js && node --check src/models/alergias.js && node --check src/models/atendimento.js && node --check src/routes/authRoutes.js && node --check src/routes/funcionarioRoutes.js && node --check src/routes/alergiaRoutes.js && node --check src/routes/atendimentoRoutes.js && node --check src/services/funcionarioService.js && node --check src/services/alergiaService.js && node --check src/services/atendimentoService.js && node --check src/utils/normalizadores.js && node --check src/utils/validadores.js && node --check src/utils/datas.js && node --check src/utils/respostas.js",
+    "check:frontend": "node --check public/js/auth-session.js && node --check public/js/login.js && node --check public/js/dashboard.js && node --check public/js/consultar-paciente.js && node --check public/js/ficha-paciente.js",
+    "check": "npm run check:backend && npm run check:frontend",
     "test": "npm run check"
   },
   "dependencies": {
@@ -27,8 +29,6 @@
     "dotenv": "^17.4.2",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.6.0",
-    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.22.3",
     "sequelize": "^6.37.8"

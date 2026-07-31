@@ -2,125 +2,102 @@ import { Sequelize } from 'sequelize';
 import mysql2 from 'mysql2';
 import 'dotenv/config';
 
+const VARIAVEIS_URL = [
+    'MYSQL_URL',
+    'DATABASE_URL',
+    'MYSQL_PUBLIC_URL'
+];
+
+function textoPreenchido(valor) {
+    if (typeof valor !== 'string') {
+        return false;
+    }
+
+    if (valor.trim().length === 0) {
+        return false;
+    }
+
+    return true;
+}
 
 function obterUrlConexao() {
-
-    const variaveisUrl = [
-        'MYSQL_URL',
-        'DATABASE_URL',
-        'MYSQL_PUBLIC_URL'
-    ];
-
-    for (const nomeVariavel of variaveisUrl) {
-
+    for (const nomeVariavel of VARIAVEIS_URL) {
         const valor = process.env[nomeVariavel];
 
-        if (typeof valor === 'string') {
-
-            const urlNormalizada = valor.trim();
-
-            if (urlNormalizada.length > 0) {
-
-                return urlNormalizada;
-
-            }
-
+        if (textoPreenchido(valor)) {
+            return valor.trim();
         }
-
     }
 
     return null;
-
 }
 
+function obterSenhaBanco() {
+    const senhaBanco = process.env.DB_PASS;
+
+    if (typeof senhaBanco !== 'string') {
+        return '';
+    }
+
+    return senhaBanco;
+}
 
 function obterConfiguracaoManual() {
-
     const nomeBanco = process.env.DB_NAME;
     const usuarioBanco = process.env.DB_USER;
-    const senhaBanco = process.env.DB_PASS;
+    const senhaBanco = obterSenhaBanco();
     const hostBanco = process.env.DB_HOST;
-    const portaBanco = process.env.DB_PORT;
-
-    const variaveisObrigatorias = {
-        DB_NAME: nomeBanco,
-        DB_USER: usuarioBanco,
-        DB_HOST: hostBanco,
-        DB_PORT: portaBanco
-    };
+    const portaBancoTexto = process.env.DB_PORT;
 
     const variaveisAusentes = [];
 
-    Object.entries(variaveisObrigatorias).forEach(
-        ([nomeVariavel, valorVariavel]) => {
+    if (!textoPreenchido(nomeBanco)) {
+        variaveisAusentes.push('DB_NAME');
+    }
 
-            if (typeof valorVariavel !== 'string') {
+    if (!textoPreenchido(usuarioBanco)) {
+        variaveisAusentes.push('DB_USER');
+    }
 
-                variaveisAusentes.push(nomeVariavel);
+    if (!textoPreenchido(hostBanco)) {
+        variaveisAusentes.push('DB_HOST');
+    }
 
-                return;
-
-            }
-
-            if (valorVariavel.trim().length === 0) {
-
-                variaveisAusentes.push(nomeVariavel);
-
-            }
-
-        }
-    );
+    if (!textoPreenchido(portaBancoTexto)) {
+        variaveisAusentes.push('DB_PORT');
+    }
 
     if (variaveisAusentes.length > 0) {
-
         throw new Error(
             `Variáveis de banco ausentes: ${variaveisAusentes.join(', ')}`
         );
-
     }
 
-    const portaNumerica = Number(
-        portaBanco
-    );
+    const portaBanco = Number(portaBancoTexto);
 
-    if (!Number.isInteger(portaNumerica)) {
-
+    if (!Number.isInteger(portaBanco)) {
         throw new Error(
             'DB_PORT deve possuir uma porta numérica válida.'
         );
-
     }
 
-    if (portaNumerica <= 0 || portaNumerica > 65535) {
-
+    if (portaBanco <= 0 || portaBanco > 65535) {
         throw new Error(
-            'DB_PORT deve estar entre 1 e 65535.'
+            'DB_PORT deve possuir uma porta numérica válida.'
         );
-
-    }
-
-    let senhaNormalizada = '';
-
-    if (typeof senhaBanco === 'string') {
-
-        senhaNormalizada = senhaBanco;
-
     }
 
     return {
         nomeBanco: nomeBanco.trim(),
         usuarioBanco: usuarioBanco.trim(),
-        senhaBanco: senhaNormalizada,
+        senhaBanco,
         hostBanco: hostBanco.trim(),
-        portaBanco: portaNumerica
+        portaBanco
     };
-
 }
 
-
-function criarInstanciaBanco() {
-
-    const opcoesConexao = {
+function obterOpcoesConexao() {
+    return {
         dialect: 'mysql',
         dialectModule: mysql2,
         logging: false,
@@ -137,107 +114,75 @@ function criarInstanciaBanco() {
             max: 3
         }
     };
+}
 
+function normalizarUrlConexao(urlConexao) {
+    const utilizaMysql = urlConexao.startsWith('mysql://');
+    const utilizaMysql2 = urlConexao.startsWith('mysql2://');
+
+    if (!utilizaMysql && !utilizaMysql2) {
+        throw new Error(
+            'A URL de conexão deve utilizar o protocolo mysql:// ou mysql2://.'
+        );
+    }
+
+    if (utilizaMysql2) {
+        return urlConexao.replace(
+            'mysql2://',
+            'mysql://'
+        );
+    }
+
+    return urlConexao;
+}
+
+function criarInstanciaBanco() {
+    const opcoesConexao = obterOpcoesConexao();
     const urlConexao = obterUrlConexao();
 
-    if (urlConexao) {
-
-        if (
-            !urlConexao.startsWith('mysql://') &&
-            !urlConexao.startsWith('mysql2://')
-        ) {
-
-            throw new Error(
-                'A URL de conexão deve utilizar o protocolo mysql://.'
-            );
-
-        }
-
-        let urlNormalizada = urlConexao;
-
-        if (urlNormalizada.startsWith('mysql2://')) {
-
-            urlNormalizada = urlNormalizada.replace(
-                'mysql2://',
-                'mysql://'
-            );
-
-        }
+    if (urlConexao !== null) {
+        const urlNormalizada = normalizarUrlConexao(urlConexao);
 
         return new Sequelize(
             urlNormalizada,
             opcoesConexao
         );
-
     }
 
-    const configuracaoManual = obterConfiguracaoManual();
+    const configuracao = obterConfiguracaoManual();
+
+    const opcoesConexaoManual = {
+        ...opcoesConexao,
+        host: configuracao.hostBanco,
+        port: configuracao.portaBanco
+    };
 
     return new Sequelize(
-        configuracaoManual.nomeBanco,
-        configuracaoManual.usuarioBanco,
-        configuracaoManual.senhaBanco,
-        {
-            ...opcoesConexao,
-            host: configuracaoManual.hostBanco,
-            port: configuracaoManual.portaBanco
-        }
+        configuracao.nomeBanco,
+        configuracao.usuarioBanco,
+        configuracao.senhaBanco,
+        opcoesConexaoManual
     );
-
 }
-
 
 const database = criarInstanciaBanco();
 
-
-export async function testarConexaoBanco() {
-
+export async function sincronizarBanco() {
     try {
-
         await database.authenticate();
+        await database.sync();
 
         console.log(
-            'Banco de dados conectado com sucesso.'
+            'Banco de dados conectado e sincronizado com sucesso.'
         );
-
-        return true;
-
     } catch (erro) {
-
         console.error(
-            'Erro ao conectar ao banco de dados:',
+            'Erro ao conectar ou sincronizar o banco de dados:',
             erro.message
         );
 
         throw erro;
-
     }
-
 }
-
-
-export async function fecharConexaoBanco() {
-
-    try {
-
-        await database.close();
-
-        console.log(
-            'Conexão com o banco de dados encerrada.'
-        );
-
-    } catch (erro) {
-
-        console.error(
-            'Erro ao encerrar a conexão com o banco de dados:',
-            erro.message
-        );
-
-        throw erro;
-
-    }
-
-}
-
 
 export default database;
