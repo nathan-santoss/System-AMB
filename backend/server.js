@@ -20,23 +20,30 @@ import atendimentoRoutes from './src/routes/atendimentoRoutes.js';
 
 const app = express();
 
-const __filename = fileURLToPath(import.meta.url);
+const __filename = fileURLToString(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const porta = Number(process.env.PORT) || 3000;
+let porta = 3000;
+
+if (process.env.PORT) {
+    porta = Number(process.env.PORT);
+}
 
 
 app.disable('x-powered-by');
 
 app.set('view engine', 'ejs');
-
 app.set(
     'views',
     path.join(__dirname, '..', 'frontend', 'views')
 );
 
+
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+app.use(express.urlencoded({
+    extended: true
+}));
 
 app.use(
     express.static(
@@ -44,83 +51,61 @@ app.use(
     )
 );
 
+
 // páginas
 
-app.get('/', (req, res) => {
-    res.redirect('/login');
-});
+app.get('/', (req, res) => res.redirect('/login'));
+
+app.get('/login', (req, res) => res.render('login'));
+
+app.get('/dashboard', (req, res) => res.render('dashboard'));
+
+app.get('/consultar-paciente', (req, res) =>
+    res.render('consultar-paciente')
+);
+
+app.get('/ficha-paciente', (req, res) =>
+    res.render('ficha-paciente')
+);
 
 
-[
-    'login',
-    'dashboard',
-    'consultar-paciente',
-    'ficha-paciente'
-].forEach(pagina => {
-
-    app.get(`/${pagina}`, (req, res) => {
-        res.render(pagina);
-    });
-
-});
-
-
-// API
+// APIs
 
 app.use('/api/auth', authRoutes);
 
-app.use(
-    '/api/funcionarios',
-    funcionarioRoutes
-);
+app.use('/api/funcionarios', funcionarioRoutes);
 
-app.use(
-    '/api/alergias',
-    alergiaRoutes
-);
+app.use('/api/alergias', alergiaRoutes);
 
-app.use(
-    '/api/atendimentos',
-    atendimentoRoutes
-);
+app.use('/api/atendimentos', atendimentoRoutes);
 
 
-// erros de rota
+// erros
 
 app.use('/api', (req, res) => {
-
     res.status(404).json({
         message: 'Rota não encontrada.'
     });
-
 });
 
-
 app.use((req, res) => {
-
     res.status(404).send(
         'Página não encontrada.'
     );
-
 });
 
-
-// erro geral
-
 app.use((erro, req, res, next) => {
-
     console.error(erro);
 
     res.status(500).json({
         message: 'Erro interno do servidor.'
     });
-
 });
 
 
-// inicialização
+// iniciar
 
-async function iniciarServidor() {
+const iniciarServidor = async () => {
 
     try {
 
@@ -128,16 +113,11 @@ async function iniciarServidor() {
 
         await criarUsuarioMaster();
 
-
-        app.listen(
-            porta,
-            () => {
-                console.log(
-                    `Servidor rodando na porta ${porta}`
-                );
-            }
-        );
-
+        app.listen(porta, () => {
+            console.log(
+                `Servidor rodando na porta ${porta}`
+            );
+        });
 
     } catch (erro) {
 
@@ -145,9 +125,10 @@ async function iniciarServidor() {
             'Falha ao iniciar:',
             erro.message
         );
+
     }
 
-}
+};
 
 
 iniciarServidor();
