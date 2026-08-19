@@ -1,336 +1,119 @@
 import jwt from 'jsonwebtoken';
-
 import Usuario from '../models/usuarios.js';
 
+// Aqui eu defino as constantes necessárias para validar a emissão estrutural do token.
 const EMISSOR_TOKEN = 'system-amb';
 const PUBLICO_TOKEN = 'system-amb-web';
 
-function ambienteEhProducao() {
-    return process.env.NODE_ENV === 'production';
-}
+// Nesta função eu isolo a responsabilidade de limpar o cookie de sessão do usuário em caso de falhas.
+function limparCookieSessao(res) {
+    const ambienteEhProducao = process.env.NODE_ENV === 'production';
 
-function obterOpcoesLimpezaCookie() {
-    return {
+    res.clearCookie('token', {
         httpOnly: true,
-        secure: ambienteEhProducao(),
+        secure: ambienteEhProducao,
         sameSite: 'strict',
         path: '/'
-    };
-}
-
-function impedirCache(res) {
-    res.setHeader(
-        'Cache-Control',
-        'no-store, no-cache, must-revalidate, private'
-    );
-
-    res.setHeader(
-        'Pragma',
-        'no-cache'
-    );
-}
-
-function extrairCookies(cabecalhoCookie) {
-    const cookies = {};
-
-    if (typeof cabecalhoCookie !== 'string') {
-        return cookies;
-    }
-
-    const partesCookie = cabecalhoCookie.split(';');
-
-    for (const parteCookie of partesCookie) {
-        const indiceSeparador = parteCookie.indexOf('=');
-
-        if (indiceSeparador === -1) {
-            continue;
-        }
-
-        const nome = parteCookie
-            .slice(0, indiceSeparador)
-            .trim();
-
-        const valor = parteCookie
-            .slice(indiceSeparador + 1)
-            .trim();
-
-        if (nome.length === 0) {
-            continue;
-        }
-
-        try {
-            cookies[nome] = decodeURIComponent(valor);
-        } catch (erro) {
-            cookies[nome] = valor;
-        }
-    }
-
-    return cookies;
-}
-
-function extrairTokenCookie(req) {
-    let cabecalhoCookie;
-
-    if (req.headers) {
-        cabecalhoCookie = req.headers.cookie;
-    }
-
-    const cookies = extrairCookies(
-        cabecalhoCookie
-    );
-
-    if (typeof cookies.token !== 'string') {
-        return null;
-    }
-
-    const token = cookies.token.trim();
-
-    if (token.length === 0) {
-        return null;
-    }
-
-    return token;
-}
-
-function obterJwtSecret() {
-    if (typeof process.env.JWT_SECRET !== 'string') {
-        return null;
-    }
-
-    const jwtSecret = process.env.JWT_SECRET.trim();
-
-    if (jwtSecret.length < 32) {
-        return null;
-    }
-
-    return jwtSecret;
-}
-
-function limparCookieToken(res) {
-    res.clearCookie(
-        'token',
-        obterOpcoesLimpezaCookie()
-    );
-}
-
-function identificadorUsuarioEhValido(valor) {
-    const idUsuario = Number(valor);
-
-    if (!Number.isSafeInteger(idUsuario)) {
-        return false;
-    }
-
-    if (idUsuario <= 0) {
-        return false;
-    }
-
-    return true;
-}
-
-function normalizarEmail(email) {
-    if (typeof email !== 'string') {
-        return '';
-    }
-
-    return email
-        .trim()
-        .toLowerCase();
-}
-
-function dadosTokenSaoValidos(usuarioDecodificado) {
-    if (!usuarioDecodificado) {
-        return false;
-    }
-
-    if (typeof usuarioDecodificado !== 'object') {
-        return false;
-    }
-
-    if (
-        !identificadorUsuarioEhValido(
-            usuarioDecodificado.id_usuario
-        )
-    ) {
-        return false;
-    }
-
-    if (
-        !identificadorUsuarioEhValido(
-            usuarioDecodificado.sub
-        )
-    ) {
-        return false;
-    }
-
-    if (
-        Number(usuarioDecodificado.id_usuario) !==
-        Number(usuarioDecodificado.sub)
-    ) {
-        return false;
-    }
-
-    const email = normalizarEmail(
-        usuarioDecodificado.email
-    );
-
-    if (email.length === 0) {
-        return false;
-    }
-
-    return true;
-}
-
-function responderSessaoInvalida(
-    res,
-    mensagem
-) {
-    limparCookieToken(res);
-
-    return res.status(401).json({
-        message: mensagem
     });
 }
 
-function obterMensagemErroToken(erro) {
-    if (erro.name === 'TokenExpiredError') {
-        return 'Sessão expirada. Faça login novamente.';
+// Agora eu crio um extrator simples para capturar exclusivamente o nosso token dentro do cabeçalho HTTP.
+function extrairTokenDoCookie(cabecalhoCookie) {
+    if (typeof cabecalhoCookie !== 'string') {
+        return null;
     }
 
-    if (erro.name === 'NotBeforeError') {
-        return 'A sessão ainda não está válida.';
+    const cookies = cabecalhoCookie.split(';');
+
+    for (const cookie of cookies) {
+        const partes = cookie.split('=');
+        const nome = partes[0].trim();
+
+        if (nome === 'token') {
+            return partes[1].trim();
+        }
     }
 
-    return 'Sessão inválida. Faça login novamente.';
+    return null;
 }
 
-function erroEhDeToken(erro) {
-    if (erro.name === 'TokenExpiredError') {
-        return true;
-    }
+// Em seguida eu padronizo a forma como o sistema nega e encerra o acesso em requisições inválidas.
+function bloquearAcesso(res, mensagem) {
+    limparCookieSessao(res);
 
-    if (erro.name === 'JsonWebTokenError') {
-        return true;
-    }
-
-    if (erro.name === 'NotBeforeError') {
-        return true;
-    }
-
-    return false;
+    return res.status(401).json({
+        erro: mensagem
+    });
 }
 
-export async function verificarToken(
-    req,
-    res,
-    next
-) {
-    impedirCache(res);
+// Aqui eu implemento o middleware principal que atuará como um "guardião" em todas as rotas protegidas.
+export async function verificarToken(req, res, next) {
+    // Primeiro eu evito que o navegador faça o cache de informações confidenciais trafegadas por segurança.
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
 
     try {
-        const jwtSecret = obterJwtSecret();
+        const jwtSecret = process.env.JWT_SECRET;
 
-        if (!jwtSecret) {
-            console.error(
-                'JWT_SECRET não está configurado ou possui menos de 32 caracteres.'
-            );
-
+        // Antes de prosseguir, eu garanto que o servidor possui a chave criptográfica devidamente configurada.
+        if (typeof jwtSecret !== 'string') {
             return res.status(500).json({
-                message: 'O servidor de autenticação não está configurado corretamente.'
+                erro: 'O servidor não possui uma chave de segurança configurada.'
             });
         }
 
-        const token = extrairTokenCookie(req);
+        // Agora eu tento extrair o token identificador a partir dos cookies da requisição atual.
+        const token = extrairTokenDoCookie(req.headers.cookie);
 
         if (!token) {
-            return res.status(401).json({
-                message: 'Sessão não autenticada.'
-            });
+            return bloquearAcesso(res, 'Sessão não autenticada.');
         }
 
-        const usuarioDecodificado = jwt.verify(
-            token,
-            jwtSecret,
-            {
-                algorithms: [
-                    'HS256'
-                ],
-                issuer: EMISSOR_TOKEN,
-                audience: PUBLICO_TOKEN
-            }
-        );
+        // Neste ponto eu tento decodificar o token. O próprio JWT lançará um erro imediato se for forjado ou expirado.
+        const usuarioDecodificado = jwt.verify(token, jwtSecret, {
+            algorithms: ['HS256'],
+            issuer: EMISSOR_TOKEN,
+            audience: PUBLICO_TOKEN
+        });
 
-        if (
-            !dadosTokenSaoValidos(
-                usuarioDecodificado
-            )
-        ) {
-            return responderSessaoInvalida(
-                res,
-                'Sessão inválida.'
-            );
-        }
+        const idUsuario = Number(usuarioDecodificado.id_usuario);
 
-        const idUsuario = Number(
-            usuarioDecodificado.id_usuario
-        );
-
-        const usuario = await Usuario.findByPk(
-            idUsuario,
-            {
-                attributes: [
-                    'id_usuario',
-                    'email'
-                ]
-            }
-        );
+        // Por segurança, eu vou ao banco de dados confirmar se o usuário que assina o token não foi removido.
+        const usuario = await Usuario.findByPk(idUsuario, {
+            attributes: ['id_usuario', 'email']
+        });
 
         if (!usuario) {
-            return responderSessaoInvalida(
-                res,
-                'O usuário da sessão não existe mais.'
-            );
+            return bloquearAcesso(res, 'O usuário da sessão não existe mais.');
         }
 
-        const emailUsuario = normalizarEmail(
-            usuario.email
-        );
-
-        const emailToken = normalizarEmail(
-            usuarioDecodificado.email
-        );
-
-        if (emailUsuario !== emailToken) {
-            return responderSessaoInvalida(
-                res,
-                'Os dados da sessão não correspondem ao usuário atual.'
-            );
-        }
-
+        // Com tudo validado, eu armazeno os dados essenciais na requisição e autorizo o seguimento do fluxo.
         req.usuario = {
             id_usuario: usuario.id_usuario,
             email: usuario.email
         };
 
         return next();
-    } catch (erro) {
-        if (erroEhDeToken(erro)) {
-            const mensagem = obterMensagemErroToken(
-                erro
-            );
 
-            return responderSessaoInvalida(
-                res,
-                mensagem
-            );
+    } catch (erro) {
+        // Caso ocorra qualquer problema de validação no JWT, eu capturo a exceção e trato com mensagens amigáveis.
+        if (erro.name === 'TokenExpiredError') {
+            return bloquearAcesso(res, 'Sessão expirada. Faça login novamente.');
         }
 
-        console.error(
-            'Erro inesperado na autenticação:',
-            erro
-        );
+        if (erro.name === 'JsonWebTokenError') {
+            return bloquearAcesso(res, 'Sessão inválida. Faça login novamente.');
+        }
 
+        if (erro.name === 'NotBeforeError') {
+            return bloquearAcesso(res, 'A sessão ainda não é válida.');
+        }
+
+        console.error('Erro inesperado na autenticação:', erro);
+
+        // Se o erro for algo interno do servidor e não do token, eu devolvo o status 500 genérico.
         return res.status(500).json({
-            message: 'Erro interno ao validar a autenticação.'
+            erro: 'Erro interno ao validar a autenticação.'
         });
     }
 }

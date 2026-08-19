@@ -2,164 +2,73 @@ import {
     buscarFuncionarioPorMatricula
 } from './funcionarioService.js';
 
-
 import {
     buscarAlergiasPorFuncionario
 } from './alergiaService.js';
-
 
 import {
     buscarAtendimentosPorFuncionario
 } from './atendimentoService.js';
 
+// Aqui eu monto o prontuário completo do paciente de forma organizada.
+export async function buscarProntuarioFuncionario(matricula) {
+    // Primeiro eu busco os dados principais do funcionário utilizando a matrícula.
+    const funcionario = await buscarFuncionarioPorMatricula(matricula);
 
-
-// Eu monto o prontuário completo de um funcionário.
-export async function buscarProntuarioFuncionario(
-    matricula
-) {
-
-
-    // Primeiro, busco os dados principais do funcionário.
-    const funcionario =
-        await buscarFuncionarioPorMatricula(
-            matricula
-        );
-
-
+    // Se o paciente não existir no banco de dados, eu interrompo a execução retornando nulo.
     if (!funcionario) {
-        // Se ele não existir, eu paro por aqui e retorno nulo.
-
         return null;
-
     }
 
+    // Com o paciente validado, eu resgato todos os alertas médicos e alergias cadastradas.
+    const alergias = await buscarAlergiasPorFuncionario(matricula);
 
+    // Em seguida eu busco todo o histórico de triagens e atendimentos já realizados.
+    const atendimentos = await buscarAtendimentosPorFuncionario(matricula);
 
-    // Se o funcionário existe, eu busco a lista de alergias dele.
-    const alergias =
-        await buscarAlergiasPorFuncionario(
-            matricula
-        );
+    // Agora eu percorro cada atendimento para injetar um status situacional amigável.
+    const atendimentosComStatus = atendimentos.map(atendimento => {
+        const dados = atendimento.toJSON();
+        let status = 'em_aberto';
 
+        // Se houver uma data de saída registrada, eu considero o atendimento como concluído.
+        if (dados.data_hora_saida !== null && dados.data_hora_saida !== undefined) {
+            status = 'finalizado';
+        }
 
+        return {
+            ...dados,
+            status
+        };
+    });
 
-    // Também busco todo o histórico de atendimentos.
-    const atendimentos =
-        await buscarAtendimentosPorFuncionario(
-            matricula
-        );
+    // Neste ponto eu filtro a lista apenas para saber quantos atendimentos não foram finalizados.
+    const atendimentosAbertos = atendimentosComStatus.filter(atendimento => {
+        if (atendimento.status === 'em_aberto') {
+            return true;
+        }
 
+        return false;
+    });
 
+    // Aqui eu preparo a variável que guardará a data da última vez que o paciente foi atendido.
+    let ultimoAtendimento = null;
 
-    // Eu percorro cada atendimento para adicionar um campo de 'status' (em_aberto ou finalizado).
-    const atendimentosComStatus =
-        atendimentos.map(
-            atendimento => {
+    // Se existir pelo menos um registro no histórico, eu pego a data de entrada do mais recente.
+    if (atendimentos.length > 0) {
+        ultimoAtendimento = atendimentos[0].data_hora_entrada;
+    }
 
-
-                const dados =
-                    atendimento.toJSON();
-
-
-
-                let status =
-                    'em_aberto';
-
-
-
-                // Se tiver data e hora de saída, o status muda para 'finalizado'.
-                if (
-
-                    dados.data_hora_saida !== null &&
-                    dados.data_hora_saida !== undefined
-
-                ) {
-
-                    status =
-                        'finalizado';
-
-                }
-
-
-
-                return {
-
-                    ...dados,
-
-                    status
-
-                };
-
-            }
-
-        );
-
-
-
-    // Eu filtro a lista de atendimentos para contar quantos ainda estão abertos.
-    const atendimentosAbertos =
-        atendimentosComStatus.filter(
-            atendimento => {
-
-
-                return (
-                    atendimento.status ===
-                    'em_aberto'
-                );
-
-
-            }
-        );
-
-
-
-    // Eu pego a data do último atendimento registrado.
-    const ultimoAtendimento =
-        atendimentos.length > 0
-            ?
-            atendimentos[0].data_hora_entrada
-            :
-            null;
-
-    // Por fim, eu junto todas as informações em um único objeto de prontuário.
+    // Por fim eu empacoto todas as informações no formato exato que o frontend espera (o molde).
     return {
-
-
         funcionario,
-
-
-
-        // Crio um resumo com os totais para facilitar a exibição no frontend.
         resumo: {
-
-
-            totalAlergias:
-                alergias.length,
-
-
-
-            totalAtendimentos:
-                atendimentos.length,
-
-
-
-            totalAtendimentosAbertos:
-                atendimentosAbertos.length,
-
+            totalAlergias: alergias.length,
+            totalAtendimentos: atendimentos.length,
+            totalAtendimentosAbertos: atendimentosAbertos.length,
             ultimoAtendimento
-
-
         },
-
         alergias,
-
-        // Retorno a lista de atendimentos já com o campo de status.
-        atendimentos:
-            atendimentosComStatus
-
-
+        atendimentos: atendimentosComStatus
     };
-
-
 }

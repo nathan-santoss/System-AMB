@@ -1,13 +1,11 @@
 const DASHBOARD_BASE_URL = '/api';
 
-// Aqui eu inicializo os ícones da interface caso a biblioteca esteja disponível.
 function atualizarIcones() {
     if (window.lucide) {
         window.lucide.createIcons();
     }
 }
 
-// Nesta parte eu crio uma função para evitar falhas de segurança com textos no HTML.
 function escapeHTML(valor) {
     if (valor === null) {
         return '';
@@ -25,7 +23,6 @@ function escapeHTML(valor) {
         .replace(/'/g, '&#039;');
 }
 
-// Agora eu garanto que um texto padrão seja exibido caso o valor original seja inválido.
 function obterTextoExibicao(valor, textoPadrao) {
     if (valor === null) {
         return textoPadrao;
@@ -44,7 +41,6 @@ function obterTextoExibicao(valor, textoPadrao) {
     return texto;
 }
 
-// Aqui eu transformo o valor recebido em um número seguro para exibição nos contadores.
 function obterNumeroExibicao(valor) {
     const numero = Number(valor);
 
@@ -59,7 +55,6 @@ function obterNumeroExibicao(valor) {
     return Math.trunc(numero);
 }
 
-// Neste ponto eu leio a resposta da API garantindo que não quebre a tela se o JSON for inválido.
 async function lerRespostaJson(resposta) {
     try {
         return await resposta.json();
@@ -68,11 +63,11 @@ async function lerRespostaJson(resposta) {
     }
 }
 
-// Aqui eu extraio a melhor mensagem de erro possível dos dados retornados pelo backend.
 function obterMensagemErro(dados, mensagemPadrao) {
     if (dados) {
         if (typeof dados.erro === 'string') {
             const mensagemErro = dados.erro.trim();
+
             if (mensagemErro.length > 0) {
                 return mensagemErro;
             }
@@ -80,6 +75,7 @@ function obterMensagemErro(dados, mensagemPadrao) {
 
         if (typeof dados.message === 'string') {
             const mensagem = dados.message.trim();
+
             if (mensagem.length > 0) {
                 return mensagem;
             }
@@ -95,7 +91,6 @@ function obterMensagemErro(dados, mensagemPadrao) {
     return mensagemPadrao;
 }
 
-// Em seguida eu formato a data e hora para o padrão brasileiro que será exibido na tabela.
 function formatarDataHora(valor) {
     if (!valor) {
         return 'Não informado';
@@ -116,7 +111,6 @@ function formatarDataHora(valor) {
     });
 }
 
-// Nesta função eu defino as cores e estilos corretos para cada nível de gravidade.
 function obterClasseGravidade(gravidade) {
     if (gravidade === 'Alta') {
         return 'bg-red-50 text-red-700 border-red-200';
@@ -133,7 +127,6 @@ function obterClasseGravidade(gravidade) {
     return 'bg-slate-50 text-slate-700 border-slate-200';
 }
 
-// Aqui eu crio um utilitário simples para atualizar textos de elementos no HTML.
 function definirTextoElemento(idElemento, valor) {
     const elemento = document.getElementById(idElemento);
 
@@ -144,7 +137,6 @@ function definirTextoElemento(idElemento, valor) {
     elemento.textContent = String(valor);
 }
 
-// Antes de carregar os dados eu mostro um estado de carregamento visual nos contadores superiores.
 function definirContadoresCarregando() {
     definirTextoElemento('contador-hoje', '...');
     definirTextoElemento('count-normal', '...');
@@ -152,7 +144,6 @@ function definirContadoresCarregando() {
     definirTextoElemento('count-grave', '...');
 }
 
-// Caso ocorra algum erro eu atualizo os contadores para refletir a falha na obtenção dos dados.
 function definirContadoresErro() {
     definirTextoElemento('contador-hoje', 'Erro');
     definirTextoElemento('count-normal', '-');
@@ -160,7 +151,6 @@ function definirContadoresErro() {
     definirTextoElemento('count-grave', '-');
 }
 
-// Agora eu atualizo os contadores principais com as informações reais vindas da API.
 function renderizarContadores(dados) {
     const totalHoje = obterNumeroExibicao(dados.totalHoje);
 
@@ -182,12 +172,10 @@ function renderizarContadores(dados) {
     definirTextoElemento('count-grave', quantidadeAlta);
 }
 
-// Aqui eu construo uma linha de tabela de ponta a ponta para exibir apenas mensagens textuais.
 function criarLinhaMensagemTabela(mensagem, classeTexto) {
     const linha = document.createElement('tr');
-
     const coluna = document.createElement('td');
-    // Para manter a tabela alinhada eu ocupo o espaço de todas as 4 colunas.
+
     coluna.colSpan = 4;
     coluna.className = 'py-8 text-center text-sm ' + classeTexto;
     coluna.textContent = mensagem;
@@ -197,7 +185,6 @@ function criarLinhaMensagemTabela(mensagem, classeTexto) {
     return linha;
 }
 
-// Neste momento eu aplico a mensagem de carregamento inicial na tabela de atendimentos.
 function renderizarAtendimentosCarregando() {
     const tabela = document.getElementById('lista-ultimos-atendimentos');
 
@@ -211,12 +198,10 @@ function renderizarAtendimentosCarregando() {
     );
 }
 
-// Nesta parte fundamental eu monto a linha da tabela separando cada dado na sua respectiva coluna.
 function criarLinhaAtendimento(atendimento) {
     const linha = document.createElement('tr');
     linha.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors';
 
-    // Primeiro eu crio a coluna 1 contendo o nome e a matrícula do paciente.
     const colunaPaciente = document.createElement('td');
     colunaPaciente.className = 'px-6 py-4';
 
@@ -233,7 +218,6 @@ function criarLinhaAtendimento(atendimento) {
     colunaPaciente.appendChild(nomeFuncionario);
     colunaPaciente.appendChild(dadosFuncionario);
 
-    // Agora eu crio a coluna 2 exclusiva para exibir a queixa do paciente.
     const colunaQueixa = document.createElement('td');
     colunaQueixa.className = 'px-6 py-4';
 
@@ -243,24 +227,20 @@ function criarLinhaAtendimento(atendimento) {
 
     colunaQueixa.appendChild(queixa);
 
-    // Em seguida eu crio a coluna 3 que mostrará a tag visual do nível de gravidade.
     const colunaGravidade = document.createElement('td');
     colunaGravidade.className = 'px-6 py-4 text-center';
 
     const gravidade = obterTextoExibicao(atendimento.gravidade, 'Não informada');
-
     const badgeGravidade = document.createElement('span');
     badgeGravidade.className = 'inline-flex px-3 py-1 text-xs font-bold rounded-full border ' + obterClasseGravidade(gravidade);
     badgeGravidade.textContent = gravidade;
 
     colunaGravidade.appendChild(badgeGravidade);
 
-    // Depois eu crio a coluna 4 contendo a data e a hora precisas do registro.
     const colunaData = document.createElement('td');
     colunaData.className = 'px-6 py-4 text-center text-slate-500 text-xs whitespace-nowrap';
     colunaData.textContent = formatarDataHora(atendimento.data_hora_entrada);
 
-    // Por fim eu adiciono as quatro colunas organizadas dentro da linha.
     linha.appendChild(colunaPaciente);
     linha.appendChild(colunaQueixa);
     linha.appendChild(colunaGravidade);
@@ -269,7 +249,6 @@ function criarLinhaAtendimento(atendimento) {
     return linha;
 }
 
-// Aqui eu processo a lista completa de atendimentos e os exibo estruturados na tabela.
 function renderizarUltimosAtendimentos(atendimentos) {
     const tabela = document.getElementById('lista-ultimos-atendimentos');
 
@@ -293,7 +272,6 @@ function renderizarUltimosAtendimentos(atendimentos) {
         return;
     }
 
-    // Com isso eu navego pela lista gerando cada uma das linhas visuais.
     atendimentos.forEach(function (atendimento) {
         if (!atendimento) {
             return;
@@ -316,7 +294,6 @@ function renderizarUltimosAtendimentos(atendimentos) {
         tabela.appendChild(criarLinhaAtendimento(atendimento));
     });
 
-    // Por segurança eu valido se sobrou alguma linha exibida para não mostrar uma tabela vazia.
     if (tabela.children.length === 0) {
         tabela.appendChild(
             criarLinhaMensagemTabela('Nenhum atendimento vinculado a um funcionário válido.', 'text-slate-400')
@@ -324,7 +301,6 @@ function renderizarUltimosAtendimentos(atendimentos) {
     }
 }
 
-// Agora eu lido com a seção lateral do ranking, colocando uma mensagem de aviso inicial.
 function renderizarSetoresCarregando() {
     const container = document.getElementById('lista-setores');
 
@@ -341,7 +317,6 @@ function renderizarSetoresCarregando() {
     container.appendChild(mensagem);
 }
 
-// Nesta parte eu monto um pequeno cartão listando o nome do setor e a quantidade somada.
 function criarItemSetor(setor) {
     const item = document.createElement('div');
     item.className = 'flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100';
@@ -360,7 +335,6 @@ function criarItemSetor(setor) {
     return item;
 }
 
-// Em seguida eu exibo a lista processada do ranking de setores mais frequentes do mês.
 function renderizarRankingSetores(setores) {
     const container = document.getElementById('lista-setores');
 
@@ -388,7 +362,6 @@ function renderizarRankingSetores(setores) {
         return;
     }
 
-    // Então eu populo a caixa lateral contendo as referências para todos os setores ativos.
     setores.forEach(function (setor) {
         if (!setor) {
             return;
@@ -398,7 +371,6 @@ function renderizarRankingSetores(setores) {
     });
 }
 
-// Caso algo dê errado eu injeto as mensagens de falha nas três frentes do painel.
 function mostrarErroDashboard(mensagem) {
     definirContadoresErro();
 
@@ -422,7 +394,6 @@ function mostrarErroDashboard(mensagem) {
     }
 }
 
-// Este é o fluxo central encarregado de buscar os dados com o token de autorização.
 async function carregarDadosDashboard() {
     definirContadoresCarregando();
     renderizarAtendimentosCarregando();
@@ -454,7 +425,6 @@ async function carregarDadosDashboard() {
             throw new Error(mensagem);
         }
 
-        // Tendo os resultados em mãos eu executo as funções de preenchimento do HTML.
         renderizarContadores(dados);
         renderizarUltimosAtendimentos(dados.ultimosAtendimentos);
         renderizarRankingSetores(dados.atendimentosPorSetor);
@@ -466,7 +436,6 @@ async function carregarDadosDashboard() {
     }
 }
 
-// Aqui eu valido a sessão e realizo a primeira chamada à API após a carga total da tela.
 async function inicializarDashboard() {
     if (!window.AuthSession) {
         console.error('O arquivo auth-session.js não foi carregado.');
@@ -485,7 +454,6 @@ async function inicializarDashboard() {
 
     atualizarIcones();
 
-    // Com isso eu também conecto o botão de forçar atualização no cabeçalho do painel.
     const botaoAtualizar = document.getElementById('botao-atualizar-dashboard');
 
     if (botaoAtualizar) {
@@ -495,7 +463,6 @@ async function inicializarDashboard() {
     await carregarDadosDashboard();
 }
 
-// Para manter o projeto flexível eu possibilito o comando de logout em escopo global.
 window.fazerLogout = async function () {
     if (!window.AuthSession) {
         localStorage.removeItem('token');
@@ -506,5 +473,4 @@ window.fazerLogout = async function () {
     await window.AuthSession.fazerLogout();
 };
 
-// Por fim eu configuro o gatilho principal de injeção após a página ser totalmente interpretada.
 document.addEventListener('DOMContentLoaded', inicializarDashboard);
