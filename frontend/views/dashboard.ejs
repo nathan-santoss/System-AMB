@@ -2,379 +2,206 @@
 <html lang="pt-BR">
 
 <head>
-
+    <!-- Aqui eu incluo os metadados e as bibliotecas essenciais da nossa interface. -->
     <%- include('partials/head') %>
-
-        <title>
-            Dashboard - Sistema de Ambulatório
-        </title>
-
+        <title>Dashboard - Sistema de Ambulatório</title>
 </head>
 
 <body class="flex min-h-screen bg-slate-100 text-slate-700">
 
+    <!-- Primeiro eu renderizo a barra lateral de navegação. -->
     <%- include('partials/sidebar') %>
 
+        <!-- Em seguida eu crio o container principal que se adapta ao restante da tela. -->
         <main class="min-w-0 flex-1 overflow-y-auto">
-
             <div class="p-4 sm:p-6 lg:p-8">
 
+                <!-- Neste bloco eu monto o cabeçalho superior contendo o título e o botão principal. -->
                 <header class="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-
                     <div class="flex items-center gap-3">
-
                         <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100"
                             aria-hidden="true">
-
-                            <i data-lucide="layout-dashboard" class="h-7 w-7 text-azulEscuro">
-                            </i>
-
+                            <i data-lucide="layout-dashboard" class="h-7 w-7 text-azulEscuro"></i>
                         </div>
-
                         <div>
-
                             <h1 class="text-2xl font-bold text-slate-800 sm:text-3xl">
-
                                 Painel do Ambulatório
-
                             </h1>
-
                             <p class="mt-1 text-sm text-slate-500">
-
                                 Resumo dos atendimentos e atividades do sistema.
-
                             </p>
-
                         </div>
-
                     </div>
 
+                    <!-- Agora eu configuro o botão que o usuário clica para recarregar o painel sem atualizar a página. -->
                     <button type="button" id="botao-atualizar-dashboard"
                         class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto">
-
-                        <i data-lucide="refresh-cw" class="h-5 w-5" aria-hidden="true">
-                        </i>
-
-                        <span id="texto-botao-atualizar-dashboard">
-                            Atualizar painel
-                        </span>
-
+                        <i data-lucide="refresh-cw" class="h-5 w-5" aria-hidden="true"></i>
+                        <span id="texto-botao-atualizar-dashboard">Atualizar painel</span>
                     </button>
-
                 </header>
 
+                <!-- Neste ponto eu estruturo a grade responsiva dos quatro cartões de contagem diária. -->
                 <section class="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4"
                     aria-label="Indicadores de atendimentos do dia">
 
+                    <!-- Aqui eu crio o cartão dedicado a mostrar o volume total de consultas do dia. -->
                     <article class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
-
                         <div class="flex items-start justify-between gap-4">
-
                             <div>
-
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">
-
-                                    Atendimentos hoje
-
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Atendimentos hoje
                                 </p>
-
                                 <p id="contador-hoje" class="mt-3 text-4xl font-bold text-azulEscuro"
-                                    aria-live="polite">
-
-                                    0
-
-                                </p>
-
+                                    aria-live="polite">0</p>
                             </div>
-
                             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100"
                                 aria-hidden="true">
-
-                                <i data-lucide="stethoscope" class="h-6 w-6 text-azulEscuro">
-                                </i>
-
+                                <i data-lucide="stethoscope" class="h-6 w-6 text-azulEscuro"></i>
                             </div>
-
                         </div>
-
-                        <p class="mt-4 text-xs text-slate-400">
-
-                            Registros realizados desde o início do dia.
-
-                        </p>
-
+                        <p class="mt-4 text-xs text-slate-400">Registros realizados desde o início do dia.</p>
                     </article>
 
+                    <!-- Depois eu monto o cartão focado exclusivamente nos casos de baixa complexidade. -->
                     <article class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
-
                         <div class="flex items-start justify-between gap-4">
-
                             <div>
-
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">
-
-                                    Gravidade baixa
-
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Gravidade baixa</p>
+                                <p id="count-normal" class="mt-3 text-4xl font-bold text-green-600" aria-live="polite">0
                                 </p>
-
-                                <p id="count-normal" class="mt-3 text-4xl font-bold text-green-600" aria-live="polite">
-
-                                    0
-
-                                </p>
-
                             </div>
-
                             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-100"
                                 aria-hidden="true">
-
-                                <i data-lucide="circle-check-big" class="h-6 w-6 text-green-600">
-                                </i>
-
+                                <i data-lucide="circle-check-big" class="h-6 w-6 text-green-600"></i>
                             </div>
-
                         </div>
-
-                        <p class="mt-4 text-xs text-slate-400">
-
-                            Atendimentos classificados como baixa gravidade.
-
-                        </p>
-
+                        <p class="mt-4 text-xs text-slate-400">Atendimentos classificados como baixa gravidade.</p>
                     </article>
 
+                    <!-- Em seguida preparo o indicador para ocorrências de nível intermediário. -->
                     <article class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
-
                         <div class="flex items-start justify-between gap-4">
-
                             <div>
-
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">
-
-                                    Gravidade média
-
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Gravidade média</p>
+                                <p id="count-medio" class="mt-3 text-4xl font-bold text-yellow-600" aria-live="polite">0
                                 </p>
-
-                                <p id="count-medio" class="mt-3 text-4xl font-bold text-yellow-600" aria-live="polite">
-
-                                    0
-
-                                </p>
-
                             </div>
-
                             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-yellow-100"
                                 aria-hidden="true">
-
-                                <i data-lucide="triangle-alert" class="h-6 w-6 text-yellow-600">
-                                </i>
-
+                                <i data-lucide="triangle-alert" class="h-6 w-6 text-yellow-600"></i>
                             </div>
-
                         </div>
-
-                        <p class="mt-4 text-xs text-slate-400">
-
-                            Atendimentos classificados como média gravidade.
-
-                        </p>
-
+                        <p class="mt-4 text-xs text-slate-400">Atendimentos classificados como média gravidade.</p>
                     </article>
 
+                    <!-- Por fim construo o painel de alerta para triagens consideradas graves ou urgentes. -->
                     <article class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
-
                         <div class="flex items-start justify-between gap-4">
-
                             <div>
-
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">
-
-                                    Gravidade alta
-
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Gravidade alta</p>
+                                <p id="count-grave" class="mt-3 text-4xl font-bold text-red-600" aria-live="polite">0
                                 </p>
-
-                                <p id="count-grave" class="mt-3 text-4xl font-bold text-red-600" aria-live="polite">
-
-                                    0
-
-                                </p>
-
                             </div>
-
                             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-100"
                                 aria-hidden="true">
-
-                                <i data-lucide="siren" class="h-6 w-6 text-red-600">
-                                </i>
-
+                                <i data-lucide="siren" class="h-6 w-6 text-red-600"></i>
                             </div>
-
                         </div>
-
-                        <p class="mt-4 text-xs text-slate-400">
-
-                            Atendimentos classificados como alta gravidade.
-
-                        </p>
-
+                        <p class="mt-4 text-xs text-slate-400">Atendimentos classificados como alta gravidade.</p>
                     </article>
-
                 </section>
 
+                <!-- Agora eu organizo o grid inferior que abriga a tabela e o ranking lado a lado em desktop. -->
                 <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
+                    <!-- Por segurança eu aplico "min-w-0" aqui. Isso impede que a tabela expanda a grade além da tela, corrigindo o erro de vazamento visual. -->
                     <article
-                        class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm lg:col-span-2">
+                        class="min-w-0 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm lg:col-span-2">
 
+                        <!-- Neste header eu apresento o título da seção da tabela e um link de atalho ágil. -->
                         <header
                             class="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-
                             <div>
-
                                 <h2 class="flex items-center gap-2 text-lg font-bold text-slate-800">
-
-                                    <i data-lucide="clock-3" class="h-5 w-5 text-azulEscuro" aria-hidden="true">
-                                    </i>
-
+                                    <i data-lucide="clock-3" class="h-5 w-5 text-azulEscuro" aria-hidden="true"></i>
                                     Últimos atendimentos
-
                                 </h2>
-
                                 <p class="mt-1 text-sm text-slate-500">
-
                                     Registros mais recentes realizados no ambulatório.
-
                                 </p>
-
                             </div>
-
                             <a href="/consultar-paciente"
                                 class="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold text-azulEscuro transition-all hover:bg-blue-50">
-
-                                <i data-lucide="users" class="h-4 w-4" aria-hidden="true">
-                                </i>
-
+                                <i data-lucide="users" class="h-4 w-4" aria-hidden="true"></i>
                                 Consultar funcionários
-
                             </a>
-
                         </header>
 
+                        <!-- Aqui o contêiner controla o scroll horizontal de forma nativa e sem quebrar o layout limitante do article. -->
                         <div class="table-container">
-
                             <table class="w-full min-w-[760px] text-left">
 
+                                <!-- Em seguida defino as colunas do cabeçalho da tabela. -->
                                 <thead>
-
                                     <tr
                                         class="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-
-                                        <th scope="col" class="px-6 py-4 font-semibold">
-
-                                            Funcionário
-
-                                        </th>
-
-                                        <th scope="col" class="px-6 py-4 font-semibold">
-
-                                            Queixa
-
-                                        </th>
-
-                                        <th scope="col" class="px-6 py-4 text-center font-semibold">
-
-                                            Gravidade
-
-                                        </th>
-
-                                        <th scope="col" class="px-6 py-4 text-center font-semibold">
-
-                                            Data e hora
-
-                                        </th>
-
+                                        <th scope="col" class="px-6 py-4 font-semibold">Funcionário</th>
+                                        <th scope="col" class="px-6 py-4 font-semibold">Queixa</th>
+                                        <th scope="col" class="px-6 py-4 text-center font-semibold">Gravidade</th>
+                                        <!-- Aplico a restrição de "whitespace-nowrap" aqui para a data não quebrar aleatoriamente. -->
+                                        <th scope="col" class="px-6 py-4 text-center font-semibold whitespace-nowrap">
+                                            Data e hora</th>
                                     </tr>
-
                                 </thead>
 
+                                <!-- Neste local o Javascript injetará assincronamente as linhas de dados do banco. -->
                                 <tbody id="lista-ultimos-atendimentos" class="divide-y divide-slate-100"
                                     aria-live="polite">
-
                                     <tr>
-
                                         <td colspan="4" class="px-6 py-12 text-center text-slate-400">
-
                                             <i data-lucide="loader-circle"
-                                                class="mx-auto mb-3 h-9 w-9 animate-spin opacity-60" aria-hidden="true">
-                                            </i>
-
-                                            <p>
-                                                Carregando atendimentos...
-                                            </p>
-
+                                                class="mx-auto mb-3 h-9 w-9 animate-spin opacity-60"
+                                                aria-hidden="true"></i>
+                                            <p>Carregando atendimentos...</p>
                                         </td>
-
                                     </tr>
-
                                 </tbody>
-
                             </table>
-
                         </div>
-
                     </article>
 
+                    <!-- Para completar a grade, monto a barra lateral que exibe os setores com maior demanda. -->
                     <article class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
-
                         <header class="border-b border-slate-100 px-5 py-5 sm:px-6">
-
                             <h2 class="flex items-center gap-2 text-lg font-bold text-slate-800">
-
                                 <i data-lucide="chart-no-axes-column-increasing" class="h-5 w-5 text-azulEscuro"
-                                    aria-hidden="true">
-                                </i>
-
+                                    aria-hidden="true"></i>
                                 Ranking de setores
-
                             </h2>
-
                             <p class="mt-1 text-sm text-slate-500">
-
                                 Setores com mais atendimentos no mês.
-
                             </p>
-
                         </header>
 
+                        <!-- Com isso crio o bloco visual de fallback enquanto o ranking é calculado na API. -->
                         <div id="lista-setores" class="space-y-3 p-5 sm:p-6" aria-live="polite">
-
                             <div class="flex items-center justify-center gap-2 py-6 text-slate-400">
-
-                                <i data-lucide="loader-circle" class="h-5 w-5 animate-spin" aria-hidden="true">
-                                </i>
-
-                                <span class="text-sm">
-                                    Carregando setores...
-                                </span>
-
+                                <i data-lucide="loader-circle" class="h-5 w-5 animate-spin" aria-hidden="true"></i>
+                                <span class="text-sm">Carregando setores...</span>
                             </div>
-
                         </div>
-
                     </article>
-
                 </section>
-
             </div>
-
         </main>
 
+        <!-- Por fim deixo engatilhada a div responsável pelas mensagens flutuantes de feedback no canto da tela. -->
         <div id="mensagem-dashboard" class="fixed right-5 top-5 z-[70] hidden max-w-sm rounded-xl px-5 py-4 shadow-xl"
             role="alert" aria-live="assertive" aria-atomic="true">
         </div>
 
+        <!-- O script central que controla as interações assíncronas desta visão é devidamente incluído. -->
         <script src="/js/dashboard.js"></script>
-
 </body>
 
 </html>
