@@ -1,11 +1,13 @@
 const DASHBOARD_BASE_URL = '/api';
 
+// Primeiro eu inicializo os ícones da interface, caso a biblioteca esteja carregada no navegador.
 function atualizarIcones() {
     if (window.lucide) {
         window.lucide.createIcons();
     }
 }
 
+// Aqui eu crio uma função de segurança para evitar que códigos maliciosos sejam injetados no HTML.
 function escapeHTML(valor) {
     if (valor === null) {
         return '';
@@ -23,6 +25,7 @@ function escapeHTML(valor) {
         .replace(/'/g, '&#039;');
 }
 
+// Agora eu garanto que o sistema exiba um texto amigável caso a informação solicitada não exista.
 function obterTextoExibicao(valor, textoPadrao) {
     if (valor === null) {
         return textoPadrao;
@@ -41,6 +44,7 @@ function obterTextoExibicao(valor, textoPadrao) {
     return texto;
 }
 
+// Nesta parte eu asseguro que o valor seja tratado como um número válido e não negativo para os contadores.
 function obterNumeroExibicao(valor) {
     const numero = Number(valor);
 
@@ -55,6 +59,7 @@ function obterNumeroExibicao(valor) {
     return Math.trunc(numero);
 }
 
+// Aqui eu leio a resposta da API de forma isolada, evitando que o sistema quebre se o JSON for inválido.
 async function lerRespostaJson(resposta) {
     try {
         return await resposta.json();
@@ -63,6 +68,7 @@ async function lerRespostaJson(resposta) {
     }
 }
 
+// Com isso eu analiso os dados retornados para extrair a melhor mensagem de erro disponível.
 function obterMensagemErro(dados, mensagemPadrao) {
     if (dados) {
         if (typeof dados.erro === 'string') {
@@ -91,6 +97,7 @@ function obterMensagemErro(dados, mensagemPadrao) {
     return mensagemPadrao;
 }
 
+// Depois eu formato a data fornecida pelo banco para o padrão local brasileiro.
 function formatarDataHora(valor) {
     if (!valor) {
         return 'Não informado';
@@ -111,6 +118,7 @@ function formatarDataHora(valor) {
     });
 }
 
+// Em seguida eu mapeio a gravidade do atendimento para aplicar as cores corretas no crachá visual.
 function obterClasseGravidade(gravidade) {
     if (gravidade === 'Alta') {
         return 'bg-red-50 text-red-700 border-red-200';
@@ -127,6 +135,7 @@ function obterClasseGravidade(gravidade) {
     return 'bg-slate-50 text-slate-700 border-slate-200';
 }
 
+// Aqui eu padronizo a forma como o texto é atualizado em qualquer elemento da página.
 function definirTextoElemento(idElemento, valor) {
     const elemento = document.getElementById(idElemento);
 
@@ -137,6 +146,7 @@ function definirTextoElemento(idElemento, valor) {
     elemento.textContent = String(valor);
 }
 
+// Antes de carregar os dados reais, eu aplico reticências nos contadores indicando o carregamento da API.
 function definirContadoresCarregando() {
     definirTextoElemento('contador-hoje', '...');
     definirTextoElemento('count-normal', '...');
@@ -144,6 +154,7 @@ function definirContadoresCarregando() {
     definirTextoElemento('count-grave', '...');
 }
 
+// Caso aconteça uma falha de rede, eu exibo traços para mostrar que a contagem está indisponível.
 function definirContadoresErro() {
     definirTextoElemento('contador-hoje', 'Erro');
     definirTextoElemento('count-normal', '-');
@@ -151,6 +162,7 @@ function definirContadoresErro() {
     definirTextoElemento('count-grave', '-');
 }
 
+// Agora eu atualizo os blocos de contagem na tela com os números precisos extraídos da API.
 function renderizarContadores(dados) {
     const totalHoje = obterNumeroExibicao(dados.totalHoje);
 
@@ -172,6 +184,7 @@ function renderizarContadores(dados) {
     definirTextoElemento('count-grave', quantidadeAlta);
 }
 
+// Nesta parte eu crio uma linha inteira e genérica para exibir mensagens de aviso dentro da tabela.
 function criarLinhaMensagemTabela(mensagem, classeTexto) {
     const linha = document.createElement('tr');
     const coluna = document.createElement('td');
@@ -185,6 +198,7 @@ function criarLinhaMensagemTabela(mensagem, classeTexto) {
     return linha;
 }
 
+// Aqui eu injeto a mensagem de carregamento inicial no corpo da tabela de últimos atendimentos.
 function renderizarAtendimentosCarregando() {
     const tabela = document.getElementById('lista-ultimos-atendimentos');
 
@@ -198,6 +212,7 @@ function renderizarAtendimentosCarregando() {
     );
 }
 
+// Neste momento eu construo a linha completa com os dados isolados de cada atendimento.
 function criarLinhaAtendimento(atendimento) {
     const linha = document.createElement('tr');
     linha.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors';
@@ -218,6 +233,7 @@ function criarLinhaAtendimento(atendimento) {
     colunaPaciente.appendChild(nomeFuncionario);
     colunaPaciente.appendChild(dadosFuncionario);
 
+    // Agora eu preparo a coluna limpa para a queixa principal.
     const colunaQueixa = document.createElement('td');
     colunaQueixa.className = 'px-6 py-4';
 
@@ -227,6 +243,7 @@ function criarLinhaAtendimento(atendimento) {
 
     colunaQueixa.appendChild(queixa);
 
+    // Em seguida eu configuro a coluna para exibir a gravidade colorida como um pequeno cartão.
     const colunaGravidade = document.createElement('td');
     colunaGravidade.className = 'px-6 py-4 text-center';
 
@@ -237,10 +254,14 @@ function criarLinhaAtendimento(atendimento) {
 
     colunaGravidade.appendChild(badgeGravidade);
 
+    // Depois eu formato a coluna de data e hora. 
+    // Para corrigir o bug visual de sobreposição e corte percebido nas imagens, eu retirei a classe "whitespace-nowrap".
+    // Isso permite que o texto se adapte organicamente na tela.
     const colunaData = document.createElement('td');
-    colunaData.className = 'px-6 py-4 text-center text-slate-500 text-xs whitespace-nowrap';
+    colunaData.className = 'px-6 py-4 text-center text-slate-500 text-xs';
     colunaData.textContent = formatarDataHora(atendimento.data_hora_entrada);
 
+    // Por fim eu anexo as colunas perfeitamente alinhadas na linha gerada.
     linha.appendChild(colunaPaciente);
     linha.appendChild(colunaQueixa);
     linha.appendChild(colunaGravidade);
@@ -249,6 +270,7 @@ function criarLinhaAtendimento(atendimento) {
     return linha;
 }
 
+// Aqui eu listo todos os atendimentos retornados iterando sobre a estrutura JSON entregue pela API.
 function renderizarUltimosAtendimentos(atendimentos) {
     const tabela = document.getElementById('lista-ultimos-atendimentos');
 
@@ -294,6 +316,7 @@ function renderizarUltimosAtendimentos(atendimentos) {
         tabela.appendChild(criarLinhaAtendimento(atendimento));
     });
 
+    // Por segurança, se os itens forem filtrados por falha nos if acima, eu exibo a mensagem vazia.
     if (tabela.children.length === 0) {
         tabela.appendChild(
             criarLinhaMensagemTabela('Nenhum atendimento vinculado a um funcionário válido.', 'text-slate-400')
@@ -301,6 +324,7 @@ function renderizarUltimosAtendimentos(atendimentos) {
     }
 }
 
+// Agora eu exibo a indicação temporal de que o ranking de setores está sendo processado.
 function renderizarSetoresCarregando() {
     const container = document.getElementById('lista-setores');
 
@@ -317,6 +341,7 @@ function renderizarSetoresCarregando() {
     container.appendChild(mensagem);
 }
 
+// Com isso eu modelo a linha interativa de ranking para cada setor e a sua quantidade respectiva de idas ao ambulatório.
 function criarItemSetor(setor) {
     const item = document.createElement('div');
     item.className = 'flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100';
@@ -335,6 +360,7 @@ function criarItemSetor(setor) {
     return item;
 }
 
+// Aqui eu injeto a lista final dos setores classificados na lateral da tela.
 function renderizarRankingSetores(setores) {
     const container = document.getElementById('lista-setores');
 
@@ -371,6 +397,7 @@ function renderizarRankingSetores(setores) {
     });
 }
 
+// Se ocorrer uma falha grave na conexão com o sistema, eu espalho a mensagem vermelha de erro.
 function mostrarErroDashboard(mensagem) {
     definirContadoresErro();
 
@@ -394,6 +421,7 @@ function mostrarErroDashboard(mensagem) {
     }
 }
 
+// Este é o motor da tela onde eu disparo o gatilho para buscar todo o resumo gerencial no backend.
 async function carregarDadosDashboard() {
     definirContadoresCarregando();
     renderizarAtendimentosCarregando();
@@ -425,6 +453,7 @@ async function carregarDadosDashboard() {
             throw new Error(mensagem);
         }
 
+        // Em seguida eu distribuo o JSON extraído para as suas respectivas áreas de montagem na interface.
         renderizarContadores(dados);
         renderizarUltimosAtendimentos(dados.ultimosAtendimentos);
         renderizarRankingSetores(dados.atendimentosPorSetor);
@@ -436,6 +465,7 @@ async function carregarDadosDashboard() {
     }
 }
 
+// Por fim eu orquestro a inicialização da dashboard validando primeiro a sessão ativa do usuário.
 async function inicializarDashboard() {
     if (!window.AuthSession) {
         console.error('O arquivo auth-session.js não foi carregado.');
@@ -463,6 +493,7 @@ async function inicializarDashboard() {
     await carregarDadosDashboard();
 }
 
+// Eu libero o comando de desconexão diretamente no escopo global para o botão da Sidebar funcionar perfeitamente.
 window.fazerLogout = async function () {
     if (!window.AuthSession) {
         localStorage.removeItem('token');
@@ -473,4 +504,5 @@ window.fazerLogout = async function () {
     await window.AuthSession.fazerLogout();
 };
 
+// Quando o navegador terminar de montar o esqueleto HTML, esse ouvinte entra em ação e inicia a busca de dados.
 document.addEventListener('DOMContentLoaded', inicializarDashboard);
