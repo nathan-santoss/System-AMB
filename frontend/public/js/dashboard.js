@@ -217,11 +217,13 @@ function criarLinhaAtendimento(atendimento) {
     const linha = document.createElement('tr');
     linha.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors';
 
+    // Primeiro eu configuro a coluna encarregada de exibir os dados pessoais do funcionário.
     const colunaPaciente = document.createElement('td');
     colunaPaciente.className = 'px-6 py-4';
 
     const nomeFuncionario = document.createElement('p');
-    nomeFuncionario.className = 'font-semibold text-azulEscuro';
+    // Adiciono a restrição "whitespace-nowrap" aqui para impedir que o nome seja comprimido e cortado.
+    nomeFuncionario.className = 'font-semibold text-azulEscuro whitespace-nowrap';
     nomeFuncionario.textContent = obterTextoExibicao(atendimento.nome, 'Funcionário sem nome');
 
     const dadosFuncionario = document.createElement('p');
@@ -233,7 +235,7 @@ function criarLinhaAtendimento(atendimento) {
     colunaPaciente.appendChild(nomeFuncionario);
     colunaPaciente.appendChild(dadosFuncionario);
 
-    // Agora eu preparo a coluna limpa para a queixa principal.
+    // Agora eu preparo a coluna limpa exclusiva para a queixa principal.
     const colunaQueixa = document.createElement('td');
     colunaQueixa.className = 'px-6 py-4';
 
@@ -255,10 +257,9 @@ function criarLinhaAtendimento(atendimento) {
     colunaGravidade.appendChild(badgeGravidade);
 
     // Depois eu formato a coluna de data e hora. 
-    // Para corrigir o bug visual de sobreposição e corte percebido nas imagens, eu retirei a classe "whitespace-nowrap".
-    // Isso permite que o texto se adapte organicamente na tela.
+    // Faço o uso imperativo da classe "whitespace-nowrap" aqui. Isso impede que a quebra de linha aconteça, garantindo que a hora não seja jogada para baixo e cortada visualmente.
     const colunaData = document.createElement('td');
-    colunaData.className = 'px-6 py-4 text-center text-slate-500 text-xs';
+    colunaData.className = 'px-6 py-4 text-center text-slate-500 text-xs whitespace-nowrap';
     colunaData.textContent = formatarDataHora(atendimento.data_hora_entrada);
 
     // Por fim eu anexo as colunas perfeitamente alinhadas na linha gerada.
@@ -316,7 +317,7 @@ function renderizarUltimosAtendimentos(atendimentos) {
         tabela.appendChild(criarLinhaAtendimento(atendimento));
     });
 
-    // Por segurança, se os itens forem filtrados por falha nos if acima, eu exibo a mensagem vazia.
+    // Por segurança, se os itens forem filtrados por falha nos blocos if acima, eu exibo a mensagem vazia.
     if (tabela.children.length === 0) {
         tabela.appendChild(
             criarLinhaMensagemTabela('Nenhum atendimento vinculado a um funcionário válido.', 'text-slate-400')
