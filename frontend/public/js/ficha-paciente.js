@@ -420,6 +420,15 @@ function criarItemHistorico(atendimento) {
         : 'Em aberto';
     item.appendChild(situacao);
 
+    const linkImpressao = document.createElement('a');
+    linkImpressao.href = '/api/funcionarios/' + encodeURIComponent(matriculaAtual)
+        + '/atendimentos/' + encodeURIComponent(atendimento.id_atendimento) + '/ficha';
+    linkImpressao.target = '_blank';
+    linkImpressao.rel = 'noopener';
+    linkImpressao.className = 'inline-block mt-3 mr-3 rounded-lg bg-slate-100 px-3 py-2 text-sm text-blue-900';
+    linkImpressao.textContent = 'Imprimir ficha / PDF';
+    item.appendChild(linkImpressao);
+
     if (!atendimento.data_hora_saida) {
         const botao = document.createElement('button');
         botao.type = 'button';
@@ -553,6 +562,10 @@ async function carregarDadosPaciente(matricula) {
         // Depois eu chamo as funções responsáveis por renderizar as listas baseadas nos dados do pacote único recebido.
         renderizarAlergias(alergias);
         renderizarHistoricoAtendimentos(atendimentos);
+
+        document.getElementById('link-relatorio-pop').href = '/api/funcionarios/'
+            + encodeURIComponent(matricula) + '/relatorio-pop';
+        document.getElementById('acoes-relatorios').hidden = false;
 
         return true;
 
@@ -875,8 +888,34 @@ async function registrarAtendimento(evento) {
     }
 }
 
+async function exportarExcel() {
+    const botao = document.getElementById('exportar-excel');
+    definirBotaoCarregando(botao, true, 'Gerando Excel...');
+    try {
+        const resposta = await window.AuthSession.fetchAutenticado('/api/funcionarios/'
+            + encodeURIComponent(matriculaAtual) + '/relatorio-excel', { cache: 'no-store' });
+        if (await respostaExigeNovoLogin(resposta)) return;
+        if (!resposta.ok) {
+            throw new Error(obterMensagemErro(await lerRespostaJson(resposta), 'Não foi possível exportar o relatório.'));
+        }
+        const url = URL.createObjectURL(await resposta.blob());
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'relatorio-funcionario.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (erro) {
+        alert(erro.message);
+    } finally {
+        definirBotaoCarregando(botao, false, 'Gerando Excel...');
+    }
+}
+
 // Nesta parte eu articulo todos os engates das funções com suas respectivas reações oriundas da interface do usuário.
 function configurarEventos() {
+    document.getElementById('exportar-excel').addEventListener('click', exportarExcel);
     const formularioAlergia = document.getElementById('formAlergia');
     const formularioTriagem = obterFormularioTriagem();
     const modalAlergia = obterModalAlergia();

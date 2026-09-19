@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>POP - <%= relatorio.funcionario.nome %></title>
+    <link rel="stylesheet" href="/styles/relatorio-pop.css">
+    <script src="/js/relatorio-pop.js" defer></script>
+</head>
+<body>
+    <nav class="toolbar" aria-label="Ações do relatório">
+        <a href="/ficha-paciente?matricula=<%= encodeURIComponent(relatorio.funcionario.matricula) %>">Voltar à ficha</a>
+        <button type="button" id="imprimir-pop">Imprimir / Salvar em PDF</button>
+        <p>Edite os campos destacados antes de imprimir. As edições valem apenas para esta emissão e serão perdidas ao sair ou recarregar. Na impressão, escolha “Salvar em PDF”.</p>
+    </nav>
+    <main class="documento">
+        <header class="cabecalho">
+            <p class="sobretitulo">SISTEMA DE AMBULATÓRIO</p>
+            <h1>Procedimento Operacional Padrão</h1>
+            <p>Modelo de registro e acompanhamento ambulatorial</p>
+            <div class="grade metadados">
+                <div><strong>Código</strong><span contenteditable="plaintext-only" role="textbox" aria-label="Código do documento">A definir</span></div>
+                <div><strong>Revisão</strong><span contenteditable="plaintext-only" role="textbox" aria-label="Revisão do documento">A definir</span></div>
+                <div><strong>Emissão (Brasília)</strong><span><%= formatarData(relatorio.emitidoEm) %></span></div>
+            </div>
+            <p class="nota">Modelo para preenchimento e revisão interna. Aprovação: pendente.</p>
+        </header>
+        <section>
+            <h2>1. Objetivo e abrangência</h2>
+            <p contenteditable="plaintext-only" role="textbox" aria-label="Objetivo e abrangência" aria-multiline="true">Organizar os registros de atendimento ambulatorial do funcionário identificado neste documento, com base nas informações disponíveis no sistema.</p>
+        </section>
+        <section>
+            <h2>2. Identificação do funcionário</h2>
+            <dl class="grade">
+                <% for (const [campo, rotulo] of [['nome', 'Nome'], ['matricula', 'Matrícula'], ['cargo', 'Cargo'], ['setor', 'Setor'], ['nucleo', 'Núcleo']]) { %>
+                    <% if (relatorio.funcionario[campo]) { %>
+                        <div><dt><%= rotulo %></dt><dd><%= relatorio.funcionario[campo] %></dd></div>
+                    <% } %>
+                <% } %>
+            </dl>
+        </section>
+        <section>
+            <h2>3. Responsabilidades e vínculos atuais</h2>
+            <% if (relatorio.liderancas.length) { %>
+                <dl class="grade">
+                    <% for (const lideranca of relatorio.liderancas) { %>
+                        <div><dt><%= lideranca.cargo %></dt><dd><%= lideranca.nome %></dd></div>
+                    <% } %>
+                </dl>
+            <% } else { %>
+                <p>Nenhum vínculo de liderança informado no cadastro.</p>
+            <% } %>
+            <p contenteditable="plaintext-only" role="textbox" aria-label="Responsabilidades" aria-multiline="true">Descreva as responsabilidades aplicáveis ao procedimento.</p>
+        </section>
+        <section>
+            <h2>4. Descrição do procedimento</h2>
+            <p contenteditable="plaintext-only" role="textbox" aria-label="Descrição do procedimento" aria-multiline="true">Preencha as etapas do procedimento adotado pelo ambulatório, os recursos necessários e os critérios de registro e acompanhamento.</p>
+        </section>
+        <section>
+            <h2>5. Alertas registrados na emissão</h2>
+            <% if (relatorio.alergias.length) { %>
+                <ul><% for (const alergia of relatorio.alergias) { %><li><%= alergia.descricao_alergia %></li><% } %></ul>
+            <% } else { %>
+                <p>Nenhuma alergia cadastrada no sistema.</p>
+            <% } %>
+        </section>
+        <section>
+            <h2>6. Registros de atendimento (<%= relatorio.atendimentos.length %>)</h2>
+            <p class="nota">Histórico completo, do mais recente ao mais antigo. Os responsáveis abaixo correspondem aos vínculos registrados em cada atendimento.</p>
+            <% if (!relatorio.atendimentos.length) { %><p>Nenhum atendimento registrado.</p><% } %>
+            <% for (const atendimento of relatorio.atendimentos) { %>
+                <%- include('partials/registro-atendimento', { atendimento, formatarData }) %>
+            <% } %>
+        </section>
+        <section>
+            <h2>7. Referências e controle do documento</h2>
+            <p contenteditable="plaintext-only" role="textbox" aria-label="Referências" aria-multiline="true">Informe os documentos internos de referência e a previsão de revisão.</p>
+            <div class="grade assinaturas">
+                <div><strong>Elaborado por</strong><p contenteditable="plaintext-only" role="textbox" aria-label="Elaborado por">A preencher</p></div>
+                <div><strong>Revisado por</strong><p contenteditable="plaintext-only" role="textbox" aria-label="Revisado por">A preencher</p></div>
+                <div><strong>Aprovação / assinatura</strong><p>________________________________</p></div>
+            </div>
+        </section>
+        <footer>Fonte: dados registrados no Sistema de Ambulatório na data de emissão.</footer>
+    </main>
+</body>
+</html>

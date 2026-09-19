@@ -252,50 +252,7 @@
 
                     </div>
 
-                    <div class="border-t border-slate-100 pt-5">
-
-                        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <i data-lucide="network" class="w-5 h-5 text-azulEscuro"></i>
-                            Estrutura de liderança
-                        </h3>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-
-                            <div>
-                                <label for="cadastro-supervisor"
-                                    class="block text-sm font-semibold text-slate-700 mb-1">
-                                    Supervisor
-                                </label>
-
-                                <input type="text" id="cadastro-supervisor" maxlength="100" autocomplete="off"
-                                    placeholder="Nome do supervisor"
-                                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
-                            </div>
-
-                            <div>
-                                <label for="cadastro-coordenador"
-                                    class="block text-sm font-semibold text-slate-700 mb-1">
-                                    Coordenador
-                                </label>
-
-                                <input type="text" id="cadastro-coordenador" maxlength="100" autocomplete="off"
-                                    placeholder="Nome do coordenador"
-                                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
-                            </div>
-
-                            <div>
-                                <label for="cadastro-gerente" class="block text-sm font-semibold text-slate-700 mb-1">
-                                    Gerente
-                                </label>
-
-                                <input type="text" id="cadastro-gerente" maxlength="100" autocomplete="off"
-                                    placeholder="Nome do gerente"
-                                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
-                            </div>
-
-                        </div>
-
-                    </div>
+                    <%- include('partials/liderancas', { prefixo: 'cadastro' }) %>
 
                     <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
 
@@ -417,45 +374,7 @@
 
                     </div>
 
-                    <div class="border-t border-slate-100 pt-5">
-
-                        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <i data-lucide="network" class="w-5 h-5 text-azulEscuro"></i>
-                            Estrutura de liderança
-                        </h3>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-
-                            <div>
-                                <label for="edit-supervisor" class="block text-sm font-semibold text-slate-700 mb-1">
-                                    Supervisor
-                                </label>
-
-                                <input type="text" id="edit-supervisor" maxlength="100" autocomplete="off"
-                                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
-                            </div>
-
-                            <div>
-                                <label for="edit-coordenador" class="block text-sm font-semibold text-slate-700 mb-1">
-                                    Coordenador
-                                </label>
-
-                                <input type="text" id="edit-coordenador" maxlength="100" autocomplete="off"
-                                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
-                            </div>
-
-                            <div>
-                                <label for="edit-gerente" class="block text-sm font-semibold text-slate-700 mb-1">
-                                    Gerente
-                                </label>
-
-                                <input type="text" id="edit-gerente" maxlength="100" autocomplete="off"
-                                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all">
-                            </div>
-
-                        </div>
-
-                    </div>
+                    <%- include('partials/liderancas', { prefixo: 'edit' }) %>
 
                     <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
 

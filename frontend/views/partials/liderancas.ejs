@@ -1,0 +1,18 @@
+<fieldset class="border-t border-slate-100 pt-5">
+    <legend class="font-bold text-slate-800">Estrutura de liderança (opcional)</legend>
+    <p class="text-sm text-slate-500 mt-2 mb-4">Marque apenas os vínculos que deseja informar. É possível cadastrar qualquer combinação ou nenhum responsável. Desmarcar um vínculo na edição remove o nome do cadastro atual, preservando os atendimentos anteriores.</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <% for (const [campo, rotulo] of [['supervisor', 'Supervisor'], ['coordenador', 'Coordenador'], ['gerente', 'Gerente']]) { %>
+            <div>
+                <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
+                    <input type="checkbox" id="<%= prefixo %>-informar-<%= campo %>" data-lideranca="<%= prefixo %>-<%= campo %>">
+                    Informar <%= rotulo.toLowerCase() %>
+                </label>
+                <label for="<%= prefixo %>-<%= campo %>" class="sr-only">Nome do <%= rotulo.toLowerCase() %></label>
+                <input type="text" id="<%= prefixo %>-<%= campo %>" maxlength="150" autocomplete="off" disabled
+                    placeholder="Nome do <%= rotulo.toLowerCase() %>"
+                    class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-azulEscuro focus:border-transparent outline-none transition-all disabled:opacity-50">
+            </div>
+        <% } %>
+    </div>
+</fieldset>

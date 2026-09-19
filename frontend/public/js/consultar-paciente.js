@@ -303,6 +303,31 @@ function atualizarBloqueioRolagem() {
     document.body.classList.remove('overflow-hidden');
 }
 
+// Os vínculos de liderança são independentes e podem ser removidos na edição.
+function atualizarCampoLideranca(controle) {
+    const campo = document.getElementById(controle.dataset.lideranca);
+    campo.disabled = !controle.checked;
+    campo.required = controle.checked;
+}
+
+function preencherLiderancas(prefixo, funcionario) {
+    for (const cargo of ['supervisor', 'coordenador', 'gerente']) {
+        const campo = document.getElementById(prefixo + '-' + cargo);
+        const controle = document.getElementById(prefixo + '-informar-' + cargo);
+        campo.value = obterValorFormulario(funcionario[cargo]).trim();
+        controle.checked = campo.value.length > 0;
+        atualizarCampoLideranca(controle);
+    }
+}
+
+function obterLiderancasFormulario(prefixo) {
+    return Object.fromEntries(['supervisor', 'coordenador', 'gerente'].map(cargo => {
+        const marcado = document.getElementById(prefixo + '-informar-' + cargo).checked;
+        const valor = document.getElementById(prefixo + '-' + cargo).value.trim();
+        return [cargo, marcado ? valor || null : null];
+    }));
+}
+
 // Agora eu exibo a interface de cadastro zerando o formulário.
 function abrirModalCadastro() {
     const modal = document.getElementById('modal-cadastrar');
@@ -317,6 +342,7 @@ function abrirModalCadastro() {
     }
 
     formulario.reset();
+    preencherLiderancas('cadastro', {});
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 
@@ -381,9 +407,7 @@ function abrirModalEditar(funcionario) {
     document.getElementById('edit-cargo').value = obterValorFormulario(funcionario.cargo);
     document.getElementById('edit-setor').value = obterValorFormulario(funcionario.setor);
     document.getElementById('edit-nucleo').value = obterValorFormulario(funcionario.nucleo);
-    document.getElementById('edit-supervisor').value = obterValorFormulario(funcionario.supervisor);
-    document.getElementById('edit-coordenador').value = obterValorFormulario(funcionario.coordenador);
-    document.getElementById('edit-gerente').value = obterValorFormulario(funcionario.gerente);
+    preencherLiderancas('edit', funcionario);
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -708,9 +732,7 @@ function obterDadosCadastro() {
         cargo: document.getElementById('cadastro-cargo').value.trim(),
         setor: document.getElementById('cadastro-setor').value.trim(),
         nucleo: document.getElementById('cadastro-nucleo').value.trim(),
-        supervisor: document.getElementById('cadastro-supervisor').value.trim(),
-        coordenador: document.getElementById('cadastro-coordenador').value.trim(),
-        gerente: document.getElementById('cadastro-gerente').value.trim()
+        ...obterLiderancasFormulario('cadastro')
     };
 }
 
@@ -824,9 +846,7 @@ function obterDadosAtualizacao() {
         cargo: document.getElementById('edit-cargo').value.trim(),
         setor: document.getElementById('edit-setor').value.trim(),
         nucleo: document.getElementById('edit-nucleo').value.trim(),
-        supervisor: document.getElementById('edit-supervisor').value.trim(),
-        coordenador: document.getElementById('edit-coordenador').value.trim(),
-        gerente: document.getElementById('edit-gerente').value.trim()
+        ...obterLiderancasFormulario('edit')
     };
 }
 
@@ -940,6 +960,9 @@ async function deletarFuncionario(funcionario) {
 
 // Aqui eu amarro os ouvintes do Javascript em cada input form, botão e tecla gerando interatividade total do sistema com a API.
 function configurarEventos() {
+    document.querySelectorAll('[data-lideranca]').forEach(controle => {
+        controle.addEventListener('change', () => atualizarCampoLideranca(controle));
+    });
     const formularioBusca = document.getElementById('form-busca');
     const botaoLimpar = document.getElementById('botao-limpar-busca');
     const botaoAtualizar = document.getElementById('botao-atualizar-lista');

@@ -1,0 +1,21 @@
+                <article class="atendimento">
+                    <h3>Atendimento #<%= atendimento.id_atendimento %></h3>
+                    <dl class="grade">
+                        <div><dt>Entrada (Brasília)</dt><dd><%= formatarData(atendimento.data_hora_entrada) %></dd></div>
+                        <div><dt>Saída (Brasília)</dt><dd><%= atendimento.data_hora_saida ? formatarData(atendimento.data_hora_saida) : 'Em aberto' %></dd></div>
+                        <div><dt>Pressão arterial</dt><dd><%= atendimento.pressao_arterial ?? 'Não informada' %></dd></div>
+                        <div><dt>Temperatura</dt><dd><%= atendimento.temperatura == null ? 'Não informada' : String(atendimento.temperatura).replace('.', ',') + ' °C' %></dd></div>
+                        <div><dt>Gravidade</dt><dd><%= atendimento.gravidade %></dd></div>
+                        <div><dt>Ação tomada</dt><dd><%= atendimento.acao_tomada %></dd></div>
+                        <% if (atendimento.local_encaminhamento) { %><div><dt>Encaminhamento</dt><dd><%= atendimento.local_encaminhamento %></dd></div><% } %>
+                    </dl>
+                    <h4>Queixa principal</h4>
+                    <p class="texto-longo"><%= atendimento.queixa_principal %></p>
+                    <% if (atendimento.liderancas.length) { %>
+                        <dl class="grade">
+                            <% for (const lideranca of atendimento.liderancas) { %>
+                                <div><dt><%= lideranca.cargo %> na época</dt><dd><%= lideranca.nome %></dd></div>
+                            <% } %>
+                        </dl>
+                    <% } else { %><p class="nota">Nenhum vínculo de liderança informado neste atendimento.</p><% } %>
+                </article>
