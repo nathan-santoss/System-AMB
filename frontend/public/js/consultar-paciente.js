@@ -278,6 +278,10 @@ function atualizarBloqueioRolagem() {
     const modalEditar = document.getElementById('modal-editar');
 
     let existeModalAberto = false;
+    const backdropSidebar = document.getElementById('sidebar-backdrop');
+    if (backdropSidebar && !backdropSidebar.classList.contains('hidden')) {
+        existeModalAberto = true;
+    }
 
     if (modalCadastro) {
         if (!modalCadastro.classList.contains('hidden')) {
@@ -648,7 +652,10 @@ function renderizarFuncionarios(funcionarios) {
 }
 
 // Neste bloco eu realizo a requisição HTTP e obtenho os cadastros armazenados no banco do servidor.
+let versaoBuscaFuncionarios = 0;
+
 async function buscarFuncionarios(termo) {
+    const versao = ++versaoBuscaFuncionarios;
     mostrarTabelaCarregando();
 
     let url = FUNCIONARIOS_BASE_URL;
@@ -667,11 +674,15 @@ async function buscarFuncionarios(termo) {
             cache: 'no-store'
         });
 
+        if (versao !== versaoBuscaFuncionarios) return;
+
         if (await respostaExigeNovoLogin(resposta)) {
             return;
         }
 
         const dados = await lerRespostaJson(resposta);
+
+        if (versao !== versaoBuscaFuncionarios) return;
 
         if (!resposta.ok) {
             const mensagem = obterMensagemErro(dados, 'Não foi possível carregar os funcionários.');
@@ -681,6 +692,7 @@ async function buscarFuncionarios(termo) {
         renderizarFuncionarios(dados);
 
     } catch (erro) {
+        if (versao !== versaoBuscaFuncionarios) return;
         console.error('Erro ao buscar funcionários:', erro);
         atualizarTextoTotal(0);
         mostrarErroTabela(erro.message);
@@ -703,6 +715,28 @@ function obterDadosCadastro() {
 }
 
 // Por segurança, avalio internamente os três campos cruciais antes de enviá-los e tomar tempo do servidor.
+function cpfEhValido(cpf) {
+    if (typeof cpf !== 'string') {
+        return false;
+    }
+
+    if (!/^\d{11}$/.test(cpf) || /^(\d)\1{10}$/.test(cpf)) {
+        return false;
+    }
+
+    for (let tamanho = 9; tamanho <= 10; tamanho++) {
+        let soma = 0;
+        for (let i = 0; i < tamanho; i++) {
+            soma += Number(cpf[i]) * (tamanho + 1 - i);
+        }
+        const resto = (soma * 10) % 11;
+        if (Number(cpf[tamanho]) !== (resto === 10 ? 0 : resto)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function validarDadosFuncionario(dados) {
     if (dados.matricula.length === 0) {
         return 'Informe a matrícula do funcionário.';
@@ -720,8 +754,8 @@ function validarDadosFuncionario(dados) {
         return 'O nome deve possuir no máximo 150 caracteres.';
     }
 
-    if (dados.cpf.length !== 11) {
-        return 'O CPF deve possuir exatamente 11 números.';
+    if (!cpfEhValido(dados.cpf)) {
+        return 'Informe um CPF válido.';
     }
 
     return null;
@@ -870,7 +904,7 @@ async function deletarFuncionario(funcionario) {
     const matricula = String(funcionario.matricula).trim();
 
     const confirmado = window.confirm(
-        'Deseja realmente excluir o funcionário "' + nome + '" de matrícula ' + matricula + '?\n\nEsta ação poderá ser desfeita.'
+        'Deseja realmente excluir o funcionário "' + nome + '" de matrícula ' + matricula + '?\n\nEsta ação é permanente e não pode ser desfeita. Todas as alergias e todo o histórico de atendimentos deste funcionário também serão excluídos.'
     );
 
     if (!confirmado) {
@@ -1005,7 +1039,7 @@ async function inicializarPaginaFuncionarios() {
     const resultadoSessao = await window.AuthSession.exigirSessao();
 
     if (!resultadoSessao.autenticado) {
-        if (resultadoSessao.status === 0) {
+        if (resultadoSessao.status !== 401 && resultadoSessao.status !== 403) {
             atualizarTextoTotal(0);
             mostrarErroTabela(resultadoSessao.mensagem);
         }

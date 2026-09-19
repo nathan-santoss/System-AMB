@@ -88,3 +88,13 @@ export async function buscarUltimosAtendimentos(limite) {
         ]
     });
 }
+
+export async function finalizarAtendimento(id) {
+    const [quantidade, registros] = await Atendimento.update(
+        { data_hora_saida: new Date() },
+        { where: { id_atendimento: id, data_hora_saida: null }, returning: true }
+    );
+    if (quantidade > 0) return registros[0];
+    // Repetir a solicitação não altera o horário de saída já registrado.
+    return Atendimento.findByPk(id);
+}

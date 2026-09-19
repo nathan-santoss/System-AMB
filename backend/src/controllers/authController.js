@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 import Usuario from '../models/usuarios.js';
+import { obterJwtSecret } from '../config/auth.js';
 
 const DURACAO_SESSAO_MS = 12 * 60 * 60 * 1000;
 const DURACAO_SESSAO_JWT = '12h';
@@ -63,25 +64,11 @@ function senhaLoginEhValida(senha) {
         return false;
     }
 
-    if (senha.length > 255) {
+    if (Buffer.byteLength(senha, 'utf8') > 72) {
         return false;
     }
 
     return true;
-}
-
-function obterJwtSecret() {
-    if (typeof process.env.JWT_SECRET !== 'string') {
-        return null;
-    }
-
-    const jwtSecret = process.env.JWT_SECRET.trim();
-
-    if (jwtSecret.length < 32) {
-        return null;
-    }
-
-    return jwtSecret;
 }
 
 function ambienteEhProducao() {
@@ -180,7 +167,7 @@ export async function login(req, res) {
 
         if (!senhaLoginEhValida(senha)) {
             return res.status(400).json({
-                message: 'A senha é obrigatória e deve possuir no máximo 255 caracteres.'
+                message: 'A senha é obrigatória e deve possuir no máximo 72 bytes em UTF-8.'
             });
         }
 

@@ -100,7 +100,7 @@ export function responderErroInterno(
         erroPossuiNome(
             erro,
             'SequelizeForeignKeyConstraintError'
-        )
+        ) || ['23503', '23001'].includes(erro?.original?.code)
     ) {
         return res.status(409).json({
             erro: 'Não foi possível concluir a operação devido a registros vinculados.'

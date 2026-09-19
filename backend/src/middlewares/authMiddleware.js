@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import Usuario from '../models/usuarios.js';
+import { obterJwtSecret } from '../config/auth.js';
 
 // Aqui eu defino as constantes necessárias para validar a emissão estrutural do token.
 const EMISSOR_TOKEN = 'system-amb';
@@ -30,7 +31,7 @@ function extrairTokenDoCookie(cabecalhoCookie) {
         const nome = partes[0].trim();
 
         if (nome === 'token') {
-            return partes[1].trim();
+            return partes.slice(1).join('=').trim() || null;
         }
     }
 
@@ -53,10 +54,10 @@ export async function verificarToken(req, res, next) {
     res.setHeader('Pragma', 'no-cache');
 
     try {
-        const jwtSecret = process.env.JWT_SECRET;
+        const jwtSecret = obterJwtSecret();
 
         // Antes de prosseguir, eu garanto que o servidor possui a chave criptográfica devidamente configurada.
-        if (typeof jwtSecret !== 'string') {
+        if (!jwtSecret) {
             return res.status(500).json({
                 erro: 'O servidor não possui uma chave de segurança configurada.'
             });

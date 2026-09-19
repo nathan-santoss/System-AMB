@@ -239,9 +239,9 @@
             );
         }
 
-        document.body.classList.remove(
-            'overflow-hidden'
-        );
+        const modalAberto = Array.from(document.querySelectorAll('[aria-modal="true"]'))
+            .some(modal => !modal.classList.contains('hidden'));
+        document.body.classList.toggle('overflow-hidden', modalAberto);
 
         atualizarEstadoAcessibilidadeSidebar(
             false
@@ -314,14 +314,19 @@
                 'O módulo de autenticação não foi carregado.'
             );
 
-            window.location.replace(
-                '/login'
-            );
+            window.alert('Não foi possível sair. Recarregue a página e tente novamente.');
+            logoutSidebarEmAndamento = false;
+            definirLogoutCarregando(false);
 
             return;
         }
 
-        await window.AuthSession.fazerLogout();
+        try {
+            await window.AuthSession.fazerLogout();
+        } finally {
+            logoutSidebarEmAndamento = false;
+            definirLogoutCarregando(false);
+        }
     }
 
     function itemMenuEstaAtivo(
@@ -498,27 +503,7 @@
                     return;
                 }
 
-                const backdropAtual =
-                    obterBackdropSidebar();
-
-                document.body.classList.remove(
-                    'overflow-hidden'
-                );
-
-                if (backdropAtual) {
-                    backdropAtual.classList.add(
-                        'hidden'
-                    );
-
-                    backdropAtual.setAttribute(
-                        'aria-hidden',
-                        'true'
-                    );
-                }
-
-                atualizarEstadoAcessibilidadeSidebar(
-                    false
-                );
+                fecharSidebar();
             }
         );
     }

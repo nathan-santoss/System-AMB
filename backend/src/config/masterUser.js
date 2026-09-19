@@ -41,7 +41,7 @@ function senhaEhValida(senha) {
         return false;
     }
 
-    if (senha.length > 255) {
+    if (Buffer.byteLength(senha, 'utf8') > 72) {
         return false;
     }
 
@@ -101,12 +101,6 @@ function obterCredenciaisIniciais() {
         );
     }
 
-    if (!senhaEhValida(senha)) {
-        throw new Error(
-            'BOOTSTRAP_ADMIN_PASSWORD deve possuir entre 12 e 255 caracteres.'
-        );
-    }
-
     return {
         email,
         senha
@@ -129,6 +123,14 @@ async function buscarUsuarioPorEmail(email) {
 async function criarUsuarioInicial(
     credenciais
 ) {
+    // Uma credencial antiga mantida no ambiente não deve impedir a inicialização
+    // quando o usuário já existe e a senha não será utilizada para criar um hash.
+    if (!senhaEhValida(credenciais.senha)) {
+        throw new Error(
+            'BOOTSTRAP_ADMIN_PASSWORD deve possuir pelo menos 12 caracteres e no máximo 72 bytes em UTF-8.'
+        );
+    }
+
     const senhaHash = await bcrypt.hash(
         credenciais.senha,
         CUSTO_BCRYPT

@@ -85,10 +85,7 @@ export function criarFimDoMes(data) {
     );
 
     fim.setMonth(
-        fim.getMonth() + 1
-    );
-
-    fim.setDate(
+        fim.getMonth() + 1,
         0
     );
 
