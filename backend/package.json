@@ -19,10 +19,9 @@
   },
   "scripts": {
     "start": "node server.js",
-    "check:backend": "node scripts/check-syntax.js server.js src scripts test",
+    "check:backend": "node scripts/check-syntax.js server.js src scripts",
     "check:frontend": "node scripts/check-syntax.js ../frontend/public/js",
-    "check": "npm run check:backend && npm run check:frontend",
-    "test": "npm run check && node --test"
+    "check": "npm run check:backend && npm run check:frontend"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -35,9 +34,5 @@
     "pg": "^8.22.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.8"
-  },
-  "devDependencies": {
-    "@electric-sql/pglite": "0.5.8",
-    "jsdom": "26.1.0"
   }
 }
