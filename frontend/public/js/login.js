@@ -59,7 +59,7 @@ function senhaEhValida(senha) {
         return false;
     }
 
-    if (senha.length > 255) {
+    if (new TextEncoder().encode(senha).length > 72) {
         return false;
     }
 
@@ -497,7 +497,7 @@ function obterDadosFormulario() {
     if (!senhaEhValida(senha)) {
         return {
             erro:
-                'A senha deve possuir entre 8 e 255 caracteres.',
+                'A senha deve possuir pelo menos 8 caracteres e no máximo 72 bytes (acentos podem ocupar mais de um byte).',
 
             campo:
                 campoSenha

@@ -2,6 +2,7 @@ import { Op } from 'sequelize';
 import Funcionario from '../models/funcionarios.js';
 import Alergia from '../models/alergias.js';
 import Atendimento from '../models/atendimento.js';
+import database from '../config/database.js';
 
 // Aqui eu realizo a criação de um novo registro de paciente diretamente no banco de dados.
 export async function criarFuncionario(dados) {
@@ -31,27 +32,27 @@ export async function buscarTodosFuncionarios(filtro = {}) {
         const filtrosBusca = [
             {
                 matricula: {
-                    [Op.like]: `%${busca}%`
+                    [Op.iLike]: `%${busca}%`
                 }
             },
             {
                 nome: {
-                    [Op.like]: `%${busca}%`
+                    [Op.iLike]: `%${busca}%`
                 }
             },
             {
                 cargo: {
-                    [Op.like]: `%${busca}%`
+                    [Op.iLike]: `%${busca}%`
                 }
             },
             {
                 setor: {
-                    [Op.like]: `%${busca}%`
+                    [Op.iLike]: `%${busca}%`
                 }
             },
             {
                 nucleo: {
-                    [Op.like]: `%${busca}%`
+                    [Op.iLike]: `%${busca}%`
                 }
             }
         ];
@@ -63,7 +64,7 @@ export async function buscarTodosFuncionarios(filtro = {}) {
         if (cpfBusca.length > 0) {
             filtrosBusca.push({
                 cpf: {
-                    [Op.like]: `%${cpfBusca}%`
+                    [Op.iLike]: `%${cpfBusca}%`
                 }
             });
         }
@@ -91,20 +92,11 @@ export async function atualizarFuncionario(funcionario, dados) {
 
 // Aqui eu orquestro a exclusão de um funcionário, lidando manualmente com as restrições dos seus relacionamentos.
 export async function deletarFuncionario(funcionario) {
-    // Antes de excluir o funcionário, eu deleto todas as alergias associadas a ele para evitar erros de chave estrangeira (RESTRICT).
-    await Alergia.destroy({
-        where: {
-            funcionario_matricula: funcionario.matricula
-        }
+    return database.transaction(async transaction => {
+        // Todas as etapas são revertidas se houver erro ou um novo vínculo impedir a exclusão.
+        const where = { funcionario_matricula: funcionario.matricula };
+        await Alergia.destroy({ where, transaction });
+        await Atendimento.destroy({ where, transaction });
+        await funcionario.destroy({ transaction });
     });
-
-    // Pelo mesmo motivo de integridade do banco, eu também removo todos os históricos de atendimento desse paciente.
-    await Atendimento.destroy({
-        where: {
-            funcionario_matricula: funcionario.matricula
-        }
-    });
-
-    // Com as dependências limpas de forma segura, eu finalmente posso deletar o registro principal do funcionário.
-    await funcionario.destroy();
 }

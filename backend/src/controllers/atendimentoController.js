@@ -1,5 +1,6 @@
 import {
     criarAtendimento as criarAtendimentoService,
+    finalizarAtendimento as finalizarAtendimentoService,
     buscarAtendimentosPorFuncionario as buscarHistoricoService,
     buscarAtendimentosPorPeriodo,
     buscarUltimosAtendimentos
@@ -17,6 +18,7 @@ import {
 
 import {
     corpoEhObjetoValido,
+    identificadorEhValido,
     matriculaEhValida,
     textoObrigatorioEhValido,
     temperaturaEhValida
@@ -48,6 +50,22 @@ const ACOES_PERMITIDAS = [
 const TAMANHO_MINIMO_QUEIXA = 2;
 const TAMANHO_MAXIMO_QUEIXA = 5000;
 const TAMANHO_MAXIMO_PRESSAO = 20;
+
+export async function finalizarAtendimento(req, res) {
+    const id = req.params.id;
+    if (!identificadorEhValido(id) || Number(id) > 2147483647) {
+        return res.status(400).json({ erro: 'Informe um identificador de atendimento válido.' });
+    }
+    try {
+        const atendimento = await finalizarAtendimentoService(Number(id));
+        if (!atendimento) {
+            return res.status(404).json({ erro: 'Atendimento não encontrado.' });
+        }
+        return res.status(200).json(atendimento);
+    } catch (erro) {
+        return responderErroInterno(res, 'Erro ao finalizar atendimento.', erro);
+    }
+}
 
 function responderErroValidacao(
     res,

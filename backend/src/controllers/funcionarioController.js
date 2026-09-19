@@ -60,7 +60,7 @@ export async function cadastrarFuncionario(req, res) {
 
         // Depois garanto que o CPF contenha exatamente os 11 dígitos numéricos exigidos pela aplicação.
         if (!cpfEhValido(cpf)) {
-            return responderErroValidacao(res, 'O CPF deve possuir exatamente 11 números.');
+            return responderErroValidacao(res, 'Informe um CPF válido.');
         }
 
         // Aqui eu preparo e normalizo os dados extras corporativos que não são de preenchimento obrigatório.
@@ -197,7 +197,7 @@ export async function atualizarFuncionario(req, res) {
             const cpf = normalizarCpf(req.body.cpf);
 
             if (!cpfEhValido(cpf)) {
-                return responderErroValidacao(res, 'O CPF deve possuir exatamente 11 números.');
+                return responderErroValidacao(res, 'Informe um CPF válido.');
             }
 
             dadosAtualizacao.cpf = cpf;

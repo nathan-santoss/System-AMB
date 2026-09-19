@@ -3,6 +3,7 @@ import {
 } from 'sequelize';
 
 import database from '../config/database.js';
+import { cpfEhValido } from '../utils/validadores.js';
 
 const Funcionario = database.define(
   'Funcionario',
@@ -74,6 +75,11 @@ const Funcionario = database.define(
 
         isNumeric: {
           msg: 'O CPF deve possuir somente números.'
+        },
+        cpfValido(valor) {
+          if (!cpfEhValido(valor)) {
+            throw new Error('Informe um CPF válido.');
+          }
         },
 
         len: {

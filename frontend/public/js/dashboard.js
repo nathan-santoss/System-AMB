@@ -477,7 +477,7 @@ async function inicializarDashboard() {
     const resultadoSessao = await window.AuthSession.exigirSessao();
 
     if (!resultadoSessao.autenticado) {
-        if (resultadoSessao.status === 0) {
+        if (resultadoSessao.status !== 401 && resultadoSessao.status !== 403) {
             mostrarErroDashboard(resultadoSessao.mensagem);
         }
         return;

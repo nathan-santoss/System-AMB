@@ -1,4 +1,5 @@
 import express from 'express';
+import { rateLimit } from 'express-rate-limit';
 
 import {
     login
@@ -9,6 +10,16 @@ import {
 } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+// Contagem por IP e por processo. Implantações com réplicas precisam de armazenamento compartilhado.
+const limitarLogin = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 20,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    skipSuccessfulRequests: true,
+    message: { message: 'Muitas tentativas de login. Aguarde 15 minutos e tente novamente.' }
+});
 
 function ambienteEhProducao() {
     return process.env.NODE_ENV === 'production';
@@ -46,6 +57,7 @@ function realizarLogout(req, res) {
 
 router.post(
     '/login',
+    limitarLogin,
     login
 );
 

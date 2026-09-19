@@ -249,7 +249,7 @@ async function fazerLogout() {
     logoutEmAndamento = true;
 
     try {
-        await fetchAutenticado(
+        const resposta = await fetchAutenticado(
             AUTH_BASE_URL +
             '/logout',
             {
@@ -257,15 +257,20 @@ async function fazerLogout() {
                 cache: 'no-store'
             }
         );
+        if (!resposta.ok) {
+            throw new Error('Não foi possível encerrar a sessão. Tente sair novamente.');
+        }
+        window.location.replace('/login');
+        return true;
     } catch (erro) {
         console.error(
             'Erro ao comunicar logout com o servidor:',
             erro
         );
+        window.alert('Não foi possível encerrar a sessão. Você continua conectado. Tente sair novamente.');
+        return false;
     } finally {
-        window.location.replace(
-            '/login'
-        );
+        logoutEmAndamento = false;
     }
 }
 

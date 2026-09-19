@@ -9,7 +9,7 @@ import './src/models/funcionarios.js';
 import './src/models/alergias.js';
 import './src/models/atendimento.js';
 
-import { sincronizarBanco } from './src/config/database.js';
+import database, { sincronizarBanco } from './src/config/database.js';
 import { criarUsuarioMaster } from './src/config/masterUser.js';
 
 import authRoutes from './src/routes/authRoutes.js';
@@ -33,6 +33,11 @@ if (process.env.PORT) {
 // configurações
 
 app.disable('x-powered-by');
+
+// Aceite apenas os endereços/sub-redes dos proxies controlados pela implantação.
+if (process.env.TRUST_PROXY) {
+    app.set('trust proxy', process.env.TRUST_PROXY.split(',').map(valor => valor.trim()));
+}
 
 app.set('view engine', 'ejs');
 
@@ -126,6 +131,14 @@ app.use((req, res) => {
 
 app.use((erro, req, res, next) => {
 
+    if (res.headersSent) return next(erro);
+    const status = erro.status ?? erro.statusCode;
+    if (Number.isInteger(status) && status >= 400 && status < 500) {
+        return res.status(status).json({
+            message: status === 413 ? 'O conteúdo enviado é muito grande.' : 'Requisição inválida.'
+        });
+    }
+
     console.error(erro);
 
     res.status(500).json({
@@ -145,7 +158,7 @@ const iniciarServidor = async () => {
 
         await criarUsuarioMaster();
 
-        app.listen(
+        const servidor = app.listen(
             porta,
             () => {
                 console.log(
@@ -153,8 +166,16 @@ const iniciarServidor = async () => {
                 );
             }
         );
+        servidor.on('error', async erro => {
+            console.error('Falha ao abrir a porta do servidor:', erro.message);
+            process.exitCode = 1;
+            await database.close();
+        });
 
     } catch (erro) {
+
+        process.exitCode = 1;
+        await database.close();
 
         console.error(
             'Falha ao iniciar:',

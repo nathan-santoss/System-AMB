@@ -67,10 +67,20 @@ export function cpfEhValido(cpf) {
         return false;
     }
 
-    if (!/^\d{11}$/.test(cpf)) {
+    if (!/^\d{11}$/.test(cpf) || /^(\d)\1{10}$/.test(cpf)) {
         return false;
     }
 
+    for (let tamanho = 9; tamanho <= 10; tamanho++) {
+        let soma = 0;
+        for (let i = 0; i < tamanho; i++) {
+            soma += Number(cpf[i]) * (tamanho + 1 - i);
+        }
+        const resto = (soma * 10) % 11;
+        if (Number(cpf[tamanho]) !== (resto === 10 ? 0 : resto)) {
+            return false;
+        }
+    }
     return true;
 }
 

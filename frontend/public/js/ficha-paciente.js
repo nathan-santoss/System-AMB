@@ -413,6 +413,39 @@ function criarItemHistorico(atendimento) {
     item.appendChild(queixa);
     item.appendChild(acao);
 
+    const situacao = document.createElement('p');
+    situacao.className = 'text-xs text-gray-600 mt-2';
+    situacao.textContent = atendimento.data_hora_saida
+        ? 'Finalizado em: ' + formatarDataHora(atendimento.data_hora_saida)
+        : 'Em aberto';
+    item.appendChild(situacao);
+
+    if (!atendimento.data_hora_saida) {
+        const botao = document.createElement('button');
+        botao.type = 'button';
+        botao.className = 'mt-3 rounded-lg bg-azulEscuro px-3 py-2 text-sm text-white';
+        botao.textContent = 'Finalizar atendimento';
+        botao.addEventListener('click', async () => {
+            if (!window.confirm('Finalizar este atendimento e registrar o horário de saída agora?')) return;
+            botao.disabled = true;
+            try {
+                const resposta = await window.AuthSession.fetchAutenticado(
+                    '/api/atendimentos/' + encodeURIComponent(atendimento.id_atendimento) + '/finalizar',
+                    { method: 'PATCH' }
+                );
+                if (await respostaExigeNovoLogin(resposta)) return;
+                const dados = await lerRespostaJson(resposta);
+                if (!resposta.ok) throw new Error(obterMensagemErro(dados, 'Não foi possível finalizar o atendimento.'));
+                await carregarDadosPaciente(matriculaAtual);
+            } catch (erro) {
+                window.alert(erro.message);
+            } finally {
+                botao.disabled = false;
+            }
+        });
+        item.appendChild(botao);
+    }
+
     return item;
 }
 
@@ -564,7 +597,9 @@ function fecharModalAlergia() {
 
     modal.classList.add('hidden');
     modal.classList.remove('flex');
-    document.body.classList.remove('overflow-hidden');
+    const backdropSidebar = document.getElementById('sidebar-backdrop');
+    document.body.classList.toggle('overflow-hidden',
+        Boolean(backdropSidebar && !backdropSidebar.classList.contains('hidden')));
 
     const formulario = document.getElementById('formAlergia');
 
@@ -883,7 +918,7 @@ async function inicializarFichaPaciente() {
     const resultadoSessao = await window.AuthSession.exigirSessao();
 
     if (!resultadoSessao.autenticado) {
-        if (resultadoSessao.status === 0) {
+        if (resultadoSessao.status !== 401 && resultadoSessao.status !== 403) {
             alert(resultadoSessao.mensagem);
         }
         return;
