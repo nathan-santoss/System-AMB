@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title><%= titulo %></title>
+        <link rel="stylesheet" href="/styles/relatorio-pop.css" />
+        <link rel="stylesheet" href="/styles/relatorio-operacional.css" />
+        <script src="/js/auth-session.js" defer></script>
+        <script src="/js/relatorio-pop.js" defer></script>
+    </head>
+    <body>
+        <nav class="toolbar">
+            <a href="/relatorios">Voltar aos relatórios</a
+            ><button type="button" id="imprimir-pop">Imprimir / Salvar em PDF</button>
+            <p>Na janela de impressão, escolha “Salvar em PDF”.</p>
+        </nav>
+        <main class="documento">
+            <header class="cabecalho">
+                <p class="sobretitulo">SISTEMA DE AMBULATÓRIO</p>
+                <h1><%= titulo %></h1>
+                <p>Período: <%= relatorio.filtros.inicio %> a <%= relatorio.filtros.fim %></p>
+                <p class="nota">
+                    Emissão: <%= formatarData(relatorio.emitidoEm) %> (Brasília). Situações refletem
+                    a data de emissão.
+                </p>
+            </header>
+            <section>
+                <h2>Critérios da consulta</h2>
+                <dl class="grade">
+                    <% for (const [campo, rotulo] of [['grupo', 'Agrupamento'], ['lideranca',
+                    'Responsável'], ['vinculo', 'Vínculo'], ['matricula', 'Matrícula'], ['setor',
+                    'Setor atual'], ['nucleo', 'Núcleo atual'], ['situacao', 'Situação'],
+                    ['gravidade', 'Gravidade']]) { %>
+                    <div>
+                        <dt><%= rotulo %></dt>
+                        <dd><%= relatorio.filtros[campo] || 'Todos' %></dd>
+                    </div>
+                    <% } %>
+                </dl>
+                <p class="nota">
+                    Considera a data de entrada. Pendências incluem entradas anteriores ao início.
+                    Meses em andamento apresentam resultados parciais.
+                </p>
+            </section>
+            <section>
+                <h2>Resumo operacional</h2>
+                <dl class="grade">
+                    <% for (const [campo, rotulo] of [['total', 'Atendimentos'], ['pessoas',
+                    'Pessoas distintas'], ['abertos', 'Abertos na emissão'], ['encaminhamentos',
+                    'Encaminhamentos']]) { %>
+                    <div>
+                        <dt><%= rotulo %></dt>
+                        <dd><%= relatorio.resumo[campo] %></dd>
+                    </div>
+                    <% } %>
+                    <% if (relatorio.resumo.minutos !== null) { %>
+                    <div>
+                        <dt>Permanência média registrada</dt>
+                        <dd>
+                            <%= relatorio.resumo.minutos %>
+                            minutos, considerando somente encerrados com horários válidos.
+                        </dd>
+                    </div>
+                    <% } %>
+                </dl>
+            </section>
+            <section>
+                <h2>Idas por liderança</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Posição</th>
+                            <th>Liderança</th>
+                            <th>Idas</th>
+                            <th>Pessoas</th>
+                            <th>Participação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% for (const item of relatorio.ranking) { let participacao = 0; if (relatorio.resumo.total) participacao = 100 * item.idas / relatorio.resumo.total; %>
+                        <tr>
+                            <td><%= item.posicao || '—' %></td>
+                            <td><%= item.lideranca || 'Sem liderança informada' %></td>
+                            <td><%= item.idas %></td>
+                            <td><%= item.pessoas %></td>
+                            <td><%= participacao.toFixed(1).replace('.', ',') %>%</td>
+                        </tr>
+                        <% } %>
+                        <% if (!relatorio.ranking.length) { %>
+                        <tr>
+                            <td colspan="5">Nenhum atendimento encontrado.</td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+                <p class="nota">
+                    Participação nas idas registradas, não no tamanho da equipe. Empates mantêm a
+                    posição. Pessoas podem aparecer em grupos diferentes quando houve mudança de
+                    liderança.
+                </p>
+            </section>
+            <section>
+                <h2>Movimento diário</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dia (Brasília)</th>
+                            <th>Atendimentos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% for (const item of relatorio.evolucao) { %>
+                        <tr>
+                            <td><%= item.dia %></td>
+                            <td><%= item.total %></td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </section>
+            <% if (['individual', 'pendencias', 'encaminhamentos'].includes(relatorio.filtros.tipo)) { %>
+            <section>
+                <h2>Registros para conferência interna</h2>
+                <% for (const item of relatorio.registros) { %>
+                <article class="atendimento">
+                    <h3>
+                        Ficha #<%= item.id %>
+                        —
+                        <%= item.nome %>
+                    </h3>
+                    <p>
+                        Matrícula: <%= item.matricula %> · Entrada: <%= formatarData(item.entrada)
+                        %>
+                    </p>
+                    <p>
+                        Saída: <% if (item.saida) { %><%= formatarData(item.saida) %><% } else {
+                        %>Em aberto<% } %>
+                    </p>
+                    <p>Ação: <%= item.acao %> · Gravidade: <%= item.gravidade %></p>
+                    <% if (item.destino) { %>
+                    <p>Destino: <%= item.destino %></p>
+                    <% } %>
+                </article>
+                <% } %>
+            </section>
+            <% } %>
+            <footer>
+                Fonte: registros do Sistema de Ambulatório. Setor e núcleo correspondem ao cadastro
+                atual.
+            </footer>
+        </main>
+    </body>
+</html>

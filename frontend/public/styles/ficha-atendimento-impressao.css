@@ -1,0 +1,11 @@
+/* Mantém queixas extensas legíveis sem ultrapassar a largura da ficha. */
+.atendimento .texto-longo {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+@media print {
+    .atendimento h3 {
+        break-after: avoid;
+    }
+}

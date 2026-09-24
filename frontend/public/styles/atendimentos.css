@@ -1,0 +1,17 @@
+.opcoes-atendimento {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 150px;
+}
+#lista-atendimentos td {
+    vertical-align: middle;
+}
+#lista-atendimentos td:nth-child(2) {
+    min-width: 160px;
+}
+@media (max-width: 640px) {
+    .pagina .painel {
+        padding: 16px;
+    }
+}

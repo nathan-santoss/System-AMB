@@ -1,82 +1,9 @@
 import { Op } from 'sequelize';
 import Funcionario from '../models/funcionarios.js';
-import Alergia from '../models/alergias.js';
-import Atendimento from '../models/atendimento.js';
-import database from '../config/database.js';
 
 // Aqui eu realizo a criação de um novo registro de paciente diretamente no banco de dados.
 export async function criarFuncionario(dados) {
     return Funcionario.create(dados);
-}
-
-// Nesta função eu busco a lista de funcionários, permitindo aplicar um filtro de texto livre.
-export async function buscarTodosFuncionarios(filtro = {}) {
-    // Primeiro eu defino a regra padrão da consulta, ordenando os pacientes alfabeticamente pelo nome.
-    const opcoesConsulta = {
-        order: [
-            ['nome', 'ASC']
-        ]
-    };
-
-    let busca = '';
-
-    // Agora eu verifico de forma simples se um termo de busca válido foi enviado nos parâmetros.
-    if (filtro.busca) {
-        if (typeof filtro.busca === 'string') {
-            busca = filtro.busca.trim();
-        }
-    }
-
-    // Se houver texto para buscar, eu configuro a consulta para procurar o termo em diversas colunas.
-    if (busca.length > 0) {
-        const filtrosBusca = [
-            {
-                matricula: {
-                    [Op.iLike]: `%${busca}%`
-                }
-            },
-            {
-                nome: {
-                    [Op.iLike]: `%${busca}%`
-                }
-            },
-            {
-                cargo: {
-                    [Op.iLike]: `%${busca}%`
-                }
-            },
-            {
-                setor: {
-                    [Op.iLike]: `%${busca}%`
-                }
-            },
-            {
-                nucleo: {
-                    [Op.iLike]: `%${busca}%`
-                }
-            }
-        ];
-
-        // Em seguida eu removo os caracteres não numéricos para verificar se o usuário tentou pesquisar por um CPF.
-        const cpfBusca = busca.replace(/\D/g, '');
-
-        // Caso o termo possua números, eu adiciono o CPF como uma das opções válidas de filtro.
-        if (cpfBusca.length > 0) {
-            filtrosBusca.push({
-                cpf: {
-                    [Op.iLike]: `%${cpfBusca}%`
-                }
-            });
-        }
-
-        // Neste ponto eu aplico a cláusula OR, significando que o termo pesquisado pode estar em qualquer uma dessas colunas.
-        opcoesConsulta.where = {
-            [Op.or]: filtrosBusca
-        };
-    }
-
-    // Por fim eu executo a consulta no Sequelize e retorno os dados encontrados.
-    return Funcionario.findAll(opcoesConsulta);
 }
 
 // Aqui eu busco os dados completos de um único funcionário utilizando a sua chave primária.
@@ -90,13 +17,40 @@ export async function atualizarFuncionario(funcionario, dados) {
     return funcionario;
 }
 
-// Aqui eu orquestro a exclusão de um funcionário, lidando manualmente com as restrições dos seus relacionamentos.
+// Mantém as referências históricas ao retirar o funcionário da lista ativa.
 export async function deletarFuncionario(funcionario) {
-    return database.transaction(async transaction => {
-        // Todas as etapas são revertidas se houver erro ou um novo vínculo impedir a exclusão.
-        const where = { funcionario_matricula: funcionario.matricula };
-        await Alergia.destroy({ where, transaction });
-        await Atendimento.destroy({ where, transaction });
-        await funcionario.destroy({ transaction });
+    // A inativação mantém os registros usados nos relatórios históricos.
+    return funcionario.update({ ativo: false });
+}
+
+export async function buscarPaginaFuncionarios(filtros) {
+    const where = {};
+    if (filtros.situacao === 'ativos') where.ativo = true;
+    if (filtros.situacao === 'inativos') where.ativo = false;
+    for (const campo of ['setor', 'nucleo', 'supervisor', 'coordenador', 'gerente']) {
+        if (filtros[campo]) where[campo] = filtros[campo];
+    }
+    if (filtros.busca) {
+        const termo = '%' + filtros.busca + '%';
+        where[Op.or] = ['nome', 'matricula', 'cpf', 'cargo', 'setor', 'nucleo'].map((campo) => ({
+            [campo]: { [Op.iLike]: termo }
+        }));
+        const cpf = filtros.busca.replace(/\D/g, '');
+        if (cpf.length) where[Op.or].push({ cpf: { [Op.iLike]: '%' + cpf + '%' } });
+    }
+    const resultado = await Funcionario.findAndCountAll({
+        where,
+        limit: 25,
+        offset: (filtros.pagina - 1) * 25,
+        order: [
+            ['nome', 'ASC'],
+            ['matricula', 'ASC']
+        ]
     });
+    return {
+        registros: resultado.rows,
+        total: resultado.count,
+        pagina: filtros.pagina,
+        totalPaginas: Math.max(1, Math.ceil(resultado.count / 25))
+    };
 }

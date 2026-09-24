@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <%- include('partials/head') %>
+        <title>Relatórios — Ambulatório</title>
+        <link rel="stylesheet" href="/styles/relatorios.css" />
+        <script src="/js/relatorios.js" defer></script>
+    </head>
+    <body class="flex min-h-screen">
+        <%- include('partials/sidebar') %>
+        <main class="pagina">
+            <header class="cabecalho-pagina">
+                <div>
+                    <h1>Relatórios</h1>
+                    <p>Conferência da operação e acompanhamento das equipes.</p>
+                </div>
+                <a href="/novo-atendimento" class="botao-primario">Novo atendimento</a>
+            </header>
+            <div
+                id="mensagem-pagina"
+                class="mensagem"
+                role="status"
+                aria-live="polite"
+                hidden
+            ></div>
+            <form id="filtros-relatorio" class="painel">
+                <div class="grade-filtros">
+                    <label
+                        ><span class="rotulo">Relatório</span
+                        ><select name="tipo" id="tipo-relatorio" class="campo">
+                            <option value="movimento">Movimento do ambulatório</option>
+                            <option value="ranking">Ranking mensal por liderança</option>
+                            <option value="individual">Histórico individual</option>
+                            <option value="pendencias">Pendências de encerramento</option>
+                            <option value="encaminhamentos">Encaminhamentos</option>
+                        </select></label
+                    >
+                    <label id="filtro-mes" hidden
+                        ><span class="rotulo">Mês do ranking</span
+                        ><input id="mes-relatorio" type="month" class="campo"
+                    /></label>
+                    <label
+                        ><span class="rotulo">De</span
+                        ><input name="inicio" id="inicio" type="date" required class="campo"
+                    /></label>
+                    <label
+                        ><span class="rotulo">Até</span
+                        ><input name="fim" id="fim" type="date" required class="campo"
+                    /></label>
+                    <label
+                        ><span class="rotulo">Agrupar por</span
+                        ><select name="grupo" id="grupo" class="campo">
+                            <option value="supervisor">Supervisor</option>
+                            <option value="coordenador">Coordenador</option>
+                            <option value="gerente">Gerente</option>
+                        </select></label
+                    >
+                    <label
+                        ><span class="rotulo">Responsável</span
+                        ><select name="lideranca" id="lideranca" class="campo">
+                            <option value="">Todos</option>
+                        </select></label
+                    >
+                    <label
+                        ><span class="rotulo">Vínculo da equipe</span
+                        ><select name="vinculo" class="campo">
+                            <option value="epoca">Na época do atendimento</option>
+                            <option value="atual">Equipe atual</option>
+                        </select></label
+                    >
+                    <label
+                        ><span class="rotulo">Matrícula do funcionário</span
+                        ><input
+                            name="matricula"
+                            id="matricula-relatorio"
+                            maxlength="20"
+                            class="campo"
+                            placeholder="Todas as pessoas"
+                    /></label>
+                    <label
+                        ><span class="rotulo">Setor atual</span
+                        ><select name="setor" id="setor" class="campo">
+                            <option value="">Todos</option>
+                        </select></label
+                    >
+                    <label
+                        ><span class="rotulo">Núcleo atual</span
+                        ><select name="nucleo" id="nucleo" class="campo">
+                            <option value="">Todos</option>
+                        </select></label
+                    >
+                    <label
+                        ><span class="rotulo">Situação na emissão</span
+                        ><select name="situacao" class="campo">
+                            <option value="">Todas</option>
+                            <option value="aberto">Em aberto</option>
+                            <option value="finalizado">Finalizado</option>
+                        </select></label
+                    >
+                    <label
+                        ><span class="rotulo">Gravidade</span
+                        ><select name="gravidade" class="campo">
+                            <option value="">Todas</option>
+                            <option>Baixa</option>
+                            <option>Média</option>
+                            <option>Alta</option>
+                        </select></label
+                    >
+                </div>
+                <div class="acoes">
+                    <button class="botao-primario" id="gerar-relatorio">Consultar relatório</button
+                    ><button type="reset" class="botao-secundario">Limpar filtros</button>
+                </div>
+                <p class="ajuda mt-3">
+                    Pendências incluem entradas anteriores ao início do período. O ranking conta
+                    idas registradas; não mede o percentual de pessoas de uma equipe.
+                </p>
+            </form>
+            <section id="resultado-relatorio" hidden>
+                <div class="cabecalho-pagina">
+                    <p id="descricao-relatorio"></p>
+                    <div class="acoes">
+                        <button type="button" id="excel-relatorio" class="botao-secundario">
+                            Exportar Excel</button
+                        ><a id="pdf-relatorio" class="botao-primario" target="_blank" rel="noopener"
+                            >Imprimir / PDF</a
+                        >
+                    </div>
+                </div>
+                <div class="indicadores" id="indicadores"></div>
+                <section class="painel">
+                    <h2>Idas por liderança</h2>
+                    <div class="tabela-container">
+                        <table class="tabela">
+                            <thead>
+                                <tr>
+                                    <th>Posição</th>
+                                    <th>Liderança</th>
+                                    <th>Idas</th>
+                                    <th>Pessoas atendidas</th>
+                                    <th>Participação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ranking"></tbody>
+                        </table>
+                    </div>
+                    <p class="ajuda mt-3">
+                        Empates mantêm a posição. Pessoas que mudaram de equipe podem aparecer em
+                        mais de um grupo. Cada nível de liderança é analisado separadamente.
+                    </p>
+                </section>
+                <section class="painel">
+                    <h2>Movimento por dia</h2>
+                    <div id="evolucao" class="evolucao"></div>
+                </section>
+                <section class="painel">
+                    <h2>Registros para conferência interna</h2>
+                    <p class="ajuda mb-3">
+                        As exportações gerais exibem indicadores. Listas nominais são incluídas nos
+                        relatórios individual, de pendências e de encaminhamentos.
+                    </p>
+                    <div class="tabela-container">
+                        <table class="tabela">
+                            <thead>
+                                <tr>
+                                    <th>Ficha</th>
+                                    <th>Funcionário</th>
+                                    <th>Entrada</th>
+                                    <th>Saída</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="registros"></tbody>
+                        </table>
+                    </div>
+                    <div class="paginacao">
+                        <button id="pagina-anterior" class="botao-secundario">Anterior</button
+                        ><span id="pagina-atual"></span
+                        ><button id="pagina-proxima" class="botao-secundario">Próxima</button>
+                    </div>
+                </section>
+            </section>
+            <details class="painel">
+                <summary>Rotina de conferência — orientação POP</summary>
+                <p class="ajuda mt-3">
+                    Diariamente, confira os registros em aberto. Semanalmente, revise o movimento e
+                    os encaminhamentos. No fechamento mensal, selecione o mês e o nível de
+                    liderança, confira os registros sem responsável e exporte o consolidado.
+                    Consulte a ficha individual quando precisar verificar a origem de um registro.
+                    Esse roteiro deve ser adaptado e aprovado pelo responsável do ambulatório.
+                </p>
+            </details>
+        </main>
+    </body>
+</html>

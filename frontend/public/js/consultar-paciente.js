@@ -1,5 +1,6 @@
 const FUNCIONARIOS_BASE_URL = '/api/funcionarios';
 let termoBuscaAtual = '';
+let paginaFuncionarios = 1;
 let temporizadorMensagem = null;
 
 // Aqui eu inicio os ícones para garantir a interface gráfica adequada.
@@ -200,7 +201,8 @@ function mostrarMensagem(mensagem, tipo) {
         temporizadorMensagem = null;
     }
 
-    elemento.className = 'fixed top-5 right-5 z-[70] max-w-sm rounded-xl shadow-xl px-5 py-4 flex items-start gap-3';
+    elemento.className =
+        'fixed top-5 right-5 z-[70] max-w-sm rounded-xl shadow-xl px-5 py-4 flex items-start gap-3';
 
     let classesTipo = 'bg-slate-800 text-white';
     let icone = 'info';
@@ -321,11 +323,14 @@ function preencherLiderancas(prefixo, funcionario) {
 }
 
 function obterLiderancasFormulario(prefixo) {
-    return Object.fromEntries(['supervisor', 'coordenador', 'gerente'].map(cargo => {
-        const marcado = document.getElementById(prefixo + '-informar-' + cargo).checked;
-        const valor = document.getElementById(prefixo + '-' + cargo).value.trim();
-        return [cargo, marcado ? valor || null : null];
-    }));
+    return Object.fromEntries(
+        ['supervisor', 'coordenador', 'gerente'].map((cargo) => {
+            const marcado = document.getElementById(prefixo + '-informar-' + cargo).checked;
+            const valor = document.getElementById(prefixo + '-' + cargo).value.trim();
+            if (!marcado) return [cargo, null];
+            return [cargo, valor || null];
+        })
+    );
 }
 
 // Agora eu exibo a interface de cadastro zerando o formulário.
@@ -553,7 +558,8 @@ function criarLinkProntuario(funcionario) {
 
     const link = document.createElement('a');
     link.href = '/ficha-paciente?matricula=' + encodeURIComponent(matricula);
-    link.className = 'inline-flex items-center justify-center gap-1.5 bg-azulEscuro hover:bg-blue-800 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-all shadow-sm';
+    link.className =
+        'inline-flex items-center justify-center gap-1.5 bg-azulEscuro hover:bg-blue-800 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-all shadow-sm';
     link.title = 'Abrir ficha ambulatorial';
 
     link.innerHTML = `
@@ -569,9 +575,15 @@ function criarLinhaFuncionario(funcionario) {
     const linha = document.createElement('tr');
     linha.className = 'hover:bg-slate-50 transition-colors';
 
-    linha.appendChild(criarCelula(funcionario.matricula, 'py-4 px-6 text-sm text-slate-800 font-bold'));
-    linha.appendChild(criarCelula(funcionario.nome, 'py-4 px-6 text-sm text-slate-800 font-medium'));
-    linha.appendChild(criarCelula(formatarCpf(funcionario.cpf), 'py-4 px-6 text-sm text-slate-600'));
+    linha.appendChild(
+        criarCelula(funcionario.matricula, 'py-4 px-6 text-sm text-slate-800 font-bold')
+    );
+    linha.appendChild(
+        criarCelula(funcionario.nome, 'py-4 px-6 text-sm text-slate-800 font-medium')
+    );
+    linha.appendChild(
+        criarCelula(formatarCpf(funcionario.cpf), 'py-4 px-6 text-sm text-slate-600')
+    );
     linha.appendChild(criarCelula(funcionario.cargo, 'py-4 px-6 text-sm text-slate-600'));
     linha.appendChild(criarCelula(funcionario.setor, 'py-4 px-6 text-sm text-slate-600'));
     linha.appendChild(criarCelula(funcionario.nucleo, 'py-4 px-6 text-sm text-slate-600'));
@@ -588,17 +600,19 @@ function criarLinhaFuncionario(funcionario) {
         texto: 'Editar',
         titulo: 'Editar funcionário',
         icone: 'pencil',
-        classes: 'inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-semibold transition-all',
+        classes:
+            'inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-semibold transition-all',
         acao: function () {
             abrirModalEditar(funcionario);
         }
     });
 
     const botaoExcluir = criarBotaoAcao({
-        texto: 'Excluir',
-        titulo: 'Excluir funcionário',
+        texto: 'Inativar',
+        titulo: 'Inativar funcionário',
         icone: 'trash-2',
-        classes: 'inline-flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-700 px-3 py-2 rounded-lg text-xs font-semibold transition-all',
+        classes:
+            'inline-flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-700 px-3 py-2 rounded-lg text-xs font-semibold transition-all',
         acao: function () {
             deletarFuncionario(funcionario);
         }
@@ -606,7 +620,35 @@ function criarLinhaFuncionario(funcionario) {
 
     containerAcoes.appendChild(linkProntuario);
     containerAcoes.appendChild(botaoEditar);
-    containerAcoes.appendChild(botaoExcluir);
+    if (funcionario.ativo) {
+        containerAcoes.appendChild(botaoExcluir);
+        const atender = document.createElement('a');
+        atender.href = '/novo-atendimento?matricula=' + encodeURIComponent(funcionario.matricula);
+        atender.className = 'botao-secundario';
+        atender.textContent = 'Atender';
+        containerAcoes.appendChild(atender);
+    } else {
+        containerAcoes.appendChild(
+            criarBotaoAcao({
+                texto: 'Reativar',
+                titulo: 'Reativar funcionário',
+                icone: 'user-check',
+                classes: 'botao-secundario',
+                acao: async () => {
+                    try {
+                        await window.AmbUI.enviar(
+                            FUNCIONARIOS_BASE_URL + '/' + encodeURIComponent(funcionario.matricula),
+                            { ativo: true },
+                            'PATCH'
+                        );
+                        await buscarFuncionarios(termoBuscaAtual);
+                    } catch (erro) {
+                        mostrarMensagem(erro.message, 'erro');
+                    }
+                }
+            })
+        );
+    }
 
     celulaAcoes.appendChild(containerAcoes);
     linha.appendChild(celulaAcoes);
@@ -678,19 +720,16 @@ function renderizarFuncionarios(funcionarios) {
 // Neste bloco eu realizo a requisição HTTP e obtenho os cadastros armazenados no banco do servidor.
 let versaoBuscaFuncionarios = 0;
 
-async function buscarFuncionarios(termo) {
+async function buscarFuncionarios(termo, manterPagina = false) {
+    if (!manterPagina) paginaFuncionarios = 1;
     const versao = ++versaoBuscaFuncionarios;
     mostrarTabelaCarregando();
 
-    let url = FUNCIONARIOS_BASE_URL;
-
-    if (typeof termo === 'string') {
-        const termoNormalizado = termo.trim();
-
-        if (termoNormalizado.length > 0) {
-            url += '?busca=' + encodeURIComponent(termoNormalizado);
-        }
+    const parametros = new URLSearchParams({ busca: termo || '', pagina: paginaFuncionarios });
+    for (const campo of ['situacao', 'setor', 'nucleo', 'supervisor', 'coordenador', 'gerente']) {
+        parametros.set(campo, document.getElementById('filtro-' + campo).value);
     }
+    const url = FUNCIONARIOS_BASE_URL + '?' + parametros;
 
     try {
         const resposta = await window.AuthSession.fetchAutenticado(url, {
@@ -713,8 +752,13 @@ async function buscarFuncionarios(termo) {
             throw new Error(mensagem);
         }
 
-        renderizarFuncionarios(dados);
-
+        renderizarFuncionarios(dados.registros);
+        atualizarTextoTotal(dados.total);
+        document.getElementById('funcionarios-pagina').textContent =
+            'Página ' + dados.pagina + ' de ' + dados.totalPaginas;
+        document.getElementById('funcionarios-anterior').disabled = dados.pagina <= 1;
+        document.getElementById('funcionarios-proxima').disabled =
+            dados.pagina >= dados.totalPaginas;
     } catch (erro) {
         if (versao !== versaoBuscaFuncionarios) return;
         console.error('Erro ao buscar funcionários:', erro);
@@ -751,8 +795,9 @@ function cpfEhValido(cpf) {
         for (let i = 0; i < tamanho; i++) {
             soma += Number(cpf[i]) * (tamanho + 1 - i);
         }
-        const resto = (soma * 10) % 11;
-        if (Number(cpf[tamanho]) !== (resto === 10 ? 0 : resto)) {
+        let resto = (soma * 10) % 11;
+        if (resto === 10) resto = 0;
+        if (Number(cpf[tamanho]) !== resto) {
             return false;
         }
     }
@@ -829,7 +874,6 @@ async function cadastrarFuncionario(evento) {
         }
 
         await buscarFuncionarios('');
-
     } catch (erro) {
         console.error('Erro ao cadastrar funcionário:', erro);
         mostrarMensagem(erro.message, 'erro');
@@ -904,7 +948,6 @@ async function atualizarFuncionario(evento) {
         fecharModalEditar();
         mostrarMensagem('Funcionário atualizado com sucesso.', 'sucesso');
         await buscarFuncionarios(termoBuscaAtual);
-
     } catch (erro) {
         console.error('Erro ao atualizar funcionário:', erro);
         mostrarMensagem(erro.message, 'erro');
@@ -924,7 +967,11 @@ async function deletarFuncionario(funcionario) {
     const matricula = String(funcionario.matricula).trim();
 
     const confirmado = window.confirm(
-        'Deseja realmente excluir o funcionário "' + nome + '" de matrícula ' + matricula + '?\n\nEsta ação é permanente e não pode ser desfeita. Todas as alergias e todo o histórico de atendimentos deste funcionário também serão excluídos.'
+        'Inativar o funcionário "' +
+            nome +
+            '" de matrícula ' +
+            matricula +
+            '?\n\nO histórico será preservado e o cadastro poderá ser reativado.'
     );
 
     if (!confirmado) {
@@ -945,22 +992,32 @@ async function deletarFuncionario(funcionario) {
 
         if (!resposta.ok) {
             const dados = await lerRespostaJson(resposta);
-            const mensagem = obterMensagemErro(dados, 'Não foi possível excluir o funcionário.');
+            const mensagem = obterMensagemErro(dados, 'Não foi possível inativar o funcionário.');
             throw new Error(mensagem);
         }
 
-        mostrarMensagem('Funcionário excluído com sucesso.', 'sucesso');
+        mostrarMensagem('Funcionário inativado. Histórico preservado.', 'sucesso');
         await buscarFuncionarios(termoBuscaAtual);
-
     } catch (erro) {
-        console.error('Erro ao excluir funcionário:', erro);
+        console.error('Erro ao inativar funcionário:', erro);
         mostrarMensagem(erro.message, 'erro');
     }
 }
 
 // Aqui eu amarro os ouvintes do Javascript em cada input form, botão e tecla gerando interatividade total do sistema com a API.
 function configurarEventos() {
-    document.querySelectorAll('[data-lideranca]').forEach(controle => {
+    document.getElementById('funcionarios-anterior').addEventListener('click', () => {
+        paginaFuncionarios = Math.max(1, paginaFuncionarios - 1);
+        buscarFuncionarios(termoBuscaAtual, true);
+    });
+    document.getElementById('funcionarios-proxima').addEventListener('click', () => {
+        paginaFuncionarios += 1;
+        buscarFuncionarios(termoBuscaAtual, true);
+    });
+    document.querySelectorAll('[id^="filtro-"]').forEach((campo) => {
+        campo.addEventListener('change', () => buscarFuncionarios(termoBuscaAtual));
+    });
+    document.querySelectorAll('[data-lideranca]').forEach((controle) => {
         controle.addEventListener('change', () => atualizarCampoLideranca(controle));
     });
     const formularioBusca = document.getElementById('form-busca');
@@ -997,6 +1054,10 @@ function configurarEventos() {
                 campoBusca.focus();
             }
 
+            document.querySelectorAll('[id^="filtro-"]').forEach((campo) => {
+                campo.value = '';
+            });
+            document.getElementById('filtro-situacao').value = 'ativos';
             buscarFuncionarios('');
         });
     }

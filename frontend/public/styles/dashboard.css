@@ -1,0 +1,9 @@
+#lista-ultimos-atendimentos td {
+    vertical-align: middle;
+}
+@media (max-width: 640px) {
+    #lista-setores {
+        max-height: 320px;
+        overflow-y: auto;
+    }
+}

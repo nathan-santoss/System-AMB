@@ -1,0 +1,74 @@
+.atendimento-guiado {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+.etapas {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+    list-style: none;
+    padding: 0;
+}
+.etapas li {
+    border-bottom: 3px solid #cbd5e1;
+    padding: 12px 4px;
+    color: #64748b;
+    font-weight: 600;
+}
+.etapas li[aria-current] {
+    color: #1e3a8a;
+    border-color: #2563eb;
+}
+.busca-pessoa {
+    display: flex;
+    gap: 12px;
+}
+.resultados-pessoas {
+    display: grid;
+    gap: 12px;
+    margin-top: 20px;
+}
+.resultado-pessoa {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+}
+.pessoa-selecionada {
+    border-left: 4px solid #2563eb;
+}
+#pessoa-alergias {
+    color: #991b1b;
+    margin-top: 10px;
+}
+.resumo-atendimento {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+.resumo-atendimento dt {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+.resumo-atendimento dd {
+    margin: 4px 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+    .etapas {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .busca-pessoa,
+    .resultado-pessoa {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .resumo-atendimento {
+        grid-template-columns: 1fr;
+    }
+}

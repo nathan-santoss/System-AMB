@@ -1,0 +1,33 @@
+.evolucao {
+    display: grid;
+    gap: 10px;
+    max-height: 360px;
+    overflow-y: auto;
+}
+.dia-movimento {
+    display: grid;
+    grid-template-columns: 100px 1fr 50px;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+}
+.barra-movimento {
+    height: 12px;
+    background: #dbeafe;
+    border-radius: 20px;
+    overflow: hidden;
+}
+.barra-movimento span {
+    display: block;
+    height: 100%;
+    background: #2563eb;
+}
+#descricao-relatorio {
+    max-width: 650px;
+}
+@media (max-width: 480px) {
+    .dia-movimento {
+        grid-template-columns: 80px 1fr 35px;
+        gap: 6px;
+    }
+}

@@ -1,0 +1,26 @@
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+th,
+td {
+    padding: 8px;
+    border-bottom: 1px solid #cbd5e1;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+th {
+    background: #f1f5f9;
+}
+thead {
+    display: table-header-group;
+}
+@media print {
+    tr {
+        break-inside: avoid;
+    }
+    .atendimento {
+        break-inside: avoid;
+    }
+}

@@ -9,9 +9,7 @@ function normalizarEmail(email) {
         return '';
     }
 
-    return email
-        .trim()
-        .toLowerCase();
+    return email.trim().toLowerCase();
 }
 
 function emailEhValido(email) {
@@ -61,44 +59,30 @@ function valorFoiInformado(valor) {
 }
 
 function obterCredenciaisIniciais() {
-    const emailRecebido =
-        process.env.BOOTSTRAP_ADMIN_EMAIL;
+    const emailRecebido = process.env.BOOTSTRAP_ADMIN_EMAIL;
 
-    const senhaRecebida =
-        process.env.BOOTSTRAP_ADMIN_PASSWORD;
+    const senhaRecebida = process.env.BOOTSTRAP_ADMIN_PASSWORD;
 
-    const emailFoiInformado =
-        valorFoiInformado(emailRecebido);
+    const emailFoiInformado = valorFoiInformado(emailRecebido);
 
-    const senhaFoiInformada =
-        valorFoiInformado(senhaRecebida);
+    const senhaFoiInformada = valorFoiInformado(senhaRecebida);
 
-    if (
-        !emailFoiInformado &&
-        !senhaFoiInformada
-    ) {
+    if (!emailFoiInformado && !senhaFoiInformada) {
         return null;
     }
 
-    if (
-        !emailFoiInformado ||
-        !senhaFoiInformada
-    ) {
+    if (!emailFoiInformado || !senhaFoiInformada) {
         throw new Error(
             'BOOTSTRAP_ADMIN_EMAIL e BOOTSTRAP_ADMIN_PASSWORD devem ser informados juntos.'
         );
     }
 
-    const email = normalizarEmail(
-        emailRecebido
-    );
+    const email = normalizarEmail(emailRecebido);
 
     const senha = senhaRecebida;
 
     if (!emailEhValido(email)) {
-        throw new Error(
-            'BOOTSTRAP_ADMIN_EMAIL deve possuir um e-mail válido.'
-        );
+        throw new Error('BOOTSTRAP_ADMIN_EMAIL deve possuir um e-mail válido.');
     }
 
     return {
@@ -112,17 +96,11 @@ async function buscarUsuarioPorEmail(email) {
         where: {
             email
         },
-        attributes: [
-            'id_usuario',
-            'email',
-            'senha'
-        ]
+        attributes: ['id_usuario', 'email', 'senha']
     });
 }
 
-async function criarUsuarioInicial(
-    credenciais
-) {
+async function criarUsuarioInicial(credenciais) {
     // Uma credencial antiga mantida no ambiente não deve impedir a inicialização
     // quando o usuário já existe e a senha não será utilizada para criar um hash.
     if (!senhaEhValida(credenciais.senha)) {
@@ -131,10 +109,7 @@ async function criarUsuarioInicial(
         );
     }
 
-    const senhaHash = await bcrypt.hash(
-        credenciais.senha,
-        CUSTO_BCRYPT
-    );
+    const senhaHash = await bcrypt.hash(credenciais.senha, CUSTO_BCRYPT);
 
     return Usuario.create({
         email: credenciais.email,
@@ -143,38 +118,25 @@ async function criarUsuarioInicial(
 }
 
 export async function criarUsuarioMaster() {
-    const credenciais =
-        obterCredenciaisIniciais();
+    const credenciais = obterCredenciaisIniciais();
 
     if (credenciais === null) {
-        console.log(
-            'Criação automática do usuário inicial desativada.'
-        );
+        console.log('Criação automática do usuário inicial desativada.');
 
         return null;
     }
 
-    const usuarioExistente =
-        await buscarUsuarioPorEmail(
-            credenciais.email
-        );
+    const usuarioExistente = await buscarUsuarioPorEmail(credenciais.email);
 
     if (usuarioExistente) {
-        console.log(
-            'O usuário inicial já existe. A senha não foi alterada.'
-        );
+        console.log('O usuário inicial já existe. A senha não foi alterada.');
 
         return usuarioExistente;
     }
 
-    const novoUsuario =
-        await criarUsuarioInicial(
-            credenciais
-        );
+    const novoUsuario = await criarUsuarioInicial(credenciais);
 
-    console.log(
-        'Usuário inicial criado com sucesso.'
-    );
+    console.log('Usuário inicial criado com sucesso.');
 
     return novoUsuario;
 }

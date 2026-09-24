@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <%- include('partials/head') %>
+        <title>Atendimentos — Ambulatório</title>
+        <link rel="stylesheet" href="/styles/atendimentos.css" />
+        <script src="/js/atendimentos.js" defer></script>
+    </head>
+    <body class="flex min-h-screen">
+        <%- include('partials/sidebar') %>
+        <main class="pagina">
+            <header class="cabecalho-pagina">
+                <div>
+                    <h1>Atendimentos</h1>
+                    <p>Consulte fichas, confira pendências e registre a saída.</p>
+                </div>
+                <a href="/novo-atendimento" class="botao-primario">Novo atendimento</a>
+            </header>
+            <div id="mensagem-pagina" class="mensagem" role="status" hidden></div>
+            <form id="filtros-atendimentos" class="painel">
+                <div class="grade-filtros">
+                    <label
+                        ><span class="rotulo">De</span
+                        ><input type="date" name="inicio" class="campo" required
+                    /></label>
+                    <label
+                        ><span class="rotulo">Até</span
+                        ><input type="date" name="fim" class="campo" required
+                    /></label>
+                    <label
+                        ><span class="rotulo">Matrícula</span
+                        ><input
+                            name="matricula"
+                            maxlength="20"
+                            class="campo"
+                            placeholder="Todos os funcionários"
+                    /></label>
+                    <label
+                        ><span class="rotulo">Situação</span
+                        ><select name="situacao" class="campo">
+                            <option value="">Todas</option>
+                            <option value="aberto">Em aberto, incluindo entradas antigas</option>
+                            <option value="finalizado">Finalizado</option>
+                        </select></label
+                    >
+                    <label
+                        ><span class="rotulo">Gravidade</span
+                        ><select name="gravidade" class="campo">
+                            <option value="">Todas</option>
+                            <option>Baixa</option>
+                            <option>Média</option>
+                            <option>Alta</option>
+                        </select></label
+                    >
+                </div>
+                <div class="acoes">
+                    <button class="botao-primario">Consultar</button
+                    ><a href="/relatorios" class="botao-secundario"
+                        >Filtros por equipe e relatórios</a
+                    >
+                </div>
+            </form>
+            <section class="painel">
+                <h2 id="total-atendimentos">Registros</h2>
+                <div class="tabela-container">
+                    <table class="tabela">
+                        <thead>
+                            <tr>
+                                <th>Ficha</th>
+                                <th>Funcionário</th>
+                                <th>Entrada (Brasília)</th>
+                                <th>Saída (Brasília)</th>
+                                <th>Gravidade</th>
+                                <th>Ação</th>
+                                <th>Opções</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-atendimentos"></tbody>
+                    </table>
+                </div>
+                <div class="paginacao">
+                    <button id="anterior" class="botao-secundario">Anterior</button
+                    ><span id="pagina-atendimentos"></span
+                    ><button id="proxima" class="botao-secundario">Próxima</button>
+                </div>
+            </section>
+        </main>
+    </body>
+</html>

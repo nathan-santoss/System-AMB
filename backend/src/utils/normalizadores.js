@@ -42,15 +42,11 @@ export function normalizarMatricula(valor) {
 
 export function normalizarCpf(valor) {
     if (typeof valor === 'number') {
-        return String(valor)
-            .replace(/\D/g, '')
-            .trim();
+        return String(valor).replace(/\D/g, '').trim();
     }
 
     if (typeof valor === 'string') {
-        return valor
-            .replace(/\D/g, '')
-            .trim();
+        return valor.replace(/\D/g, '').trim();
     }
 
     return valor;

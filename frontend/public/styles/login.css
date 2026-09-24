@@ -1,0 +1,9 @@
+body {
+    min-height: 100dvh;
+}
+@media (max-height: 600px) {
+    body {
+        align-items: flex-start;
+        overflow-y: auto;
+    }
+}

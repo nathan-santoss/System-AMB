@@ -1,13 +1,15 @@
 import jwt from 'jsonwebtoken';
 import Usuario from '../models/usuarios.js';
 import { obterJwtSecret } from '../config/auth.js';
+import Sessao from '../models/sessoes.js';
+import { sessaoEstaValida } from '../services/sessaoService.js';
 
 // Aqui eu defino as constantes necessárias para validar a emissão estrutural do token.
 const EMISSOR_TOKEN = 'system-amb';
 const PUBLICO_TOKEN = 'system-amb-web';
 
 // Nesta função eu isolo a responsabilidade de limpar o cookie de sessão do usuário em caso de falhas.
-function limparCookieSessao(res) {
+export function limparCookieSessao(res) {
     const ambienteEhProducao = process.env.NODE_ENV === 'production';
 
     res.clearCookie('token', {
@@ -19,7 +21,7 @@ function limparCookieSessao(res) {
 }
 
 // Agora eu crio um extrator simples para capturar exclusivamente o nosso token dentro do cabeçalho HTTP.
-function extrairTokenDoCookie(cabecalhoCookie) {
+export function extrairTokenDoCookie(cabecalhoCookie) {
     if (typeof cabecalhoCookie !== 'string') {
         return null;
     }
@@ -39,11 +41,12 @@ function extrairTokenDoCookie(cabecalhoCookie) {
 }
 
 // Em seguida eu padronizo a forma como o sistema nega e encerra o acesso em requisições inválidas.
-function bloquearAcesso(res, mensagem) {
+function bloquearAcesso(res, mensagem, codigo = 'SESSAO_INVALIDA') {
     limparCookieSessao(res);
 
     return res.status(401).json({
-        erro: mensagem
+        erro: mensagem,
+        codigo
     });
 }
 
@@ -79,6 +82,26 @@ export async function verificarToken(req, res, next) {
 
         const idUsuario = Number(usuarioDecodificado.id_usuario);
 
+        if (
+            !Number.isSafeInteger(idUsuario) ||
+            idUsuario < 1 ||
+            typeof usuarioDecodificado.jti !== 'string' ||
+            !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+                usuarioDecodificado.jti
+            )
+        ) {
+            return bloquearAcesso(res, 'Entre novamente para iniciar uma sessão segura.');
+        }
+        const sessao = await Sessao.findByPk(usuarioDecodificado.jti);
+        if (!sessaoEstaValida(sessao) || sessao.usuario_id !== idUsuario) {
+            return bloquearAcesso(
+                res,
+                'Sua sessão expirou. Faça login novamente.',
+                'SESSAO_EXPIRADA'
+            );
+        }
+        req.sessao = sessao;
+
         // Por segurança, eu vou ao banco de dados confirmar se o usuário que assina o token não foi removido.
         const usuario = await Usuario.findByPk(idUsuario, {
             attributes: ['id_usuario', 'email']
@@ -95,7 +118,6 @@ export async function verificarToken(req, res, next) {
         };
 
         return next();
-
     } catch (erro) {
         // Caso ocorra qualquer problema de validação no JWT, eu capturo a exceção e trato com mensagens amigáveis.
         if (erro.name === 'TokenExpiredError') {

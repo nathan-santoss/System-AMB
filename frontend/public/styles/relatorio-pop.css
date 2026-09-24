@@ -1,45 +1,201 @@
-:root { font-family: Arial, sans-serif; color: #172638; background: #edf1f5; line-height: 1.5; }
-* { box-sizing: border-box; }
-body { margin: 0; }
-.toolbar { max-width: 210mm; margin: 24px auto; padding: 0 20px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
-.toolbar a { color: #1e3a8a; }
-.toolbar button { margin-left: auto; background: #1e3a8a; color: white; padding: 12px 20px; border: 0; border-radius: 8px; font-size: 1rem; cursor: pointer; }
-.toolbar p { width: 100%; margin: 0; font-size: .9rem; }
-.documento { max-width: 210mm; margin: 0 auto 32px; padding: 16mm; background: white; box-shadow: 0 4px 24px #17263812; }
-.cabecalho { border-top: 5px solid #1e3a8a; padding-top: 16px; }
-.sobretitulo { letter-spacing: .12em; font-size: .7rem; font-weight: bold; color: #475569; }
-h1 { font-size: 1.6rem; line-height: 1.2; margin: 8px 0; }
-h2 { font-size: 1rem; color: #1e3a8a; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; margin-top: 28px; }
-h3 { font-size: 1rem; margin: 0 0 12px; }
-h4 { font-size: .85rem; margin-bottom: 4px; }
-p, dd, li { font-size: .9rem; overflow-wrap: anywhere; }
-.grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
-.grade > div { min-width: 0; }
-dt, .grade strong { font-size: .75rem; color: #475569; font-weight: bold; display: block; }
-dd { margin: 2px 0 0; }
-.metadados { grid-template-columns: 1fr 1fr 2fr; margin-top: 20px; }
-.metadados span { display: block; font-size: .85rem; overflow-wrap: anywhere; }
-.nota, footer { color: #526174; font-size: .75rem; }
-.atendimento { border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px; margin: 16px 0; }
-.texto-longo, [contenteditable] { white-space: pre-wrap; }
-[contenteditable] { background: #f0f6ff; border: 1px dashed #93b4db; padding: 8px; border-radius: 4px; min-height: 2em; }
-[contenteditable]:focus { outline: 2px solid #1e3a8a; }
-footer { margin-top: 32px; border-top: 1px solid #cbd5e1; padding-top: 12px; }
-@media (max-width: 600px) {
-    .documento { padding: 24px 18px; }
-    .grade, .metadados { grid-template-columns: 1fr; }
-    .toolbar button { margin-left: 0; }
+:root {
+    font-family: Arial, sans-serif;
+    color: #172638;
+    background: #edf1f5;
+    line-height: 1.5;
 }
-@page { size: A4; margin: 14mm; }
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+}
+.toolbar {
+    max-width: 210mm;
+    margin: 24px auto;
+    padding: 0 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+}
+.toolbar a {
+    color: #1e3a8a;
+}
+.toolbar button {
+    margin-left: auto;
+    background: #1e3a8a;
+    color: white;
+    padding: 12px 20px;
+    border: 0;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+.toolbar p {
+    width: 100%;
+    margin: 0;
+    font-size: 0.9rem;
+}
+.documento {
+    max-width: 210mm;
+    margin: 0 auto 32px;
+    padding: 16mm;
+    background: white;
+    box-shadow: 0 4px 24px #17263812;
+}
+.cabecalho {
+    border-top: 5px solid #1e3a8a;
+    padding-top: 16px;
+}
+.sobretitulo {
+    letter-spacing: 0.12em;
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: #475569;
+}
+h1 {
+    font-size: 1.6rem;
+    line-height: 1.2;
+    margin: 8px 0;
+}
+h2 {
+    font-size: 1rem;
+    color: #1e3a8a;
+    border-bottom: 1px solid #cbd5e1;
+    padding-bottom: 8px;
+    margin-top: 28px;
+}
+h3 {
+    font-size: 1rem;
+    margin: 0 0 12px;
+}
+h4 {
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+}
+p,
+dd,
+li {
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+.grade {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 24px;
+}
+.grade > div {
+    min-width: 0;
+}
+dt,
+.grade strong {
+    font-size: 0.75rem;
+    color: #475569;
+    font-weight: bold;
+    display: block;
+}
+dd {
+    margin: 2px 0 0;
+}
+.metadados {
+    grid-template-columns: 1fr 1fr 2fr;
+    margin-top: 20px;
+}
+.metadados span {
+    display: block;
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+}
+.nota,
+footer {
+    color: #526174;
+    font-size: 0.75rem;
+}
+.atendimento {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 16px;
+    margin: 16px 0;
+}
+.texto-longo,
+[contenteditable] {
+    white-space: pre-wrap;
+}
+[contenteditable] {
+    background: #f0f6ff;
+    border: 1px dashed #93b4db;
+    padding: 8px;
+    border-radius: 4px;
+    min-height: 2em;
+}
+[contenteditable]:focus {
+    outline: 2px solid #1e3a8a;
+}
+footer {
+    margin-top: 32px;
+    border-top: 1px solid #cbd5e1;
+    padding-top: 12px;
+}
+@media (max-width: 600px) {
+    .documento {
+        padding: 24px 18px;
+    }
+    .grade,
+    .metadados {
+        grid-template-columns: 1fr;
+    }
+    .toolbar button {
+        margin-left: 0;
+    }
+}
+@page {
+    size: A4;
+    margin: 14mm;
+}
 @media print {
-    :root { background: white; color: black; font-size: 11pt; }
-    .toolbar { display: none; }
-    .documento { padding: 0; margin: 0; max-width: none; box-shadow: none; }
-    [contenteditable] { background: transparent; border: 0; padding: 0; outline: none; }
-    h1, h2, h3, h4, dt { break-after: avoid; }
-    .grade > div, .assinaturas { break-inside: avoid; }
-    .atendimento { box-decoration-break: clone; }
-    p { orphans: 3; widows: 3; }
-    .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .metadados { grid-template-columns: 1fr 1fr 2fr; }
+    :root {
+        background: white;
+        color: black;
+        font-size: 11pt;
+    }
+    .toolbar {
+        display: none;
+    }
+    .documento {
+        padding: 0;
+        margin: 0;
+        max-width: none;
+        box-shadow: none;
+    }
+    [contenteditable] {
+        background: transparent;
+        border: 0;
+        padding: 0;
+        outline: none;
+    }
+    h1,
+    h2,
+    h3,
+    h4,
+    dt {
+        break-after: avoid;
+    }
+    .grade > div,
+    .assinaturas {
+        break-inside: avoid;
+    }
+    .atendimento {
+        box-decoration-break: clone;
+    }
+    p {
+        orphans: 3;
+        widows: 3;
+    }
+    .grade {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .metadados {
+        grid-template-columns: 1fr 1fr 2fr;
+    }
 }

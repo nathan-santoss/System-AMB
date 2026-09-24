@@ -163,12 +163,8 @@ select {
 select {
     padding-right: 42px;
     background-image:
-        linear-gradient(45deg,
-            transparent 50%,
-            #64748b 50%),
-        linear-gradient(135deg,
-            #64748b 50%,
-            transparent 50%);
+        linear-gradient(45deg, transparent 50%, #64748b 50%),
+        linear-gradient(135deg, #64748b 50%, transparent 50%);
 
     background-position:
         calc(100% - 20px) calc(50% - 2px),
@@ -233,7 +229,7 @@ select:-webkit-autofill {
     animation: aparecerModalFundo 180ms ease-out;
 }
 
-.fixed.inset-0.flex>div {
+.fixed.inset-0.flex > div {
     animation: aparecerConteudoModal 220ms ease-out;
 }
 
@@ -334,7 +330,7 @@ tbody tr:last-child {
         align-items: flex-end;
     }
 
-    .fixed.inset-0.flex>div {
+    .fixed.inset-0.flex > div {
         width: 100%;
         max-height: 92vh;
         overflow-y: auto;
@@ -366,4 +362,26 @@ tbody tr:last-child {
         scroll-behavior: auto !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+.aviso-sessao {
+    align-self: flex-start;
+    max-width: 520px;
+    margin: 15vh auto;
+    padding: 32px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px #0f172a18;
+}
+.aviso-sessao h1 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+.aviso-sessao p {
+    margin-bottom: 20px;
+}
+main,
+main > div {
+    min-width: 0;
 }

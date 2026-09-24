@@ -1,27 +1,14 @@
-import {
-    DataTypes
-} from 'sequelize';
+import { DataTypes } from 'sequelize';
 
 import database from '../config/database.js';
 
 import Funcionario from './funcionarios.js';
 
-import {
-    normalizarTexto,
-    normalizarTextoOpcional
-} from '../utils/normalizadores.js';
+import { normalizarTexto, normalizarTextoOpcional } from '../utils/normalizadores.js';
 
-const GRAVIDADES_PERMITIDAS = [
-    'Baixa',
-    'Média',
-    'Alta'
-];
+const GRAVIDADES_PERMITIDAS = ['Baixa', 'Média', 'Alta'];
 
-const ACOES_PERMITIDAS = [
-    'Medicação no Local',
-    'Encaminhado UPA',
-    'Liberado'
-];
+const ACOES_PERMITIDAS = ['Medicação no Local', 'Encaminhado UPA', 'Liberado'];
 
 function normalizarTemperatura(valor) {
     if (valor === null) {
@@ -33,9 +20,7 @@ function normalizarTemperatura(valor) {
     }
 
     if (typeof valor === 'string') {
-        const temperaturaNormalizada = valor
-            .trim()
-            .replace(',', '.');
+        const temperaturaNormalizada = valor.trim().replace(',', '.');
 
         if (temperaturaNormalizada.length === 0) {
             return null;
@@ -50,6 +35,12 @@ function normalizarTemperatura(valor) {
 const Atendimento = database.define(
     'Atendimento',
     {
+        chave_registro: { type: DataTypes.UUID, allowNull: true },
+        registrado_por: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: { model: 'tb_usuarios', key: 'id_usuario' }
+        },
         id_atendimento: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -79,37 +70,25 @@ const Atendimento = database.define(
                 },
 
                 len: {
-                    args: [
-                        1,
-                        20
-                    ],
+                    args: [1, 20],
                     msg: 'A matrícula deve possuir entre 1 e 20 caracteres.'
                 }
             },
 
             set(valor) {
                 if (typeof valor === 'number') {
-                    this.setDataValue(
-                        'funcionario_matricula',
-                        String(valor).trim()
-                    );
+                    this.setDataValue('funcionario_matricula', String(valor).trim());
 
                     return;
                 }
 
                 if (typeof valor === 'string') {
-                    this.setDataValue(
-                        'funcionario_matricula',
-                        valor.trim()
-                    );
+                    this.setDataValue('funcionario_matricula', valor.trim());
 
                     return;
                 }
 
-                this.setDataValue(
-                    'funcionario_matricula',
-                    valor
-                );
+                this.setDataValue('funcionario_matricula', valor);
             }
         },
 
@@ -127,19 +106,13 @@ const Atendimento = database.define(
                 },
 
                 len: {
-                    args: [
-                        2,
-                        5000
-                    ],
+                    args: [2, 5000],
                     msg: 'A queixa principal deve possuir entre 2 e 5000 caracteres.'
                 }
             },
 
             set(valor) {
-                this.setDataValue(
-                    'queixa_principal',
-                    normalizarTexto(valor)
-                );
+                this.setDataValue('queixa_principal', normalizarTexto(valor));
             }
         },
 
@@ -157,19 +130,13 @@ const Atendimento = database.define(
                 },
 
                 len: {
-                    args: [
-                        1,
-                        20
-                    ],
+                    args: [1, 20],
                     msg: 'A pressão arterial deve possuir entre 1 e 20 caracteres.'
                 }
             },
 
             set(valor) {
-                this.setDataValue(
-                    'pressao_arterial',
-                    normalizarTexto(valor)
-                );
+                this.setDataValue('pressao_arterial', normalizarTexto(valor));
             }
         },
 
@@ -187,25 +154,18 @@ const Atendimento = database.define(
                 },
 
                 min: {
-                    args: [
-                        0
-                    ],
+                    args: [0],
                     msg: 'A temperatura não pode ser menor que zero.'
                 },
 
                 max: {
-                    args: [
-                        100
-                    ],
+                    args: [100],
                     msg: 'A temperatura não pode ser maior que 100.'
                 }
             },
 
             set(valor) {
-                this.setDataValue(
-                    'temperatura',
-                    normalizarTemperatura(valor)
-                );
+                this.setDataValue('temperatura', normalizarTemperatura(valor));
             }
         },
 
@@ -223,18 +183,13 @@ const Atendimento = database.define(
                 },
 
                 isIn: {
-                    args: [
-                        GRAVIDADES_PERMITIDAS
-                    ],
+                    args: [GRAVIDADES_PERMITIDAS],
                     msg: 'A gravidade deve ser Baixa, Média ou Alta.'
                 }
             },
 
             set(valor) {
-                this.setDataValue(
-                    'gravidade',
-                    normalizarTexto(valor)
-                );
+                this.setDataValue('gravidade', normalizarTexto(valor));
             }
         },
 
@@ -252,18 +207,13 @@ const Atendimento = database.define(
                 },
 
                 isIn: {
-                    args: [
-                        ACOES_PERMITIDAS
-                    ],
+                    args: [ACOES_PERMITIDAS],
                     msg: 'A ação tomada informada não é permitida.'
                 }
             },
 
             set(valor) {
-                this.setDataValue(
-                    'acao_tomada',
-                    normalizarTexto(valor)
-                );
+                this.setDataValue('acao_tomada', normalizarTexto(valor));
             }
         },
 
@@ -273,19 +223,13 @@ const Atendimento = database.define(
 
             validate: {
                 len: {
-                    args: [
-                        0,
-                        150
-                    ],
+                    args: [0, 150],
                     msg: 'O local de encaminhamento deve possuir no máximo 150 caracteres.'
                 }
             },
 
             set(valor) {
-                this.setDataValue(
-                    'local_encaminhamento',
-                    normalizarTextoOpcional(valor)
-                );
+                this.setDataValue('local_encaminhamento', normalizarTextoOpcional(valor));
             }
         },
 
@@ -295,19 +239,13 @@ const Atendimento = database.define(
 
             validate: {
                 len: {
-                    args: [
-                        0,
-                        150
-                    ],
+                    args: [0, 150],
                     msg: 'O supervisor deve possuir no máximo 150 caracteres.'
                 }
             },
 
             set(valor) {
-                this.setDataValue(
-                    'supervisor_na_epoca',
-                    normalizarTextoOpcional(valor)
-                );
+                this.setDataValue('supervisor_na_epoca', normalizarTextoOpcional(valor));
             }
         },
 
@@ -317,19 +255,13 @@ const Atendimento = database.define(
 
             validate: {
                 len: {
-                    args: [
-                        0,
-                        150
-                    ],
+                    args: [0, 150],
                     msg: 'O coordenador deve possuir no máximo 150 caracteres.'
                 }
             },
 
             set(valor) {
-                this.setDataValue(
-                    'coordenador_na_epoca',
-                    normalizarTextoOpcional(valor)
-                );
+                this.setDataValue('coordenador_na_epoca', normalizarTextoOpcional(valor));
             }
         },
 
@@ -339,19 +271,13 @@ const Atendimento = database.define(
 
             validate: {
                 len: {
-                    args: [
-                        0,
-                        150
-                    ],
+                    args: [0, 150],
                     msg: 'O gerente deve possuir no máximo 150 caracteres.'
                 }
             },
 
             set(valor) {
-                this.setDataValue(
-                    'gerente_na_epoca',
-                    normalizarTextoOpcional(valor)
-                );
+                this.setDataValue('gerente_na_epoca', normalizarTextoOpcional(valor));
             }
         },
 
@@ -369,64 +295,49 @@ const Atendimento = database.define(
         indexes: [
             {
                 name: 'idx_atendimento_funcionario_matricula',
-                fields: [
-                    'funcionario_matricula'
-                ]
+                fields: ['funcionario_matricula']
             },
 
             {
                 name: 'idx_atendimento_data_hora_entrada',
-                fields: [
-                    'data_hora_entrada'
-                ]
+                fields: ['data_hora_entrada']
             },
 
             {
                 name: 'idx_atendimento_gravidade',
-                fields: [
-                    'gravidade'
-                ]
+                fields: ['gravidade']
             },
 
             {
                 name: 'idx_atendimento_funcionario_data',
-                fields: [
-                    'funcionario_matricula',
-                    'data_hora_entrada'
-                ]
+                fields: ['funcionario_matricula', 'data_hora_entrada']
             }
         ]
     }
 );
 
-Funcionario.hasMany(
-    Atendimento,
-    {
-        foreignKey: {
-            name: 'funcionario_matricula',
-            allowNull: false
-        },
+Funcionario.hasMany(Atendimento, {
+    foreignKey: {
+        name: 'funcionario_matricula',
+        allowNull: false
+    },
 
-        sourceKey: 'matricula',
-        as: 'atendimentos',
-        onUpdate: 'CASCADE',
-        onDelete: 'RESTRICT'
-    }
-);
+    sourceKey: 'matricula',
+    as: 'atendimentos',
+    onUpdate: 'CASCADE',
+    onDelete: 'RESTRICT'
+});
 
-Atendimento.belongsTo(
-    Funcionario,
-    {
-        foreignKey: {
-            name: 'funcionario_matricula',
-            allowNull: false
-        },
+Atendimento.belongsTo(Funcionario, {
+    foreignKey: {
+        name: 'funcionario_matricula',
+        allowNull: false
+    },
 
-        targetKey: 'matricula',
-        as: 'funcionario',
-        onUpdate: 'CASCADE',
-        onDelete: 'RESTRICT'
-    }
-);
+    targetKey: 'matricula',
+    as: 'funcionario',
+    onUpdate: 'CASCADE',
+    onDelete: 'RESTRICT'
+});
 
 export default Atendimento;

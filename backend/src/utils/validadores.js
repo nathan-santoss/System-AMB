@@ -14,10 +14,7 @@ export function corpoEhObjetoValido(corpo) {
     return true;
 }
 
-export function campoFoiEnviado(
-    objeto,
-    campo
-) {
+export function campoFoiEnviado(objeto, campo) {
     if (!objeto) {
         return false;
     }
@@ -38,15 +35,10 @@ export function campoFoiEnviado(
         return false;
     }
 
-    return Object.prototype.hasOwnProperty.call(
-        objeto,
-        campo
-    );
+    return Object.prototype.hasOwnProperty.call(objeto, campo);
 }
 
-export function matriculaEhValida(
-    matricula
-) {
+export function matriculaEhValida(matricula) {
     if (typeof matricula !== 'string') {
         return false;
     }
@@ -76,8 +68,9 @@ export function cpfEhValido(cpf) {
         for (let i = 0; i < tamanho; i++) {
             soma += Number(cpf[i]) * (tamanho + 1 - i);
         }
-        const resto = (soma * 10) % 11;
-        if (Number(cpf[tamanho]) !== (resto === 10 ? 0 : resto)) {
+        let resto = (soma * 10) % 11;
+        if (resto === 10) resto = 0;
+        if (Number(cpf[tamanho]) !== resto) {
             return false;
         }
     }
@@ -103,9 +96,7 @@ export function identificadorEhValido(id) {
         return false;
     }
 
-    const idNumerico = Number(
-        idNormalizado
-    );
+    const idNumerico = Number(idNormalizado);
 
     if (!Number.isSafeInteger(idNumerico)) {
         return false;
@@ -118,14 +109,8 @@ export function identificadorEhValido(id) {
     return true;
 }
 
-function tamanhoMaximoEhValido(
-    tamanhoMaximo
-) {
-    if (
-        !Number.isSafeInteger(
-            tamanhoMaximo
-        )
-    ) {
+function tamanhoMaximoEhValido(tamanhoMaximo) {
+    if (!Number.isSafeInteger(tamanhoMaximo)) {
         return false;
     }
 
@@ -136,15 +121,8 @@ function tamanhoMaximoEhValido(
     return true;
 }
 
-export function textoObrigatorioEhValido(
-    valor,
-    tamanhoMaximo
-) {
-    if (
-        !tamanhoMaximoEhValido(
-            tamanhoMaximo
-        )
-    ) {
+export function textoObrigatorioEhValido(valor, tamanhoMaximo) {
+    if (!tamanhoMaximoEhValido(tamanhoMaximo)) {
         return false;
     }
 
@@ -163,15 +141,8 @@ export function textoObrigatorioEhValido(
     return true;
 }
 
-export function textoOpcionalEhValido(
-    valor,
-    tamanhoMaximo
-) {
-    if (
-        !tamanhoMaximoEhValido(
-            tamanhoMaximo
-        )
-    ) {
+export function textoOpcionalEhValido(valor, tamanhoMaximo) {
+    if (!tamanhoMaximoEhValido(tamanhoMaximo)) {
         return false;
     }
 
@@ -194,15 +165,8 @@ export function textoOpcionalEhValido(
     return true;
 }
 
-export function buscaEhValida(
-    busca,
-    tamanhoMaximo = 150
-) {
-    if (
-        !tamanhoMaximoEhValido(
-            tamanhoMaximo
-        )
-    ) {
+export function buscaEhValida(busca, tamanhoMaximo = 150) {
+    if (!tamanhoMaximoEhValido(tamanhoMaximo)) {
         return false;
     }
 
@@ -229,19 +193,13 @@ export function temperaturaEhValida(valor) {
     let temperatura = valor;
 
     if (typeof temperatura === 'string') {
-        const temperaturaNormalizada = temperatura
-            .trim()
-            .replace(',', '.');
+        const temperaturaNormalizada = temperatura.trim().replace(',', '.');
 
-        if (
-            temperaturaNormalizada.length === 0
-        ) {
+        if (temperaturaNormalizada.length === 0) {
             return true;
         }
 
-        temperatura = Number(
-            temperaturaNormalizada
-        );
+        temperatura = Number(temperaturaNormalizada);
     }
 
     if (typeof temperatura !== 'number') {

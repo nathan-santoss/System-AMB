@@ -1,5 +1,6 @@
 const BASE_URL = '/api';
 let matriculaAtual = null;
+let paginaHistorico = 1;
 
 // Aqui eu inicio os ícones da biblioteca Lucide garantindo o aspecto gráfico do projeto.
 function atualizarIcones() {
@@ -289,7 +290,8 @@ function mostrarMensagemAlergias(mensagem, classeTexto) {
 // Aqui eu renderizo uma pílula informativa individual conectada diretamente ao ícone de lixeira.
 function criarItemAlergia(alergia) {
     const item = document.createElement('li');
-    item.className = 'bg-white text-red-800 border border-red-200 rounded-lg p-3 text-sm flex justify-between items-center gap-3';
+    item.className =
+        'bg-white text-red-800 border border-red-200 rounded-lg p-3 text-sm flex justify-between items-center gap-3';
 
     const descricao = document.createElement('span');
     descricao.className = 'font-medium break-words';
@@ -395,7 +397,8 @@ function criarItemHistorico(atendimento) {
     data.textContent = formatarDataHora(atendimento.data_hora_entrada);
 
     const gravidade = document.createElement('span');
-    gravidade.className = 'text-xs font-bold px-2.5 py-1 rounded-full ' + obterClasseGravidade(atendimento.gravidade);
+    gravidade.className =
+        'text-xs font-bold px-2.5 py-1 rounded-full ' + obterClasseGravidade(atendimento.gravidade);
     gravidade.textContent = obterTextoExibicao(atendimento.gravidade, 'Não informada');
 
     cabecalho.appendChild(data);
@@ -407,7 +410,8 @@ function criarItemHistorico(atendimento) {
 
     const acao = document.createElement('p');
     acao.className = 'text-xs text-gray-500 mt-2';
-    acao.textContent = 'Ação tomada: ' + obterTextoExibicao(atendimento.acao_tomada, 'Não informada');
+    acao.textContent =
+        'Ação tomada: ' + obterTextoExibicao(atendimento.acao_tomada, 'Não informada');
 
     item.appendChild(cabecalho);
     item.appendChild(queixa);
@@ -415,17 +419,23 @@ function criarItemHistorico(atendimento) {
 
     const situacao = document.createElement('p');
     situacao.className = 'text-xs text-gray-600 mt-2';
-    situacao.textContent = atendimento.data_hora_saida
-        ? 'Finalizado em: ' + formatarDataHora(atendimento.data_hora_saida)
-        : 'Em aberto';
+    situacao.textContent = 'Em aberto';
+    if (atendimento.data_hora_saida) {
+        situacao.textContent = 'Finalizado em: ' + formatarDataHora(atendimento.data_hora_saida);
+    }
     item.appendChild(situacao);
 
     const linkImpressao = document.createElement('a');
-    linkImpressao.href = '/api/funcionarios/' + encodeURIComponent(matriculaAtual)
-        + '/atendimentos/' + encodeURIComponent(atendimento.id_atendimento) + '/ficha';
+    linkImpressao.href =
+        '/api/funcionarios/' +
+        encodeURIComponent(matriculaAtual) +
+        '/atendimentos/' +
+        encodeURIComponent(atendimento.id_atendimento) +
+        '/ficha';
     linkImpressao.target = '_blank';
     linkImpressao.rel = 'noopener';
-    linkImpressao.className = 'inline-block mt-3 mr-3 rounded-lg bg-slate-100 px-3 py-2 text-sm text-blue-900';
+    linkImpressao.className =
+        'inline-block mt-3 mr-3 rounded-lg bg-slate-100 px-3 py-2 text-sm text-blue-900';
     linkImpressao.textContent = 'Imprimir ficha / PDF';
     item.appendChild(linkImpressao);
 
@@ -435,16 +445,22 @@ function criarItemHistorico(atendimento) {
         botao.className = 'mt-3 rounded-lg bg-azulEscuro px-3 py-2 text-sm text-white';
         botao.textContent = 'Finalizar atendimento';
         botao.addEventListener('click', async () => {
-            if (!window.confirm('Finalizar este atendimento e registrar o horário de saída agora?')) return;
+            if (!window.confirm('Finalizar este atendimento e registrar o horário de saída agora?'))
+                return;
             botao.disabled = true;
             try {
                 const resposta = await window.AuthSession.fetchAutenticado(
-                    '/api/atendimentos/' + encodeURIComponent(atendimento.id_atendimento) + '/finalizar',
+                    '/api/atendimentos/' +
+                        encodeURIComponent(atendimento.id_atendimento) +
+                        '/finalizar',
                     { method: 'PATCH' }
                 );
                 if (await respostaExigeNovoLogin(resposta)) return;
                 const dados = await lerRespostaJson(resposta);
-                if (!resposta.ok) throw new Error(obterMensagemErro(dados, 'Não foi possível finalizar o atendimento.'));
+                if (!resposta.ok)
+                    throw new Error(
+                        obterMensagemErro(dados, 'Não foi possível finalizar o atendimento.')
+                    );
                 await carregarDadosPaciente(matriculaAtual);
             } catch (erro) {
                 window.alert(erro.message);
@@ -501,7 +517,11 @@ async function carregarDadosPaciente(matricula) {
 
     try {
         const resposta = await window.AuthSession.fetchAutenticado(
-            BASE_URL + '/funcionarios/' + encodeURIComponent(matricula),
+            BASE_URL +
+                '/funcionarios/' +
+                encodeURIComponent(matricula) +
+                '?pagina=' +
+                paginaHistorico,
             {
                 method: 'GET',
                 cache: 'no-store'
@@ -549,26 +569,28 @@ async function carregarDadosPaciente(matricula) {
             'Matrícula: ' + obterTextoExibicao(funcionario.matricula, matricula)
         );
 
-        definirTextoElemento(
-            'info-setor',
-            obterTextoExibicao(funcionario.setor, 'Não informado')
-        );
+        definirTextoElemento('info-setor', obterTextoExibicao(funcionario.setor, 'Não informado'));
 
-        definirTextoElemento(
-            'info-cargo',
-            obterTextoExibicao(funcionario.cargo, 'Não informado')
-        );
+        definirTextoElemento('info-cargo', obterTextoExibicao(funcionario.cargo, 'Não informado'));
 
         // Depois eu chamo as funções responsáveis por renderizar as listas baseadas nos dados do pacote único recebido.
         renderizarAlergias(alergias);
         renderizarHistoricoAtendimentos(atendimentos);
+        document.getElementById('historico-pagina').textContent =
+            'Página ' + paginaHistorico + ' de ' + dados.totalPaginas;
+        document.getElementById('historico-anterior').disabled = paginaHistorico <= 1;
+        document.getElementById('historico-proxima').disabled =
+            paginaHistorico >= dados.totalPaginas;
+        document.getElementById('novo-atendimento-funcionario').href =
+            '/novo-atendimento?matricula=' + encodeURIComponent(matricula);
+        document.getElementById('consultar-atendimentos-funcionario').href =
+            '/atendimentos?matricula=' + encodeURIComponent(matricula);
 
-        document.getElementById('link-relatorio-pop').href = '/api/funcionarios/'
-            + encodeURIComponent(matricula) + '/relatorio-pop';
+        document.getElementById('link-relatorio-pop').href =
+            '/api/funcionarios/' + encodeURIComponent(matricula) + '/relatorio-pop';
         document.getElementById('acoes-relatorios').hidden = false;
 
         return true;
-
     } catch (erro) {
         console.error('Erro ao carregar prontuário completo:', erro);
         alert(erro.message);
@@ -611,8 +633,10 @@ function fecharModalAlergia() {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
     const backdropSidebar = document.getElementById('sidebar-backdrop');
-    document.body.classList.toggle('overflow-hidden',
-        Boolean(backdropSidebar && !backdropSidebar.classList.contains('hidden')));
+    document.body.classList.toggle(
+        'overflow-hidden',
+        Boolean(backdropSidebar && !backdropSidebar.classList.contains('hidden'))
+    );
 
     const formulario = document.getElementById('formAlergia');
 
@@ -665,19 +689,16 @@ async function cadastrarAlergia(evento) {
     definirBotaoCarregando(botaoSalvar, true, 'Salvando...');
 
     try {
-        const resposta = await window.AuthSession.fetchAutenticado(
-            BASE_URL + '/alergias',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    funcionario_matricula: matriculaAtual,
-                    descricao_alergia: descricao
-                })
-            }
-        );
+        const resposta = await window.AuthSession.fetchAutenticado(BASE_URL + '/alergias', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                funcionario_matricula: matriculaAtual,
+                descricao_alergia: descricao
+            })
+        });
 
         const invalido = await respostaExigeNovoLogin(resposta);
 
@@ -697,7 +718,6 @@ async function cadastrarAlergia(evento) {
         // Após o cadastro da alergia, eu carrego a ficha inteira novamente usando o molde centralizado.
         await carregarDadosPaciente(matriculaAtual);
         alert('Alergia cadastrada com sucesso.');
-
     } catch (erro) {
         console.error('Erro ao cadastrar alergia:', erro);
         alert(erro.message);
@@ -749,7 +769,6 @@ async function excluirAlergia(idAlergia) {
         // Da mesma forma, eu reabasteço todo o prontuário pela rota mestra para manter a consistência da tela.
         await carregarDadosPaciente(matriculaAtual);
         alert('Alergia removida com sucesso.');
-
     } catch (erro) {
         console.error('Erro ao excluir alergia:', erro);
         alert(erro.message);
@@ -760,143 +779,22 @@ async function excluirAlergia(idAlergia) {
 window.excluirAlergia = excluirAlergia;
 
 // Neste momento eu troco qualquer forma mal digitada de separador decimal permitindo que o sistema interprete.
-function normalizarTemperatura(valor) {
-    if (typeof valor !== 'string') {
-        return null;
-    }
-
-    const valorNormalizado = valor.trim().replace(',', '.');
-
-    if (valorNormalizado.length === 0) {
-        return null;
-    }
-
-    const numero = Number(valorNormalizado);
-
-    if (!Number.isFinite(numero)) {
-        return null;
-    }
-
-    return numero;
-}
-
-// Agora eu unifico todas as checagens preventivas do formulário vital de ocorrências do paciente.
-async function registrarAtendimento(evento) {
-    evento.preventDefault();
-
-    if (!matriculaAtual) {
-        alert('A matrícula do funcionário não foi encontrada.');
-        return;
-    }
-
-    const pressao = obterValorCampo('pressao');
-    const temperaturaTexto = obterValorCampo('temperatura');
-    const queixa = obterValorCampo('queixa');
-    const gravidade = obterValorCampo('gravidade');
-    const acaoTomada = obterValorCampo('acao');
-
-    if (queixa.length === 0) {
-        alert('Informe a queixa principal.');
-        return;
-    }
-
-    if (gravidade.length === 0) {
-        alert('Selecione a gravidade do atendimento.');
-        return;
-    }
-
-    if (acaoTomada.length === 0) {
-        alert('Selecione a ação tomada.');
-        return;
-    }
-
-    let temperatura = null;
-
-    if (temperaturaTexto.length > 0) {
-        temperatura = normalizarTemperatura(temperaturaTexto);
-
-        if (temperatura === null) {
-            alert('Informe uma temperatura válida.');
-            return;
-        }
-
-        if (temperatura < 0) {
-            alert('A temperatura deve estar entre 0 e 100.');
-            return;
-        }
-
-        if (temperatura > 100) {
-            alert('A temperatura deve estar entre 0 e 100.');
-            return;
-        }
-    }
-
-    const formulario = obterFormularioTriagem();
-    let botaoSalvar = null;
-
-    if (formulario) {
-        botaoSalvar = formulario.querySelector('button[type="submit"]');
-    }
-
-    definirBotaoCarregando(botaoSalvar, true, 'Salvando atendimento...');
-
-    try {
-        const resposta = await window.AuthSession.fetchAutenticado(
-            BASE_URL + '/atendimentos',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    funcionario_matricula: matriculaAtual,
-                    pressao_arterial: pressao,
-                    temperatura: temperatura,
-                    queixa_principal: queixa,
-                    gravidade: gravidade,
-                    acao_tomada: acaoTomada
-                })
-            }
-        );
-
-        const invalido = await respostaExigeNovoLogin(resposta);
-
-        if (invalido) {
-            return;
-        }
-
-        const dados = await lerRespostaJson(resposta);
-
-        if (!resposta.ok) {
-            const mensagem = obterMensagemErro(dados, 'Não foi possível registrar o atendimento.');
-            throw new Error(mensagem);
-        }
-
-        if (formulario) {
-            formulario.reset();
-        }
-
-        // Ao invés de buscar só os atendimentos, eu atualizo a ficha do paciente toda com o molde unificado.
-        await carregarDadosPaciente(matriculaAtual);
-        alert('Atendimento registrado com sucesso.');
-
-    } catch (erro) {
-        console.error('Erro ao registrar atendimento:', erro);
-        alert('Erro: ' + erro.message);
-    } finally {
-        definirBotaoCarregando(botaoSalvar, false, 'Salvando atendimento...');
-    }
-}
-
 async function exportarExcel() {
     const botao = document.getElementById('exportar-excel');
     definirBotaoCarregando(botao, true, 'Gerando Excel...');
     try {
-        const resposta = await window.AuthSession.fetchAutenticado('/api/funcionarios/'
-            + encodeURIComponent(matriculaAtual) + '/relatorio-excel', { cache: 'no-store' });
+        const resposta = await window.AuthSession.fetchAutenticado(
+            '/api/funcionarios/' + encodeURIComponent(matriculaAtual) + '/relatorio-excel',
+            { cache: 'no-store' }
+        );
         if (await respostaExigeNovoLogin(resposta)) return;
         if (!resposta.ok) {
-            throw new Error(obterMensagemErro(await lerRespostaJson(resposta), 'Não foi possível exportar o relatório.'));
+            throw new Error(
+                obterMensagemErro(
+                    await lerRespostaJson(resposta),
+                    'Não foi possível exportar o relatório.'
+                )
+            );
         }
         const url = URL.createObjectURL(await resposta.blob());
         const link = document.createElement('a');
@@ -915,6 +813,14 @@ async function exportarExcel() {
 
 // Nesta parte eu articulo todos os engates das funções com suas respectivas reações oriundas da interface do usuário.
 function configurarEventos() {
+    document.getElementById('historico-anterior').onclick = () => {
+        paginaHistorico--;
+        carregarDadosPaciente(matriculaAtual);
+    };
+    document.getElementById('historico-proxima').onclick = () => {
+        paginaHistorico++;
+        carregarDadosPaciente(matriculaAtual);
+    };
     document.getElementById('exportar-excel').addEventListener('click', exportarExcel);
     const formularioAlergia = document.getElementById('formAlergia');
     const formularioTriagem = obterFormularioTriagem();
@@ -922,10 +828,6 @@ function configurarEventos() {
 
     if (formularioAlergia) {
         formularioAlergia.addEventListener('submit', cadastrarAlergia);
-    }
-
-    if (formularioTriagem) {
-        formularioTriagem.addEventListener('submit', registrarAtendimento);
     }
 
     if (modalAlergia) {

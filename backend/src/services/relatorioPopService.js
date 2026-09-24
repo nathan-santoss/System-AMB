@@ -7,9 +7,8 @@ const cargosLideranca = [
 export function obterLiderancas(dados, sufixo = '') {
     return cargosLideranca.flatMap(([campo, cargo]) => {
         const nome = dados[campo + sufixo];
-        return typeof nome === 'string' && nome.trim()
-            ? [{ cargo, nome: nome.trim() }]
-            : [];
+        if (typeof nome === 'string' && nome.trim()) return [{ cargo, nome: nome.trim() }];
+        return [];
     });
 }
 
@@ -22,7 +21,7 @@ export function montarRelatorioPop(prontuario, emitidoEm = new Date()) {
         emitidoEm,
         liderancas: obterLiderancas(funcionario),
         alergias: prontuario.alergias,
-        atendimentos: prontuario.atendimentos.map(atendimento => ({
+        atendimentos: prontuario.atendimentos.map((atendimento) => ({
             ...atendimento,
             liderancas: obterLiderancas(atendimento, '_na_epoca')
         }))
@@ -34,6 +33,8 @@ export function formatarDataRelatorio(valor) {
     const data = new Date(valor);
     if (Number.isNaN(data.getTime())) return 'Não informado';
     return new Intl.DateTimeFormat('pt-BR', {
-        dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo'
+        dateStyle: 'short',
+        timeStyle: 'short',
+        timeZone: 'America/Sao_Paulo'
     }).format(data);
 }

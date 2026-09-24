@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .pagina {
+        @apply flex-1 min-w-0 p-4 sm:p-6 lg:p-8;
+    }
+    .cabecalho-pagina {
+        @apply flex flex-wrap items-center justify-between gap-4 mb-6;
+    }
+    .cabecalho-pagina h1 {
+        @apply text-2xl font-bold text-azulEscuro;
+    }
+    .cabecalho-pagina p {
+        @apply text-sm text-slate-500 mt-1;
+    }
+    .painel {
+        @apply bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 mb-5 shadow-sm;
+    }
+    .painel h2 {
+        @apply text-lg font-bold text-slate-800 mb-3;
+    }
+    .campo {
+        @apply block w-full border border-slate-300 bg-white rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-300;
+    }
+    .rotulo {
+        @apply block text-sm font-semibold text-slate-700 mb-1;
+    }
+    .botao-primario {
+        @apply inline-flex items-center justify-center gap-2 bg-azulEscuro text-white font-semibold px-4 py-2.5 rounded-lg hover:bg-blue-800 disabled:opacity-50;
+    }
+    .botao-secundario {
+        @apply inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-800 font-semibold px-4 py-2.5 rounded-lg hover:bg-slate-200 disabled:opacity-50;
+    }
+    .grade-filtros {
+        @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-3;
+    }
+    .acoes {
+        @apply flex flex-wrap items-center gap-3 mt-4;
+    }
+    .ajuda {
+        @apply text-sm text-slate-500;
+    }
+    .mensagem {
+        @apply mb-4 rounded-lg p-3 text-sm bg-blue-50 text-blue-900;
+    }
+    .mensagem.erro {
+        @apply bg-red-50 text-red-800;
+    }
+    .tabela-container {
+        @apply overflow-x-auto rounded-xl border border-slate-200;
+    }
+    .tabela {
+        @apply w-full text-sm text-left;
+    }
+    .tabela th {
+        @apply bg-slate-50 px-4 py-3 text-slate-600 whitespace-nowrap;
+    }
+    .tabela td {
+        @apply border-t border-slate-100 px-4 py-3;
+    }
+    .paginacao {
+        @apply flex flex-wrap items-center justify-between gap-3 mt-4;
+    }
+    .indicadores {
+        @apply grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5;
+    }
+    .indicador {
+        @apply rounded-xl bg-white border border-slate-200 p-4;
+    }
+    .indicador strong {
+        @apply block text-2xl font-bold text-azulEscuro;
+    }
+    .indicador span {
+        @apply text-sm text-slate-500;
+    }
+}

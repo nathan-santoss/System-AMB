@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 
 import Usuario from '../models/usuarios.js';
 import { obterJwtSecret } from '../config/auth.js';
+import { criarSessao, apresentarSessao } from '../services/sessaoService.js';
 
 const DURACAO_SESSAO_MS = 12 * 60 * 60 * 1000;
 const DURACAO_SESSAO_JWT = '12h';
@@ -32,9 +33,7 @@ function normalizarEmail(email) {
         return '';
     }
 
-    return email
-        .trim()
-        .toLowerCase();
+    return email.trim().toLowerCase();
 }
 
 function emailEhValido(email) {
@@ -85,7 +84,7 @@ export function obterOpcoesCookieToken() {
     };
 }
 
-function criarToken(usuario, jwtSecret) {
+function criarToken(usuario, jwtSecret, sessaoId) {
     return jwt.sign(
         {
             id_usuario: usuario.id_usuario,
@@ -97,49 +96,33 @@ function criarToken(usuario, jwtSecret) {
             expiresIn: DURACAO_SESSAO_JWT,
             issuer: EMISSOR_TOKEN,
             audience: PUBLICO_TOKEN,
-            subject: String(usuario.id_usuario)
+            subject: String(usuario.id_usuario),
+            jwtid: sessaoId
         }
     );
 }
 
 function impedirCache(res) {
-    res.setHeader(
-        'Cache-Control',
-        'no-store, no-cache, must-revalidate, private'
-    );
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
 
-    res.setHeader(
-        'Pragma',
-        'no-cache'
-    );
+    res.setHeader('Pragma', 'no-cache');
 }
 
-async function atualizarHashSenhaSeNecessario(
-    usuario,
-    senha
-) {
+async function atualizarHashSenhaSeNecessario(usuario, senha) {
     try {
-        const custoAtual = bcrypt.getRounds(
-            usuario.senha
-        );
+        const custoAtual = bcrypt.getRounds(usuario.senha);
 
         if (custoAtual >= CUSTO_BCRYPT) {
             return;
         }
 
-        const novoHash = await bcrypt.hash(
-            senha,
-            CUSTO_BCRYPT
-        );
+        const novoHash = await bcrypt.hash(senha, CUSTO_BCRYPT);
 
         await usuario.update({
             senha: novoHash
         });
     } catch (erro) {
-        console.error(
-            'Não foi possível atualizar o hash da senha do usuário:',
-            erro.message
-        );
+        console.error('Não foi possível atualizar o hash da senha do usuário:', erro.message);
     }
 }
 
@@ -153,9 +136,7 @@ export async function login(req, res) {
             });
         }
 
-        const email = normalizarEmail(
-            req.body.email
-        );
+        const email = normalizarEmail(req.body.email);
 
         const senha = req.body.senha;
 
@@ -174,9 +155,7 @@ export async function login(req, res) {
         const jwtSecret = obterJwtSecret();
 
         if (!jwtSecret) {
-            console.error(
-                'JWT_SECRET não está configurado ou possui menos de 32 caracteres.'
-            );
+            console.error('JWT_SECRET não está configurado ou possui menos de 32 caracteres.');
 
             return res.status(500).json({
                 message: 'O servidor de autenticação não está configurado corretamente.'
@@ -187,11 +166,7 @@ export async function login(req, res) {
             where: {
                 email
             },
-            attributes: [
-                'id_usuario',
-                'email',
-                'senha'
-            ]
+            attributes: ['id_usuario', 'email', 'senha']
         });
 
         if (!usuario) {
@@ -206,10 +181,7 @@ export async function login(req, res) {
             });
         }
 
-        const senhaCorreta = await bcrypt.compare(
-            senha,
-            usuario.senha
-        );
+        const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
 
         if (!senhaCorreta) {
             return res.status(401).json({
@@ -217,34 +189,23 @@ export async function login(req, res) {
             });
         }
 
-        await atualizarHashSenhaSeNecessario(
-            usuario,
-            senha
-        );
+        await atualizarHashSenhaSeNecessario(usuario, senha);
 
-        const token = criarToken(
-            usuario,
-            jwtSecret
-        );
+        const sessao = await criarSessao(usuario.id_usuario);
+        const token = criarToken(usuario, jwtSecret, sessao.id);
 
-        res.cookie(
-            'token',
-            token,
-            obterOpcoesCookieToken()
-        );
+        res.cookie('token', token, obterOpcoesCookieToken());
 
         return res.status(200).json({
             message: 'Login realizado com sucesso.',
+            sessao: apresentarSessao(sessao),
             usuario: {
                 id_usuario: usuario.id_usuario,
                 email: usuario.email
             }
         });
     } catch (erro) {
-        console.error(
-            'Erro ao realizar login:',
-            erro
-        );
+        console.error('Erro ao realizar login:', erro);
 
         return res.status(500).json({
             message: 'Erro interno ao processar o login.'

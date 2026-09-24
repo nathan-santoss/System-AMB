@@ -1,41 +1,62 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Ficha de atendimento <%= atendimento.id_atendimento %> - <%= funcionario.nome %></title>
-    <link rel="stylesheet" href="/styles/relatorio-pop.css">
-    <script src="/js/relatorio-pop.js" defer></script>
-</head>
-<body>
-    <nav class="toolbar" aria-label="Ações da ficha">
-        <a href="/ficha-paciente?matricula=<%= encodeURIComponent(funcionario.matricula) %>">Voltar à ficha do funcionário</a>
-        <button type="button" id="imprimir-pop">Imprimir / Salvar em PDF</button>
-        <p>Na janela de impressão, escolha “Salvar em PDF” para baixar esta ficha.</p>
-    </nav>
-    <main class="documento">
-        <header class="cabecalho">
-            <p class="sobretitulo">SISTEMA DE AMBULATÓRIO</p>
-            <h1>Ficha de atendimento ambulatorial</h1>
-            <p>Registro #<%= atendimento.id_atendimento %> · Emitido em <%= formatarData(emitidoEm) %> (Brasília)</p>
-        </header>
-        <section>
-            <h2>Identificação do funcionário</h2>
-            <p class="nota">Dados cadastrais atuais na data de emissão.</p>
-            <dl class="grade">
-                <% for (const [campo, rotulo] of [['nome', 'Nome'], ['matricula', 'Matrícula'], ['cargo', 'Cargo'], ['setor', 'Setor'], ['nucleo', 'Núcleo']]) { %>
-                    <% if (funcionario[campo]) { %><div><dt><%= rotulo %></dt><dd><%= funcionario[campo] %></dd></div><% } %>
-                <% } %>
-            </dl>
-        </section>
-        <section aria-label="Dados do atendimento">
-            <%- include('partials/registro-atendimento', { atendimento, formatarData }) %>
-        </section>
-        <div class="grade assinaturas">
-            <div><strong>Responsável pelo atendimento / assinatura</strong><p>________________________________</p></div>
-            <div><strong>Funcionário / assinatura</strong><p>________________________________</p></div>
-        </div>
-        <footer>Fonte: atendimento registrado no Sistema de Ambulatório.</footer>
-    </main>
-</body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>
+            Ficha de atendimento <%= atendimento.id_atendimento %> - <%= funcionario.nome %>
+        </title>
+        <link rel="stylesheet" href="/styles/relatorio-pop.css" />
+        <link rel="stylesheet" href="/styles/ficha-atendimento-impressao.css" />
+        <script src="/js/auth-session.js" defer></script>
+        <script src="/js/relatorio-pop.js" defer></script>
+    </head>
+    <body>
+        <nav class="toolbar" aria-label="Ações da ficha">
+            <a href="/ficha-paciente?matricula=<%= encodeURIComponent(funcionario.matricula) %>"
+                >Voltar à ficha do funcionário</a
+            >
+            <button type="button" id="imprimir-pop">Imprimir / Salvar em PDF</button>
+            <p>Na janela de impressão, escolha “Salvar em PDF” para baixar esta ficha.</p>
+        </nav>
+        <main class="documento">
+            <header class="cabecalho">
+                <p class="sobretitulo">SISTEMA DE AMBULATÓRIO</p>
+                <h1>Ficha de atendimento ambulatorial</h1>
+                <p>
+                    Registro #<%= atendimento.id_atendimento %> · Emitido em <%=
+                    formatarData(emitidoEm) %> (Brasília)
+                </p>
+            </header>
+            <section>
+                <h2>Identificação do funcionário</h2>
+                <p class="nota">Dados cadastrais atuais na data de emissão.</p>
+                <dl class="grade">
+                    <% for (const [campo, rotulo] of [['nome', 'Nome'], ['matricula', 'Matrícula'],
+                    ['cargo', 'Cargo'], ['setor', 'Setor'], ['nucleo', 'Núcleo']]) { %> <% if
+                    (funcionario[campo]) { %>
+                    <div>
+                        <dt><%= rotulo %></dt>
+                        <dd><%= funcionario[campo] %></dd>
+                    </div>
+                    <% } %>
+                    <% } %>
+                </dl>
+            </section>
+            <section aria-label="Dados do atendimento">
+                <%- include('partials/registro-atendimento', { atendimento, formatarData }) %>
+            </section>
+            <div class="grade assinaturas">
+                <div>
+                    <strong>Responsável pelo atendimento / assinatura</strong>
+                    <p>________________________________</p>
+                </div>
+                <div>
+                    <strong>Funcionário / assinatura</strong>
+                    <p>________________________________</p>
+                </div>
+            </div>
+            <footer>Fonte: atendimento registrado no Sistema de Ambulatório.</footer>
+        </main>
+    </body>
 </html>

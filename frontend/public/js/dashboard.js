@@ -207,9 +207,7 @@ function renderizarAtendimentosCarregando() {
     }
 
     tabela.innerHTML = '';
-    tabela.appendChild(
-        criarLinhaMensagemTabela('Carregando atendimentos...', 'text-slate-400')
-    );
+    tabela.appendChild(criarLinhaMensagemTabela('Carregando atendimentos...', 'text-slate-400'));
 }
 
 // Neste momento eu construo a linha completa com os dados isolados de cada atendimento.
@@ -229,7 +227,10 @@ function criarLinhaAtendimento(atendimento) {
     const dadosFuncionario = document.createElement('p');
     dadosFuncionario.className = 'text-xs text-slate-500 mt-1';
 
-    const matricula = obterTextoExibicao(atendimento.funcionario_matricula, 'Matrícula não informada');
+    const matricula = obterTextoExibicao(
+        atendimento.funcionario_matricula,
+        'Matrícula não informada'
+    );
     dadosFuncionario.textContent = 'Matrícula: ' + matricula;
 
     colunaPaciente.appendChild(nomeFuncionario);
@@ -251,12 +252,14 @@ function criarLinhaAtendimento(atendimento) {
 
     const gravidade = obterTextoExibicao(atendimento.gravidade, 'Não informada');
     const badgeGravidade = document.createElement('span');
-    badgeGravidade.className = 'inline-flex px-3 py-1 text-xs font-bold rounded-full border ' + obterClasseGravidade(gravidade);
+    badgeGravidade.className =
+        'inline-flex px-3 py-1 text-xs font-bold rounded-full border ' +
+        obterClasseGravidade(gravidade);
     badgeGravidade.textContent = gravidade;
 
     colunaGravidade.appendChild(badgeGravidade);
 
-    // Depois eu formato a coluna de data e hora. 
+    // Depois eu formato a coluna de data e hora.
     // Faço o uso imperativo da classe "whitespace-nowrap" aqui. Isso impede que a quebra de linha aconteça, garantindo que a hora não seja jogada para baixo e cortada visualmente.
     const colunaData = document.createElement('td');
     colunaData.className = 'px-6 py-4 text-center text-slate-500 text-xs whitespace-nowrap';
@@ -283,7 +286,10 @@ function renderizarUltimosAtendimentos(atendimentos) {
 
     if (!Array.isArray(atendimentos)) {
         tabela.appendChild(
-            criarLinhaMensagemTabela('Não foi possível interpretar os atendimentos.', 'text-red-500')
+            criarLinhaMensagemTabela(
+                'Não foi possível interpretar os atendimentos.',
+                'text-red-500'
+            )
         );
         return;
     }
@@ -320,7 +326,10 @@ function renderizarUltimosAtendimentos(atendimentos) {
     // Por segurança, se os itens forem filtrados por falha nos blocos if acima, eu exibo a mensagem vazia.
     if (tabela.children.length === 0) {
         tabela.appendChild(
-            criarLinhaMensagemTabela('Nenhum atendimento vinculado a um funcionário válido.', 'text-slate-400')
+            criarLinhaMensagemTabela(
+                'Nenhum atendimento vinculado a um funcionário válido.',
+                'text-slate-400'
+            )
         );
     }
 }
@@ -345,7 +354,8 @@ function renderizarSetoresCarregando() {
 // Com isso eu modelo a linha interativa de ranking para cada setor e a sua quantidade respectiva de idas ao ambulatório.
 function criarItemSetor(setor) {
     const item = document.createElement('div');
-    item.className = 'flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100';
+    item.className =
+        'flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100';
 
     const nomeSetor = document.createElement('span');
     nomeSetor.className = 'font-medium text-slate-700';
@@ -450,7 +460,10 @@ async function carregarDadosDashboard() {
         }
 
         if (!resposta.ok) {
-            const mensagem = obterMensagemErro(dados, 'Não foi possível carregar os dados do dashboard.');
+            const mensagem = obterMensagemErro(
+                dados,
+                'Não foi possível carregar os dados do dashboard.'
+            );
             throw new Error(mensagem);
         }
 
@@ -459,7 +472,6 @@ async function carregarDadosDashboard() {
         renderizarUltimosAtendimentos(dados.ultimosAtendimentos);
         renderizarRankingSetores(dados.atendimentosPorSetor);
         atualizarIcones();
-
     } catch (erro) {
         console.error('Erro ao carregar o dashboard:', erro);
         mostrarErroDashboard(erro.message);
