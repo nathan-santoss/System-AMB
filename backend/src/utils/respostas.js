@@ -1,7 +1,4 @@
-function erroPossuiNome(
-    erro,
-    nome
-) {
+function erroPossuiNome(erro, nome) {
     if (!erro) {
         return false;
     }
@@ -17,9 +14,7 @@ function erroPossuiNome(
     return true;
 }
 
-function extrairDetalhesValidacao(
-    erro
-) {
+function extrairDetalhesValidacao(erro) {
     const detalhes = [];
 
     if (!Array.isArray(erro.errors)) {
@@ -35,84 +30,51 @@ function extrairDetalhesValidacao(
             continue;
         }
 
-        const mensagem =
-            item.message.trim();
+        const mensagem = item.message.trim();
 
         if (mensagem.length === 0) {
             continue;
         }
 
-        detalhes.push(
-            mensagem
-        );
+        detalhes.push(mensagem);
     }
 
     return detalhes;
 }
 
-export function responderErroInterno(
-    res,
-    mensagem,
-    erro
-) {
-    console.error(
-        mensagem,
-        erro
-    );
+export function responderErroInterno(res, mensagem, erro) {
+    console.error(mensagem, erro);
 
-    if (
-        erroPossuiNome(
-            erro,
-            'SequelizeValidationError'
-        )
-    ) {
-        const detalhes =
-            extrairDetalhesValidacao(
-                erro
-            );
+    if (erroPossuiNome(erro, 'SequelizeValidationError')) {
+        const detalhes = extrairDetalhesValidacao(erro);
 
         const resposta = {
             erro: 'Os dados enviados são inválidos.'
         };
 
         if (detalhes.length > 0) {
-            resposta.detalhes =
-                detalhes;
+            resposta.detalhes = detalhes;
         }
 
-        return res.status(400).json(
-            resposta
-        );
+        return res.status(400).json(resposta);
     }
 
-    if (
-        erroPossuiNome(
-            erro,
-            'SequelizeUniqueConstraintError'
-        )
-    ) {
+    if (erroPossuiNome(erro, 'SequelizeUniqueConstraintError')) {
         return res.status(409).json({
             erro: 'Já existe um registro com os dados informados.'
         });
     }
 
     if (
-        erroPossuiNome(
-            erro,
-            'SequelizeForeignKeyConstraintError'
-        )
+        erroPossuiNome(erro, 'SequelizeForeignKeyConstraintError') ||
+        ['23503', '23001'].includes(erro?.original?.code)
     ) {
         return res.status(409).json({
             erro: 'Não foi possível concluir a operação devido a registros vinculados.'
         });
     }
 
-    if (
-        erroPossuiNome(
-            erro,
-            'SequelizeDatabaseError'
-        )
-    ) {
+    if (erroPossuiNome(erro, 'SequelizeDatabaseError')) {
         return res.status(500).json({
             erro: 'Erro ao acessar o banco de dados.'
         });

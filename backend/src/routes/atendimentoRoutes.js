@@ -3,31 +3,20 @@ import express from 'express';
 import {
     buscarAtendimentosPorFuncionario,
     registrarAtendimento,
+    finalizarAtendimento,
     obterDadosDashboard
 } from '../controllers/atendimentoController.js';
 
-import {
-    verificarToken
-} from '../middlewares/authMiddleware.js';
+import { verificarToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.get(
-    '/dashboard-dados',
-    verificarToken,
-    obterDadosDashboard
-);
+router.patch('/:id/finalizar', verificarToken, finalizarAtendimento);
 
-router.get(
-    '/:matricula',
-    verificarToken,
-    buscarAtendimentosPorFuncionario
-);
+router.get('/dashboard-dados', verificarToken, obterDadosDashboard);
 
-router.post(
-    '/',
-    verificarToken,
-    registrarAtendimento
-);
+router.get('/:matricula', verificarToken, buscarAtendimentosPorFuncionario);
+
+router.post('/', verificarToken, registrarAtendimento);
 
 export default router;

@@ -5,14 +5,9 @@ import {
     deletarAlergia as deletarAlergiaService
 } from '../services/alergiaService.js';
 
-import {
-    buscarFuncionarioPorMatricula
-} from '../services/funcionarioService.js';
+import { buscarFuncionarioPorMatricula } from '../services/funcionarioService.js';
 
-import {
-    normalizarMatricula,
-    normalizarTexto
-} from '../utils/normalizadores.js';
+import { normalizarMatricula, normalizarTexto } from '../utils/normalizadores.js';
 
 import {
     corpoEhObjetoValido,
@@ -21,9 +16,7 @@ import {
     textoObrigatorioEhValido
 } from '../utils/validadores.js';
 
-import {
-    responderErroInterno
-} from '../utils/respostas.js';
+import { responderErroInterno } from '../utils/respostas.js';
 
 // Aqui eu defino as constantes de limite da regra de negócio para facilitar futuras manutenções.
 const TAMANHO_MINIMO_DESCRICAO = 2;
@@ -95,10 +88,7 @@ export async function cadastrarAlergia(req, res) {
 
         // Se houver algum erro de tamanho ou formato, eu interrompo o processo imediatamente.
         if (validacaoDescricao.erro) {
-            return responderErroValidacao(
-                res,
-                validacaoDescricao.erro
-            );
+            return responderErroValidacao(res, validacaoDescricao.erro);
         }
 
         // Depois eu confiro se o funcionário realmente existe no sistema antes de criar o vínculo médico.
@@ -119,14 +109,9 @@ export async function cadastrarAlergia(req, res) {
 
         // Por fim eu retorno a alergia recém-criada juntamente com o código HTTP 201 (Created).
         return res.status(201).json(alergia);
-
     } catch (erro) {
         // Caso aconteça uma falha imprevista no banco, eu repasso a exceção ao tratador genérico.
-        return responderErroInterno(
-            res,
-            'Erro ao cadastrar alergia:',
-            erro
-        );
+        return responderErroInterno(res, 'Erro ao cadastrar alergia:', erro);
     }
 }
 
@@ -138,10 +123,7 @@ export async function buscarAlergiasFuncionario(req, res) {
 
         // Por segurança eu valido se a matrícula fornecida possui um formato minimamente aceitável.
         if (!matriculaEhValida(matricula)) {
-            return responderErroValidacao(
-                res,
-                'A matrícula informada é inválida.'
-            );
+            return responderErroValidacao(res, 'A matrícula informada é inválida.');
         }
 
         // Neste ponto eu procuro pelo funcionário na base de dados para ter certeza de que o paciente existe.
@@ -159,14 +141,9 @@ export async function buscarAlergiasFuncionario(req, res) {
 
         // Em seguida eu retorno a lista de alergias no formato JSON padrão com status de sucesso.
         return res.status(200).json(alergias);
-
     } catch (erro) {
         // Para evitar exposição sensível do servidor eu trato qualquer falha interna aqui.
-        return responderErroInterno(
-            res,
-            'Erro ao buscar alergias:',
-            erro
-        );
+        return responderErroInterno(res, 'Erro ao buscar alergias:', erro);
     }
 }
 
@@ -178,10 +155,7 @@ export async function deletarAlergia(req, res) {
 
         // Agora eu verifico se esse ID é de fato um identificador numérico e seguro para manipulação.
         if (!identificadorEhValido(idAlergia)) {
-            return responderErroValidacao(
-                res,
-                'O identificador da alergia é inválido.'
-            );
+            return responderErroValidacao(res, 'O identificador da alergia é inválido.');
         }
 
         // Neste momento eu consulto o serviço para garantir que a alergia desejada ainda está registrada.
@@ -201,13 +175,8 @@ export async function deletarAlergia(req, res) {
         return res.status(200).json({
             mensagem: 'Alergia excluída com sucesso.'
         });
-
     } catch (erro) {
         // Caso ocorra uma interrupção inesperada do banco, o utilitário assume a resposta adequada.
-        return responderErroInterno(
-            res,
-            'Erro ao excluir alergia:',
-            erro
-        );
+        return responderErroInterno(res, 'Erro ao excluir alergia:', erro);
     }
 }

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <%- include('partials/head') %>
+        <title>Novo atendimento — Ambulatório</title>
+        <link rel="stylesheet" href="/styles/novo-atendimento.css" />
+        <script src="/js/novo-atendimento.js" defer></script>
+    </head>
+    <body class="flex min-h-screen">
+        <%- include('partials/sidebar') %>
+        <main class="pagina atendimento-guiado">
+            <header class="cabecalho-pagina">
+                <div>
+                    <h1>Novo atendimento</h1>
+                    <p>Identifique a pessoa, registre a triagem e confira antes de salvar.</p>
+                </div>
+                <a href="/atendimentos" class="botao-secundario" id="cancelar-atendimento"
+                    >Cancelar</a
+                >
+            </header>
+            <ol class="etapas" aria-label="Etapas do atendimento">
+                <li aria-current="step">1. Funcionário</li>
+                <li>2. Triagem</li>
+                <li>3. Conduta</li>
+                <li>4. Revisão</li>
+            </ol>
+            <div
+                id="mensagem-pagina"
+                class="mensagem"
+                role="status"
+                aria-live="polite"
+                hidden
+            ></div>
+            <aside id="pessoa-selecionada" class="painel pessoa-selecionada" hidden>
+                <strong id="pessoa-nome"></strong>
+                <p id="pessoa-vinculos" class="ajuda"></p>
+                <p id="pessoa-alergias"></p>
+            </aside>
+
+            <section class="painel etapa" data-etapa="0">
+                <h2 tabindex="-1">Identificar funcionário</h2>
+                <form id="buscar-pessoa">
+                    <label for="busca-pessoa" class="rotulo">CPF, matrícula ou nome</label>
+                    <div class="busca-pessoa">
+                        <input
+                            id="busca-pessoa"
+                            class="campo"
+                            maxlength="150"
+                            required
+                            autocomplete="off"
+                            placeholder="Digite para localizar"
+                        /><button class="botao-primario">Buscar</button>
+                    </div>
+                </form>
+                <div id="resultado-pessoas" class="resultados-pessoas" aria-live="polite"></div>
+                <div class="acoes">
+                    <button id="mais-pessoas" type="button" class="botao-secundario" hidden>
+                        Mais resultados
+                    </button>
+                </div>
+                <details id="cadastro-rapido" class="mt-6">
+                    <summary>Funcionário não encontrado? Cadastrar</summary>
+                    <form id="form-cadastro-rapido" class="mt-4">
+                        <div class="grade-filtros">
+                            <label
+                                ><span class="rotulo">Matrícula</span
+                                ><input name="matricula" maxlength="20" required class="campo"
+                            /></label>
+                            <label
+                                ><span class="rotulo">Nome completo</span
+                                ><input
+                                    name="nome"
+                                    minlength="2"
+                                    maxlength="150"
+                                    required
+                                    class="campo"
+                            /></label>
+                            <label
+                                ><span class="rotulo">CPF</span
+                                ><input
+                                    name="cpf"
+                                    maxlength="14"
+                                    inputmode="numeric"
+                                    required
+                                    class="campo"
+                            /></label>
+                            <label
+                                ><span class="rotulo">Cargo (opcional)</span
+                                ><input name="cargo" maxlength="150" class="campo"
+                            /></label>
+                            <label
+                                ><span class="rotulo">Setor (opcional)</span
+                                ><input
+                                    name="setor"
+                                    maxlength="150"
+                                    class="campo"
+                                    list="opcoes-setor"
+                            /></label>
+                            <label
+                                ><span class="rotulo">Núcleo (opcional)</span
+                                ><input
+                                    name="nucleo"
+                                    maxlength="150"
+                                    class="campo"
+                                    list="opcoes-nucleo"
+                            /></label>
+                        </div>
+                        <div class="mt-5">
+                            <%- include('partials/liderancas', { prefixo: 'novo' }) %>
+                        </div>
+                        <button class="botao-primario mt-4">Cadastrar e selecionar</button>
+                    </form>
+                </details>
+            </section>
+
+            <section class="painel etapa" data-etapa="1" hidden>
+                <h2 tabindex="-1">Registrar triagem</h2>
+                <form id="form-triagem-etapa">
+                    <div class="grade-filtros">
+                        <label
+                            ><span class="rotulo">Entrada (horário de Brasília)</span
+                            ><input name="entrada" type="datetime-local" class="campo" required
+                        /></label>
+                        <label
+                            ><span class="rotulo">Pressão arterial</span
+                            ><input
+                                name="pressao_arterial"
+                                maxlength="20"
+                                placeholder="120/80"
+                                class="campo"
+                                required
+                        /></label>
+                        <label
+                            ><span class="rotulo">Temperatura (°C)</span
+                            ><input
+                                name="temperatura"
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                placeholder="36,5"
+                                class="campo"
+                                required
+                        /></label>
+                        <label
+                            ><span class="rotulo">Gravidade</span
+                            ><select name="gravidade" class="campo" required>
+                                <option value="">Selecione</option>
+                                <option>Baixa</option>
+                                <option>Média</option>
+                                <option>Alta</option>
+                            </select></label
+                        >
+                    </div>
+                    <label class="block mt-4"
+                        ><span class="rotulo">Queixa principal</span
+                        ><textarea
+                            name="queixa_principal"
+                            minlength="2"
+                            maxlength="5000"
+                            rows="5"
+                            required
+                            class="campo"
+                        ></textarea>
+                    </label>
+                    <div class="acoes">
+                        <button type="button" class="botao-secundario" data-voltar>Voltar</button
+                        ><button class="botao-primario">Continuar para conduta</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="painel etapa" data-etapa="2" hidden>
+                <h2 tabindex="-1">Informar conduta</h2>
+                <form id="form-conduta-etapa">
+                    <label
+                        ><span class="rotulo">Ação tomada</span
+                        ><select name="acao_tomada" class="campo" required>
+                            <option value="">Selecione</option>
+                            <option value="Medicação no Local">Medicação no local</option>
+                            <option value="Encaminhado UPA">Encaminhado para UPA / hospital</option>
+                            <option value="Liberado">Liberado para o trabalho</option>
+                        </select></label
+                    >
+                    <label id="campo-destino" class="block mt-4" hidden
+                        ><span class="rotulo">Destino do encaminhamento</span
+                        ><input
+                            name="local_encaminhamento"
+                            maxlength="150"
+                            class="campo"
+                            placeholder="Unidade ou hospital"
+                    /></label>
+                    <label class="flex items-center gap-3 mt-5"
+                        ><input type="checkbox" name="finalizar" />Finalizar o atendimento ao
+                        salvar</label
+                    >
+                    <p class="ajuda mt-2">
+                        Se desmarcado, o registro fica aberto para finalização posterior na página
+                        Atendimentos.
+                    </p>
+                    <div class="acoes">
+                        <button type="button" class="botao-secundario" data-voltar>Voltar</button
+                        ><button class="botao-primario">Revisar ficha</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="painel etapa" data-etapa="3" hidden>
+                <h2 tabindex="-1">Revisar e salvar</h2>
+                <dl id="resumo-atendimento" class="resumo-atendimento"></dl>
+                <p class="ajuda mt-4">
+                    Confira a pessoa e os dados antes de confirmar. A ficha será registrada somente
+                    agora.
+                </p>
+                <div class="acoes">
+                    <button type="button" class="botao-secundario" data-voltar>Voltar</button
+                    ><button type="button" id="salvar-atendimento" class="botao-primario">
+                        Confirmar atendimento
+                    </button>
+                </div>
+            </section>
+
+            <section id="atendimento-salvo" class="painel" hidden>
+                <h2>Atendimento registrado</h2>
+                <p id="mensagem-sucesso"></p>
+                <div class="acoes">
+                    <a
+                        id="imprimir-atendimento"
+                        target="_blank"
+                        rel="noopener"
+                        class="botao-primario"
+                        >Imprimir ficha / PDF</a
+                    ><a href="/novo-atendimento" class="botao-secundario">Registrar outro</a
+                    ><a href="/atendimentos" class="botao-secundario">Consultar atendimentos</a>
+                </div>
+            </section>
+            <div id="listas-cadastro"></div>
+        </main>
+    </body>
+</html>

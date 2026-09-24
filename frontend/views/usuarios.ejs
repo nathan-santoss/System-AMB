@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <%- include('partials/head') %>
+        <title>Usuários — Ambulatório</title>
+        <link rel="stylesheet" href="/styles/usuarios.css" />
+        <script src="/js/usuarios.js" defer></script>
+    </head>
+    <body class="flex min-h-screen">
+        <%- include('partials/sidebar') %>
+        <main class="pagina pagina-usuarios">
+            <header class="cabecalho-pagina">
+                <div>
+                    <h1>Usuários do sistema</h1>
+                    <p>Crie logins e controle quem pode acessar o sistema.</p>
+                </div>
+                <button id="novo-usuario" class="botao-primario" type="button">Novo usuário</button>
+            </header>
+            <div id="mensagem-pagina" class="mensagem" role="status" hidden></div>
+            <section id="editor-usuario" class="painel" aria-labelledby="titulo-editor" hidden>
+                <h2 id="titulo-editor">Novo usuário</h2>
+                <form id="form-usuario">
+                    <div class="grade-filtros">
+                        <label for="usuario-email"><span class="rotulo">E-mail de acesso</span>
+                            <input id="usuario-email" name="email" type="email" class="campo" maxlength="150" autocomplete="off" required />
+                        </label>
+                        <label for="usuario-senha"><span id="rotulo-senha" class="rotulo">Senha inicial</span>
+                            <input id="usuario-senha" name="senha" type="password" class="campo" minlength="12" maxlength="72" autocomplete="new-password" aria-describedby="ajuda-senha" required />
+                        </label>
+                    </div>
+                    <p id="ajuda-senha" class="ajuda">Use pelo menos 12 caracteres. O limite é de 72 bytes; caracteres acentuados podem ocupar mais de um byte.</p>
+                    <p class="ajuda">Novos usuários acessam os atendimentos e relatórios. A administração de logins é exclusiva do administrador.</p>
+                    <div class="acoes">
+                        <button id="salvar-usuario" class="botao-primario" type="submit">Criar usuário</button>
+                        <button id="cancelar-usuario" class="botao-secundario" type="button">Cancelar</button>
+                    </div>
+                </form>
+            </section>
+            <section class="painel" aria-label="Logins cadastrados">
+                <div class="tabela-container">
+                    <table class="tabela">
+                        <thead><tr><th scope="col">E-mail</th><th scope="col">Perfil</th><th scope="col">Situação</th><th scope="col">Ações</th></tr></thead>
+                        <tbody id="lista-usuarios"><tr><td colspan="4">Carregando usuários...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="paginacao">
+                    <span id="resumo-usuarios" class="ajuda" aria-live="polite"></span>
+                    <div class="acoes">
+                        <button id="pagina-anterior" class="botao-secundario" type="button" disabled>Anterior</button>
+                        <button id="pagina-seguinte" class="botao-secundario" type="button" disabled>Próxima</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </body>
+</html>

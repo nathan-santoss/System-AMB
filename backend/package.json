@@ -1,38 +1,47 @@
 {
-  "name": "system-amb",
-  "version": "1.1.0",
-  "description": "Sistema de gerenciamento ambulatorial",
-  "homepage": "https://github.com/nathan-santoss/System-AMB#readme",
-  "bugs": {
-    "url": "https://github.com/nathan-santoss/System-AMB/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nathan-santoss/System-AMB.git"
-  },
-  "license": "ISC",
-  "author": "nathan-santos",
-  "type": "module",
-  "main": "server.js",
-  "engines": {
-    "node": ">=20.0.0"
-  },
-  "scripts": {
-    "start": "node server.js",
-    "check:backend": "node --check server.js && node --check src/config/database.js && node --check src/config/masterUser.js && node --check src/controllers/authController.js && node --check src/controllers/funcionarioController.js && node --check src/controllers/alergiaController.js && node --check src/controllers/atendimentoController.js && node --check src/middlewares/authMiddleware.js && node --check src/models/usuarios.js && node --check src/models/funcionarios.js && node --check src/models/alergias.js && node --check src/models/atendimento.js && node --check src/routes/authRoutes.js && node --check src/routes/funcionarioRoutes.js && node --check src/routes/alergiaRoutes.js && node --check src/routes/atendimentoRoutes.js && node --check src/services/funcionarioService.js && node --check src/services/alergiaService.js && node --check src/services/atendimentoService.js && node --check src/utils/normalizadores.js && node --check src/utils/validadores.js && node --check src/utils/datas.js && node --check src/utils/respostas.js",
-    "check:frontend": "node --check public/js/auth-session.js && node --check public/js/login.js && node --check public/js/dashboard.js && node --check public/js/consultar-paciente.js && node --check public/js/ficha-paciente.js",
-    "check": "npm run check:backend && npm run check:frontend",
-    "test": "npm run check"
-  },
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "dotenv": "^17.4.2",
-    "ejs": "^6.0.1",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
-    "mysql2": "^3.22.3",
-    "pg": "^8.22.0",
-    "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.8"
-  }
+    "name": "system-amb",
+    "version": "1.1.0",
+    "description": "Sistema de gerenciamento ambulatorial",
+    "homepage": "https://github.com/nathan-santoss/System-AMB#readme",
+    "bugs": {
+        "url": "https://github.com/nathan-santoss/System-AMB/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/nathan-santoss/System-AMB.git"
+    },
+    "license": "ISC",
+    "author": "nathan-santos",
+    "type": "module",
+    "main": "server.js",
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "scripts": {
+        "start": "node server.js",
+        "check:backend": "node scripts/check-syntax.js server.js app.js src scripts",
+        "check:frontend": "node scripts/check-syntax.js ../frontend/public/js",
+        "check": "npm run check:backend && npm run check:frontend && npm run check:views",
+        "build:css": "tailwindcss -i ../frontend/styles/base.css -o ../frontend/public/styles/tailwind.css --minify",
+        "format": "prettier --write \"src/**/*.js\" server.js app.js \"../frontend/public/js/*.js\" \"../frontend/public/styles/!(tailwind).css\" \"../frontend/styles/*.css\"",
+        "check:views": "node scripts/check-syntax.js ../frontend/views",
+        "test": "node --test"
+    },
+    "dependencies": {
+        "bcryptjs": "^3.0.3",
+        "dotenv": "^17.4.2",
+        "ejs": "^6.0.1",
+        "exceljs": "^4.4.0",
+        "express": "^5.2.1",
+        "express-rate-limit": "8.7.0",
+        "jsonwebtoken": "^9.0.3",
+        "mysql2": "^3.22.3",
+        "pg": "^8.22.0",
+        "pg-hstore": "^2.3.4",
+        "sequelize": "^6.37.8"
+    },
+    "devDependencies": {
+        "prettier": "^3.9.8",
+        "tailwindcss": "^3.4.17"
+    }
 }

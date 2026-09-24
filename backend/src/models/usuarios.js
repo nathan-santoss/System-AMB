@@ -30,32 +30,34 @@ const Usuario = database.define(
                     msg: 'Informe um e-mail válido.'
                 },
                 len: {
-                    args: [
-                        3,
-                        150
-                    ],
+                    args: [3, 150],
                     msg: 'O e-mail deve possuir entre 3 e 150 caracteres.'
                 }
             },
             set(valor) {
                 if (typeof valor !== 'string') {
-                    this.setDataValue(
-                        'email',
-                        valor
-                    );
+                    this.setDataValue('email', valor);
 
                     return;
                 }
 
-                const emailNormalizado = valor
-                    .trim()
-                    .toLowerCase();
+                const emailNormalizado = valor.trim().toLowerCase();
 
-                this.setDataValue(
-                    'email',
-                    emailNormalizado
-                );
+                this.setDataValue('email', emailNormalizado);
             }
+        },
+
+        perfil: {
+            type: DataTypes.STRING(20),
+            allowNull: false,
+            defaultValue: 'usuario',
+            validate: { isIn: [['admin', 'usuario']] }
+        },
+
+        ativo: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true
         },
 
         senha: {
@@ -69,10 +71,7 @@ const Usuario = database.define(
                     msg: 'A senha é obrigatória.'
                 },
                 len: {
-                    args: [
-                        1,
-                        255
-                    ],
+                    args: [1, 255],
                     msg: 'A senha armazenada é inválida.'
                 }
             }
@@ -85,18 +84,14 @@ const Usuario = database.define(
         updatedAt: 'atualizado_em',
         defaultScope: {
             attributes: {
-                exclude: [
-                    'senha'
-                ]
+                exclude: ['senha']
             }
         },
         indexes: [
             {
                 name: 'idx_usuarios_email',
                 unique: true,
-                fields: [
-                    'email'
-                ]
+                fields: ['email']
             }
         ]
     }

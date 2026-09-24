@@ -1,0 +1,7 @@
+#historico-atendimentos {
+    overflow-wrap: anywhere;
+}
+#acoes-relatorios a,
+#acoes-relatorios button {
+    min-height: 44px;
+}

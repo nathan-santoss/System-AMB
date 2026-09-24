@@ -1,50 +1,11 @@
 const DASHBOARD_BASE_URL = '/api';
 
-// Aqui eu inicializo os ícones da interface caso a biblioteca esteja disponível.
 function atualizarIcones() {
     if (window.lucide) {
         window.lucide.createIcons();
     }
 }
 
-// Nesta parte eu crio uma função para evitar falhas de segurança com textos no HTML.
-function escapeHTML(valor) {
-    if (valor === null) {
-        return '';
-    }
-
-    if (valor === undefined) {
-        return '';
-    }
-
-    return String(valor)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-// Agora eu garanto que um texto padrão seja exibido caso o valor original seja inválido.
-function obterTextoExibicao(valor, textoPadrao) {
-    if (valor === null) {
-        return textoPadrao;
-    }
-
-    if (valor === undefined) {
-        return textoPadrao;
-    }
-
-    const texto = String(valor).trim();
-
-    if (texto.length === 0) {
-        return textoPadrao;
-    }
-
-    return texto;
-}
-
-// Aqui eu transformo o valor recebido em um número seguro para exibição nos contadores.
 function obterNumeroExibicao(valor) {
     const numero = Number(valor);
 
@@ -59,64 +20,6 @@ function obterNumeroExibicao(valor) {
     return Math.trunc(numero);
 }
 
-// Neste ponto eu leio a resposta da API garantindo que não quebre a tela se o JSON for inválido.
-async function lerRespostaJson(resposta) {
-    try {
-        return await resposta.json();
-    } catch (erro) {
-        return {};
-    }
-}
-
-// Aqui eu extraio a melhor mensagem de erro possível dos dados retornados pelo backend.
-function obterMensagemErro(dados, mensagemPadrao) {
-    if (dados) {
-        if (typeof dados.erro === 'string') {
-            const mensagemErro = dados.erro.trim();
-            if (mensagemErro.length > 0) {
-                return mensagemErro;
-            }
-        }
-
-        if (typeof dados.message === 'string') {
-            const mensagem = dados.message.trim();
-            if (mensagem.length > 0) {
-                return mensagem;
-            }
-        }
-
-        if (Array.isArray(dados.detalhes)) {
-            if (dados.detalhes.length > 0) {
-                return dados.detalhes.join(' ');
-            }
-        }
-    }
-
-    return mensagemPadrao;
-}
-
-// Em seguida eu formato a data e hora para o padrão brasileiro que será exibido na tabela.
-function formatarDataHora(valor) {
-    if (!valor) {
-        return 'Não informado';
-    }
-
-    const data = new Date(valor);
-
-    if (Number.isNaN(data.getTime())) {
-        return 'Data inválida';
-    }
-
-    return data.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
-
-// Nesta função eu defino as cores e estilos corretos para cada nível de gravidade.
 function obterClasseGravidade(gravidade) {
     if (gravidade === 'Alta') {
         return 'bg-red-50 text-red-700 border-red-200';
@@ -133,7 +36,6 @@ function obterClasseGravidade(gravidade) {
     return 'bg-slate-50 text-slate-700 border-slate-200';
 }
 
-// Aqui eu crio um utilitário simples para atualizar textos de elementos no HTML.
 function definirTextoElemento(idElemento, valor) {
     const elemento = document.getElementById(idElemento);
 
@@ -144,7 +46,6 @@ function definirTextoElemento(idElemento, valor) {
     elemento.textContent = String(valor);
 }
 
-// Antes de carregar os dados eu mostro um estado de carregamento visual nos contadores superiores.
 function definirContadoresCarregando() {
     definirTextoElemento('contador-hoje', '...');
     definirTextoElemento('count-normal', '...');
@@ -152,7 +53,6 @@ function definirContadoresCarregando() {
     definirTextoElemento('count-grave', '...');
 }
 
-// Caso ocorra algum erro eu atualizo os contadores para refletir a falha na obtenção dos dados.
 function definirContadoresErro() {
     definirTextoElemento('contador-hoje', 'Erro');
     definirTextoElemento('count-normal', '-');
@@ -160,7 +60,6 @@ function definirContadoresErro() {
     definirTextoElemento('count-grave', '-');
 }
 
-// Agora eu atualizo os contadores principais com as informações reais vindas da API.
 function renderizarContadores(dados) {
     const totalHoje = obterNumeroExibicao(dados.totalHoje);
 
@@ -182,12 +81,10 @@ function renderizarContadores(dados) {
     definirTextoElemento('count-grave', quantidadeAlta);
 }
 
-// Aqui eu construo uma linha de tabela de ponta a ponta para exibir apenas mensagens textuais.
 function criarLinhaMensagemTabela(mensagem, classeTexto) {
     const linha = document.createElement('tr');
-
     const coluna = document.createElement('td');
-    // Para manter a tabela alinhada eu ocupo o espaço de todas as 4 colunas.
+
     coluna.colSpan = 4;
     coluna.className = 'py-8 text-center text-sm ' + classeTexto;
     coluna.textContent = mensagem;
@@ -197,7 +94,6 @@ function criarLinhaMensagemTabela(mensagem, classeTexto) {
     return linha;
 }
 
-// Neste momento eu aplico a mensagem de carregamento inicial na tabela de atendimentos.
 function renderizarAtendimentosCarregando() {
     const tabela = document.getElementById('lista-ultimos-atendimentos');
 
@@ -206,61 +102,73 @@ function renderizarAtendimentosCarregando() {
     }
 
     tabela.innerHTML = '';
-    tabela.appendChild(
-        criarLinhaMensagemTabela('Carregando atendimentos...', 'text-slate-400')
-    );
+    tabela.appendChild(criarLinhaMensagemTabela('Carregando atendimentos...', 'text-slate-400'));
 }
 
-// Nesta parte fundamental eu monto a linha da tabela separando cada dado na sua respectiva coluna.
 function criarLinhaAtendimento(atendimento) {
     const linha = document.createElement('tr');
     linha.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors';
 
-    // Primeiro eu crio a coluna 1 contendo o nome e a matrícula do paciente.
+    // Primeiro eu configuro a coluna encarregada de exibir os dados pessoais do funcionário.
     const colunaPaciente = document.createElement('td');
     colunaPaciente.className = 'px-6 py-4';
 
     const nomeFuncionario = document.createElement('p');
-    nomeFuncionario.className = 'font-semibold text-azulEscuro';
-    nomeFuncionario.textContent = obterTextoExibicao(atendimento.nome, 'Funcionário sem nome');
+    // Adiciono a restrição "whitespace-nowrap" aqui para impedir que o nome seja comprimido e cortado.
+    nomeFuncionario.className = 'font-semibold text-azulEscuro whitespace-nowrap';
+    nomeFuncionario.textContent = window.AmbFormatadores.obterTextoExibicao(
+        atendimento.nome,
+        'Funcionário sem nome'
+    );
 
     const dadosFuncionario = document.createElement('p');
     dadosFuncionario.className = 'text-xs text-slate-500 mt-1';
 
-    const matricula = obterTextoExibicao(atendimento.funcionario_matricula, 'Matrícula não informada');
+    const matricula = window.AmbFormatadores.obterTextoExibicao(
+        atendimento.funcionario_matricula,
+        'Matrícula não informada'
+    );
     dadosFuncionario.textContent = 'Matrícula: ' + matricula;
 
     colunaPaciente.appendChild(nomeFuncionario);
     colunaPaciente.appendChild(dadosFuncionario);
 
-    // Agora eu crio a coluna 2 exclusiva para exibir a queixa do paciente.
+    // Agora eu preparo a coluna limpa exclusiva para a queixa principal.
     const colunaQueixa = document.createElement('td');
     colunaQueixa.className = 'px-6 py-4';
 
     const queixa = document.createElement('p');
     queixa.className = 'text-sm text-slate-600';
-    queixa.textContent = obterTextoExibicao(atendimento.queixa_principal, 'Sem queixa registrada');
+    queixa.textContent = window.AmbFormatadores.obterTextoExibicao(
+        atendimento.queixa_principal,
+        'Sem queixa registrada'
+    );
 
     colunaQueixa.appendChild(queixa);
 
-    // Em seguida eu crio a coluna 3 que mostrará a tag visual do nível de gravidade.
+    // Em seguida eu configuro a coluna para exibir a gravidade colorida como um pequeno cartão.
     const colunaGravidade = document.createElement('td');
     colunaGravidade.className = 'px-6 py-4 text-center';
 
-    const gravidade = obterTextoExibicao(atendimento.gravidade, 'Não informada');
-
+    const gravidade = window.AmbFormatadores.obterTextoExibicao(
+        atendimento.gravidade,
+        'Não informada'
+    );
     const badgeGravidade = document.createElement('span');
-    badgeGravidade.className = 'inline-flex px-3 py-1 text-xs font-bold rounded-full border ' + obterClasseGravidade(gravidade);
+    badgeGravidade.className =
+        'inline-flex px-3 py-1 text-xs font-bold rounded-full border ' +
+        obterClasseGravidade(gravidade);
     badgeGravidade.textContent = gravidade;
 
     colunaGravidade.appendChild(badgeGravidade);
 
-    // Depois eu crio a coluna 4 contendo a data e a hora precisas do registro.
+    // Depois eu formato a coluna de data e hora.
+    // Faço o uso imperativo da classe "whitespace-nowrap" aqui. Isso impede que a quebra de linha aconteça, garantindo que a hora não seja jogada para baixo e cortada visualmente.
     const colunaData = document.createElement('td');
     colunaData.className = 'px-6 py-4 text-center text-slate-500 text-xs whitespace-nowrap';
-    colunaData.textContent = formatarDataHora(atendimento.data_hora_entrada);
+    colunaData.textContent = window.AmbFormatadores.formatarDataHora(atendimento.data_hora_entrada);
 
-    // Por fim eu adiciono as quatro colunas organizadas dentro da linha.
+    // Por fim eu anexo as colunas perfeitamente alinhadas na linha gerada.
     linha.appendChild(colunaPaciente);
     linha.appendChild(colunaQueixa);
     linha.appendChild(colunaGravidade);
@@ -269,7 +177,6 @@ function criarLinhaAtendimento(atendimento) {
     return linha;
 }
 
-// Aqui eu processo a lista completa de atendimentos e os exibo estruturados na tabela.
 function renderizarUltimosAtendimentos(atendimentos) {
     const tabela = document.getElementById('lista-ultimos-atendimentos');
 
@@ -281,7 +188,10 @@ function renderizarUltimosAtendimentos(atendimentos) {
 
     if (!Array.isArray(atendimentos)) {
         tabela.appendChild(
-            criarLinhaMensagemTabela('Não foi possível interpretar os atendimentos.', 'text-red-500')
+            criarLinhaMensagemTabela(
+                'Não foi possível interpretar os atendimentos.',
+                'text-red-500'
+            )
         );
         return;
     }
@@ -293,7 +203,6 @@ function renderizarUltimosAtendimentos(atendimentos) {
         return;
     }
 
-    // Com isso eu navego pela lista gerando cada uma das linhas visuais.
     atendimentos.forEach(function (atendimento) {
         if (!atendimento) {
             return;
@@ -316,15 +225,17 @@ function renderizarUltimosAtendimentos(atendimentos) {
         tabela.appendChild(criarLinhaAtendimento(atendimento));
     });
 
-    // Por segurança eu valido se sobrou alguma linha exibida para não mostrar uma tabela vazia.
+    // Por segurança, se os itens forem filtrados por falha nos blocos if acima, eu exibo a mensagem vazia.
     if (tabela.children.length === 0) {
         tabela.appendChild(
-            criarLinhaMensagemTabela('Nenhum atendimento vinculado a um funcionário válido.', 'text-slate-400')
+            criarLinhaMensagemTabela(
+                'Nenhum atendimento vinculado a um funcionário válido.',
+                'text-slate-400'
+            )
         );
     }
 }
 
-// Agora eu lido com a seção lateral do ranking, colocando uma mensagem de aviso inicial.
 function renderizarSetoresCarregando() {
     const container = document.getElementById('lista-setores');
 
@@ -341,14 +252,14 @@ function renderizarSetoresCarregando() {
     container.appendChild(mensagem);
 }
 
-// Nesta parte eu monto um pequeno cartão listando o nome do setor e a quantidade somada.
 function criarItemSetor(setor) {
     const item = document.createElement('div');
-    item.className = 'flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100';
+    item.className =
+        'flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100';
 
     const nomeSetor = document.createElement('span');
     nomeSetor.className = 'font-medium text-slate-700';
-    nomeSetor.textContent = obterTextoExibicao(setor.setor, 'Não informado');
+    nomeSetor.textContent = window.AmbFormatadores.obterTextoExibicao(setor.setor, 'Não informado');
 
     const quantidade = document.createElement('span');
     quantidade.className = 'font-bold text-azulEscuro bg-blue-100 px-3 py-1 rounded-full text-xs';
@@ -360,7 +271,6 @@ function criarItemSetor(setor) {
     return item;
 }
 
-// Em seguida eu exibo a lista processada do ranking de setores mais frequentes do mês.
 function renderizarRankingSetores(setores) {
     const container = document.getElementById('lista-setores');
 
@@ -388,7 +298,6 @@ function renderizarRankingSetores(setores) {
         return;
     }
 
-    // Então eu populo a caixa lateral contendo as referências para todos os setores ativos.
     setores.forEach(function (setor) {
         if (!setor) {
             return;
@@ -398,7 +307,6 @@ function renderizarRankingSetores(setores) {
     });
 }
 
-// Caso algo dê errado eu injeto as mensagens de falha nas três frentes do painel.
 function mostrarErroDashboard(mensagem) {
     definirContadoresErro();
 
@@ -422,7 +330,6 @@ function mostrarErroDashboard(mensagem) {
     }
 }
 
-// Este é o fluxo central encarregado de buscar os dados com o token de autorização.
 async function carregarDadosDashboard() {
     definirContadoresCarregando();
     renderizarAtendimentosCarregando();
@@ -437,7 +344,7 @@ async function carregarDadosDashboard() {
             }
         );
 
-        const dados = await lerRespostaJson(resposta);
+        const dados = await window.AmbFormatadores.lerRespostaJson(resposta);
 
         if (resposta.status === 401) {
             await window.AuthSession.fazerLogout();
@@ -450,23 +357,24 @@ async function carregarDadosDashboard() {
         }
 
         if (!resposta.ok) {
-            const mensagem = obterMensagemErro(dados, 'Não foi possível carregar os dados do dashboard.');
+            const mensagem = window.AmbFormatadores.obterMensagemErro(
+                dados,
+                'Não foi possível carregar os dados do dashboard.'
+            );
             throw new Error(mensagem);
         }
 
-        // Tendo os resultados em mãos eu executo as funções de preenchimento do HTML.
+        // Em seguida eu distribuo o JSON extraído para as suas respectivas áreas de montagem na interface.
         renderizarContadores(dados);
         renderizarUltimosAtendimentos(dados.ultimosAtendimentos);
         renderizarRankingSetores(dados.atendimentosPorSetor);
         atualizarIcones();
-
     } catch (erro) {
         console.error('Erro ao carregar o dashboard:', erro);
         mostrarErroDashboard(erro.message);
     }
 }
 
-// Aqui eu valido a sessão e realizo a primeira chamada à API após a carga total da tela.
 async function inicializarDashboard() {
     if (!window.AuthSession) {
         console.error('O arquivo auth-session.js não foi carregado.');
@@ -477,7 +385,7 @@ async function inicializarDashboard() {
     const resultadoSessao = await window.AuthSession.exigirSessao();
 
     if (!resultadoSessao.autenticado) {
-        if (resultadoSessao.status === 0) {
+        if (resultadoSessao.status !== 401 && resultadoSessao.status !== 403) {
             mostrarErroDashboard(resultadoSessao.mensagem);
         }
         return;
@@ -485,7 +393,6 @@ async function inicializarDashboard() {
 
     atualizarIcones();
 
-    // Com isso eu também conecto o botão de forçar atualização no cabeçalho do painel.
     const botaoAtualizar = document.getElementById('botao-atualizar-dashboard');
 
     if (botaoAtualizar) {
@@ -495,7 +402,6 @@ async function inicializarDashboard() {
     await carregarDadosDashboard();
 }
 
-// Para manter o projeto flexível eu possibilito o comando de logout em escopo global.
 window.fazerLogout = async function () {
     if (!window.AuthSession) {
         localStorage.removeItem('token');
@@ -506,5 +412,4 @@ window.fazerLogout = async function () {
     await window.AuthSession.fazerLogout();
 };
 
-// Por fim eu configuro o gatilho principal de injeção após a página ser totalmente interpretada.
 document.addEventListener('DOMContentLoaded', inicializarDashboard);

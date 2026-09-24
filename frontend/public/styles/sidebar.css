@@ -1,0 +1,12 @@
+#sidebar-principal {
+    will-change: transform;
+}
+
+#sidebar-backdrop {
+    animation: aparecerModalFundo 180ms ease-out;
+}
+@media (min-width: 768px) {
+    #sidebar-principal {
+        transform: translateX(0);
+    }
+}

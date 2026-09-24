@@ -1,22 +1,16 @@
 import {
     criarAtendimento as criarAtendimentoService,
-    buscarAtendimentosPorFuncionario as buscarHistoricoService,
-    buscarAtendimentosPorPeriodo,
-    buscarUltimosAtendimentos
+    finalizarAtendimento as finalizarAtendimentoService,
+    buscarAtendimentosPorFuncionario as buscarHistoricoService
 } from '../services/atendimentoService.js';
 
-import {
-    buscarFuncionarioPorMatricula,
-    buscarTodosFuncionarios
-} from '../services/funcionarioService.js';
+import { buscarFuncionarioPorMatricula } from '../services/funcionarioService.js';
 
-import {
-    normalizarMatricula,
-    normalizarTexto
-} from '../utils/normalizadores.js';
+import { normalizarMatricula, normalizarTexto } from '../utils/normalizadores.js';
 
 import {
     corpoEhObjetoValido,
+    identificadorEhValido,
     matriculaEhValida,
     textoObrigatorioEhValido,
     temperaturaEhValida
@@ -29,30 +23,34 @@ import {
     criarFimDoMes
 } from '../utils/datas.js';
 
-import {
-    responderErroInterno
-} from '../utils/respostas.js';
+import { responderErroInterno } from '../utils/respostas.js';
+import { consultarDashboard } from '../services/dashboardService.js';
 
-const GRAVIDADES_PERMITIDAS = [
-    'Baixa',
-    'Média',
-    'Alta'
-];
+const GRAVIDADES_PERMITIDAS = ['Baixa', 'Média', 'Alta'];
 
-const ACOES_PERMITIDAS = [
-    'Medicação no Local',
-    'Encaminhado UPA',
-    'Liberado'
-];
+const ACOES_PERMITIDAS = ['Medicação no Local', 'Encaminhado UPA', 'Liberado'];
 
 const TAMANHO_MINIMO_QUEIXA = 2;
 const TAMANHO_MAXIMO_QUEIXA = 5000;
 const TAMANHO_MAXIMO_PRESSAO = 20;
 
-function responderErroValidacao(
-    res,
-    mensagem
-) {
+export async function finalizarAtendimento(req, res) {
+    const id = req.params.id;
+    if (!identificadorEhValido(id) || Number(id) > 2147483647) {
+        return res.status(400).json({ erro: 'Informe um identificador de atendimento válido.' });
+    }
+    try {
+        const atendimento = await finalizarAtendimentoService(Number(id));
+        if (!atendimento) {
+            return res.status(404).json({ erro: 'Atendimento não encontrado.' });
+        }
+        return res.status(200).json(atendimento);
+    } catch (erro) {
+        return responderErroInterno(res, 'Erro ao finalizar atendimento.', erro);
+    }
+}
+
+function responderErroValidacao(res, mensagem) {
     return res.status(400).json({
         erro: mensagem
     });
@@ -68,9 +66,7 @@ function normalizarTemperatura(valor) {
     }
 
     if (typeof valor === 'string') {
-        const texto = valor
-            .trim()
-            .replace(',', '.');
+        const texto = valor.trim().replace(',', '.');
 
         if (texto.length === 0) {
             return null;
@@ -83,48 +79,29 @@ function normalizarTemperatura(valor) {
 }
 
 function validarDadosAtendimento(corpo) {
-    const queixaPrincipal = normalizarTexto(
-        corpo.queixa_principal
-    );
+    const queixaPrincipal = normalizarTexto(corpo.queixa_principal);
 
-    if (
-        !textoObrigatorioEhValido(
-            queixaPrincipal,
-            TAMANHO_MAXIMO_QUEIXA
-        )
-    ) {
+    if (!textoObrigatorioEhValido(queixaPrincipal, TAMANHO_MAXIMO_QUEIXA)) {
         return {
             erro: 'A queixa principal é obrigatória e deve possuir entre 2 e 5000 caracteres.'
         };
     }
 
-    if (
-        queixaPrincipal.length <
-        TAMANHO_MINIMO_QUEIXA
-    ) {
+    if (queixaPrincipal.length < TAMANHO_MINIMO_QUEIXA) {
         return {
             erro: 'A queixa principal é obrigatória e deve possuir entre 2 e 5000 caracteres.'
         };
     }
 
-    const pressaoArterial = normalizarTexto(
-        corpo.pressao_arterial
-    );
+    const pressaoArterial = normalizarTexto(corpo.pressao_arterial);
 
-    if (
-        !textoObrigatorioEhValido(
-            pressaoArterial,
-            TAMANHO_MAXIMO_PRESSAO
-        )
-    ) {
+    if (!textoObrigatorioEhValido(pressaoArterial, TAMANHO_MAXIMO_PRESSAO)) {
         return {
             erro: 'A pressão arterial é obrigatória e deve possuir até 20 caracteres.'
         };
     }
 
-    const temperatura = normalizarTemperatura(
-        corpo.temperatura
-    );
+    const temperatura = normalizarTemperatura(corpo.temperatura);
 
     if (temperatura === null) {
         return {
@@ -138,33 +115,56 @@ function validarDadosAtendimento(corpo) {
         };
     }
 
-    const gravidade = normalizarTexto(
-        corpo.gravidade
-    );
+    const gravidade = normalizarTexto(corpo.gravidade);
 
-    if (
-        !GRAVIDADES_PERMITIDAS.includes(
-            gravidade
-        )
-    ) {
+    if (!GRAVIDADES_PERMITIDAS.includes(gravidade)) {
         return {
             erro: 'A gravidade deve ser Baixa, Média ou Alta.'
         };
     }
 
-    const acaoTomada = normalizarTexto(
-        corpo.acao_tomada
-    );
+    const acaoTomada = normalizarTexto(corpo.acao_tomada);
 
-    if (
-        !ACOES_PERMITIDAS.includes(
-            acaoTomada
-        )
-    ) {
+    if (!ACOES_PERMITIDAS.includes(acaoTomada)) {
         return {
             erro: 'A ação tomada informada não é permitida.'
         };
     }
+
+    const entrada = new Date(corpo.data_hora_entrada);
+    if (
+        typeof corpo.data_hora_entrada !== 'string' ||
+        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?(Z|[+-]\d{2}:\d{2})$/.test(
+            corpo.data_hora_entrada
+        ) ||
+        Number.isNaN(entrada.getTime()) ||
+        entrada.getTime() > Date.now()
+    ) {
+        return { erro: 'Informe uma data de entrada válida, sem horário futuro.' };
+    }
+    if (
+        typeof corpo.chave_registro !== 'string' ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+            corpo.chave_registro
+        )
+    ) {
+        return { erro: 'Identificador do envio inválido. Atualize a página.' };
+    }
+    let destino = null;
+    if (acaoTomada === 'Encaminhado UPA') {
+        if (
+            typeof corpo.local_encaminhamento !== 'string' ||
+            !corpo.local_encaminhamento.trim() ||
+            corpo.local_encaminhamento.trim().length > 150
+        ) {
+            return { erro: 'Informe o destino do encaminhamento, com até 150 caracteres.' };
+        }
+        destino = corpo.local_encaminhamento.trim();
+    }
+    if (corpo.finalizar !== undefined && typeof corpo.finalizar !== 'boolean')
+        return { erro: 'Situação inválida.' };
+    let saida = null;
+    if (corpo.finalizar === true) saida = new Date();
 
     return {
         dados: {
@@ -172,186 +172,16 @@ function validarDadosAtendimento(corpo) {
             pressao_arterial: pressaoArterial,
             temperatura,
             gravidade,
-            acao_tomada: acaoTomada
+            acao_tomada: acaoTomada,
+            chave_registro: corpo.chave_registro,
+            data_hora_entrada: entrada,
+            data_hora_saida: saida,
+            local_encaminhamento: destino
         }
     };
 }
 
-function converterRegistroParaObjeto(registro) {
-    if (!registro) {
-        return {};
-    }
-
-    if (typeof registro.toJSON === 'function') {
-        return registro.toJSON();
-    }
-
-    return {
-        ...registro
-    };
-}
-
-function criarMapaFuncionarios(funcionarios) {
-    const mapa = new Map();
-
-    for (const funcionario of funcionarios) {
-        const dadosFuncionario =
-            converterRegistroParaObjeto(
-                funcionario
-            );
-
-        const chave = String(
-            dadosFuncionario.matricula
-        );
-
-        mapa.set(
-            chave,
-            dadosFuncionario
-        );
-    }
-
-    return mapa;
-}
-
-function montarUltimosAtendimentos(
-    atendimentos,
-    funcionarios
-) {
-    const resultado = [];
-
-    for (const atendimento of atendimentos) {
-        const dadosAtendimento =
-            converterRegistroParaObjeto(
-                atendimento
-            );
-
-        const chaveFuncionario = String(
-            dadosAtendimento.funcionario_matricula
-        );
-
-        const funcionario = funcionarios.get(
-            chaveFuncionario
-        );
-
-        let nome = 'Funcionário sem nome';
-
-        if (funcionario) {
-            if (
-                typeof funcionario.nome === 'string' &&
-                funcionario.nome.trim().length > 0
-            ) {
-                nome = funcionario.nome;
-            }
-        }
-
-        resultado.push({
-            ...dadosAtendimento,
-            nome
-        });
-    }
-
-    return resultado;
-}
-
-function montarRankingSetores(
-    atendimentos,
-    funcionarios
-) {
-    const totais = new Map();
-
-    for (const atendimento of atendimentos) {
-        const dadosAtendimento =
-            converterRegistroParaObjeto(
-                atendimento
-            );
-
-        const chaveFuncionario = String(
-            dadosAtendimento.funcionario_matricula
-        );
-
-        const funcionario = funcionarios.get(
-            chaveFuncionario
-        );
-
-        let setor = 'Não informado';
-
-        if (funcionario) {
-            if (
-                typeof funcionario.setor === 'string' &&
-                funcionario.setor.trim().length > 0
-            ) {
-                setor = funcionario.setor;
-            }
-        }
-
-        let quantidadeAtual = 0;
-
-        if (totais.has(setor)) {
-            quantidadeAtual = totais.get(
-                setor
-            );
-        }
-
-        totais.set(
-            setor,
-            quantidadeAtual + 1
-        );
-    }
-
-    const ranking = [];
-
-    for (const item of totais) {
-        ranking.push({
-            setor: item[0],
-            quantidade: item[1]
-        });
-    }
-
-    ranking.sort(
-        function (primeiro, segundo) {
-            return (
-                segundo.quantidade -
-                primeiro.quantidade
-            );
-        }
-    );
-
-    return ranking;
-}
-
-function contarGravidades(atendimentos) {
-    const totais = {
-        baixa: 0,
-        media: 0,
-        alta: 0
-    };
-
-    for (const atendimento of atendimentos) {
-        const dadosAtendimento =
-            converterRegistroParaObjeto(
-                atendimento
-            );
-
-        if (dadosAtendimento.gravidade === 'Baixa') {
-            totais.baixa += 1;
-        }
-
-        if (dadosAtendimento.gravidade === 'Média') {
-            totais.media += 1;
-        }
-
-        if (dadosAtendimento.gravidade === 'Alta') {
-            totais.alta += 1;
-        }
-    }
-
-    return totais;
-}
-
-export async function registrarAtendimento(
-    req,
-    res
-) {
+export async function registrarAtendimento(req, res) {
     try {
         if (!corpoEhObjetoValido(req.body)) {
             return responderErroValidacao(
@@ -360,9 +190,7 @@ export async function registrarAtendimento(
             );
         }
 
-        const matricula = normalizarMatricula(
-            req.body.funcionario_matricula
-        );
+        const matricula = normalizarMatricula(req.body.funcionario_matricula);
 
         if (!matriculaEhValida(matricula)) {
             return responderErroValidacao(
@@ -371,10 +199,7 @@ export async function registrarAtendimento(
             );
         }
 
-        const funcionario =
-            await buscarFuncionarioPorMatricula(
-                matricula
-            );
+        const funcionario = await buscarFuncionarioPorMatricula(matricula);
 
         if (!funcionario) {
             return res.status(404).json({
@@ -382,61 +207,38 @@ export async function registrarAtendimento(
             });
         }
 
-        const validacao = validarDadosAtendimento(
-            req.body
-        );
+        const validacao = validarDadosAtendimento(req.body);
 
         if (validacao.erro) {
-            return responderErroValidacao(
-                res,
-                validacao.erro
-            );
+            return responderErroValidacao(res, validacao.erro);
         }
 
-        const atendimento =
-            await criarAtendimentoService({
-                ...validacao.dados,
-                funcionario_matricula: matricula,
-                supervisor_na_epoca:
-                    funcionario.supervisor,
-                coordenador_na_epoca:
-                    funcionario.coordenador,
-                gerente_na_epoca:
-                    funcionario.gerente
-            });
+        const atendimento = await criarAtendimentoService({
+            ...validacao.dados,
+            funcionario_matricula: matricula,
+            registrado_por: req.usuario.id_usuario,
+            supervisor_na_epoca: funcionario.supervisor,
+            coordenador_na_epoca: funcionario.coordenador,
+            gerente_na_epoca: funcionario.gerente
+        });
 
-        return res.status(201).json(
-            atendimento
-        );
+        return res.status(201).json(atendimento);
     } catch (erro) {
-        return responderErroInterno(
-            res,
-            'Erro ao registrar atendimento:',
-            erro
-        );
+        if (erro.status === 400 || erro.status === 409)
+            return res.status(erro.status).json({ erro: erro.message });
+        return responderErroInterno(res, 'Erro ao registrar atendimento:', erro);
     }
 }
 
-export async function buscarAtendimentosPorFuncionario(
-    req,
-    res
-) {
+export async function buscarAtendimentosPorFuncionario(req, res) {
     try {
-        const matricula = normalizarMatricula(
-            req.params.matricula
-        );
+        const matricula = normalizarMatricula(req.params.matricula);
 
         if (!matriculaEhValida(matricula)) {
-            return responderErroValidacao(
-                res,
-                'A matrícula informada é inválida.'
-            );
+            return responderErroValidacao(res, 'A matrícula informada é inválida.');
         }
 
-        const funcionario =
-            await buscarFuncionarioPorMatricula(
-                matricula
-            );
+        const funcionario = await buscarFuncionarioPorMatricula(matricula);
 
         if (!funcionario) {
             return res.status(404).json({
@@ -444,104 +246,18 @@ export async function buscarAtendimentosPorFuncionario(
             });
         }
 
-        const atendimentos =
-            await buscarHistoricoService(
-                matricula
-            );
+        const atendimentos = await buscarHistoricoService(matricula);
 
-        return res.status(200).json(
-            atendimentos
-        );
+        return res.status(200).json(atendimentos);
     } catch (erro) {
-        return responderErroInterno(
-            res,
-            'Erro ao buscar atendimentos:',
-            erro
-        );
+        return responderErroInterno(res, 'Erro ao buscar atendimentos:', erro);
     }
 }
 
-export async function obterDadosDashboard(
-    req,
-    res
-) {
+export async function obterDadosDashboard(req, res) {
     try {
-        const agora = new Date();
-
-        const inicioDia = criarInicioDoDia(
-            agora
-        );
-
-        const fimDia = criarFimDoDia(
-            agora
-        );
-
-        const inicioMes = criarInicioDoMes(
-            agora
-        );
-
-        const fimMes = criarFimDoMes(
-            agora
-        );
-
-        const resultados = await Promise.all([
-            buscarAtendimentosPorPeriodo(
-                inicioDia,
-                fimDia
-            ),
-
-            buscarAtendimentosPorPeriodo(
-                inicioMes,
-                fimMes
-            ),
-
-            buscarUltimosAtendimentos(
-                5
-            ),
-
-            buscarTodosFuncionarios()
-        ]);
-
-        const atendimentosHoje =
-            resultados[0];
-
-        const atendimentosMes =
-            resultados[1];
-
-        const ultimosAtendimentos =
-            resultados[2];
-
-        const funcionarios =
-            criarMapaFuncionarios(
-                resultados[3]
-            );
-
-        return res.status(200).json({
-            totalHoje:
-                atendimentosHoje.length,
-
-            gravidadeHoje:
-                contarGravidades(
-                    atendimentosHoje
-                ),
-
-            ultimosAtendimentos:
-                montarUltimosAtendimentos(
-                    ultimosAtendimentos,
-                    funcionarios
-                ),
-
-            atendimentosPorSetor:
-                montarRankingSetores(
-                    atendimentosMes,
-                    funcionarios
-                )
-        });
+        return res.json(await consultarDashboard());
     } catch (erro) {
-        return responderErroInterno(
-            res,
-            'Erro ao carregar dashboard:',
-            erro
-        );
+        return responderErroInterno(res, 'Erro ao carregar dashboard:', erro);
     }
 }

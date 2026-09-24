@@ -1,0 +1,31 @@
+.pagina-usuarios {
+    max-width: 1440px;
+}
+.pagina-usuarios .ajuda {
+    margin-top: 12px;
+}
+.pagina-usuarios td:first-child {
+    overflow-wrap: anywhere;
+}
+.acoes-usuario {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 190px;
+}
+.situacao-usuario {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 3px 10px;
+    background: #dcfce7;
+    color: #166534;
+}
+.situacao-usuario.inativo {
+    background: #f1f5f9;
+    color: #475569;
+}
+@media (max-width: 640px) {
+    .pagina-usuarios .grade-filtros {
+        grid-template-columns: 1fr;
+    }
+}

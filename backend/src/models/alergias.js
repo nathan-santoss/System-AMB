@@ -1,6 +1,4 @@
-import {
-    DataTypes
-} from 'sequelize';
+import { DataTypes } from 'sequelize';
 
 import database from '../config/database.js';
 
@@ -38,37 +36,25 @@ const Alergia = database.define(
                 },
 
                 len: {
-                    args: [
-                        1,
-                        20
-                    ],
+                    args: [1, 20],
                     msg: 'A matrícula do funcionário deve possuir entre 1 e 20 caracteres.'
                 }
             },
 
             set(valor) {
                 if (typeof valor === 'number') {
-                    this.setDataValue(
-                        'funcionario_matricula',
-                        String(valor).trim()
-                    );
+                    this.setDataValue('funcionario_matricula', String(valor).trim());
 
                     return;
                 }
 
                 if (typeof valor === 'string') {
-                    this.setDataValue(
-                        'funcionario_matricula',
-                        valor.trim()
-                    );
+                    this.setDataValue('funcionario_matricula', valor.trim());
 
                     return;
                 }
 
-                this.setDataValue(
-                    'funcionario_matricula',
-                    valor
-                );
+                this.setDataValue('funcionario_matricula', valor);
             }
         },
 
@@ -86,28 +72,19 @@ const Alergia = database.define(
                 },
 
                 len: {
-                    args: [
-                        2,
-                        255
-                    ],
+                    args: [2, 255],
                     msg: 'A descrição da alergia deve possuir entre 2 e 255 caracteres.'
                 }
             },
 
             set(valor) {
                 if (typeof valor === 'string') {
-                    this.setDataValue(
-                        'descricao_alergia',
-                        valor.trim()
-                    );
+                    this.setDataValue('descricao_alergia', valor.trim());
 
                     return;
                 }
 
-                this.setDataValue(
-                    'descricao_alergia',
-                    valor
-                );
+                this.setDataValue('descricao_alergia', valor);
             }
         }
     },
@@ -118,42 +95,34 @@ const Alergia = database.define(
         indexes: [
             {
                 name: 'idx_alergias_funcionario_matricula',
-                fields: [
-                    'funcionario_matricula'
-                ]
+                fields: ['funcionario_matricula']
             }
         ]
     }
 );
 
-Funcionario.hasMany(
-    Alergia,
-    {
-        foreignKey: {
-            name: 'funcionario_matricula',
-            allowNull: false
-        },
+Funcionario.hasMany(Alergia, {
+    foreignKey: {
+        name: 'funcionario_matricula',
+        allowNull: false
+    },
 
-        sourceKey: 'matricula',
-        as: 'alergias',
-        onUpdate: 'CASCADE',
-        onDelete: 'RESTRICT'
-    }
-);
+    sourceKey: 'matricula',
+    as: 'alergias',
+    onUpdate: 'CASCADE',
+    onDelete: 'RESTRICT'
+});
 
-Alergia.belongsTo(
-    Funcionario,
-    {
-        foreignKey: {
-            name: 'funcionario_matricula',
-            allowNull: false
-        },
+Alergia.belongsTo(Funcionario, {
+    foreignKey: {
+        name: 'funcionario_matricula',
+        allowNull: false
+    },
 
-        targetKey: 'matricula',
-        as: 'funcionario',
-        onUpdate: 'CASCADE',
-        onDelete: 'RESTRICT'
-    }
-);
+    targetKey: 'matricula',
+    as: 'funcionario',
+    onUpdate: 'CASCADE',
+    onDelete: 'RESTRICT'
+});
 
 export default Alergia;

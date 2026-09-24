@@ -1,170 +1,56 @@
-import {
-    Op
-} from 'sequelize';
-
+import { Op } from 'sequelize';
 import Funcionario from '../models/funcionarios.js';
-import Alergia from '../models/alergias.js';
-import Atendimento from '../models/atendimento.js';
 
-
+// Aqui eu realizo a criação de um novo registro de paciente diretamente no banco de dados.
 export async function criarFuncionario(dados) {
-
-    return Funcionario.create(
-        dados
-    );
-
+    return Funcionario.create(dados);
 }
 
-
-export async function buscarTodosFuncionarios(filtro = {}) {
-
-    const opcoesConsulta = {
-        order: [
-            [
-                'nome',
-                'ASC'
-            ]
-        ]
-    };
-
-
-    let busca = '';
-
-
-    if (
-        filtro &&
-        typeof filtro === 'object' &&
-        typeof filtro.busca === 'string'
-    ) {
-
-        busca = filtro.busca.trim();
-
-    }
-
-
-    if (busca.length > 0) {
-
-        const filtrosBusca = [
-
-            {
-                matricula: {
-                    [Op.like]: `%${busca}%`
-                }
-            },
-
-            {
-                nome: {
-                    [Op.like]: `%${busca}%`
-                }
-            },
-
-            {
-                cargo: {
-                    [Op.like]: `%${busca}%`
-                }
-            },
-
-            {
-                setor: {
-                    [Op.like]: `%${busca}%`
-                }
-            },
-
-            {
-                nucleo: {
-                    [Op.like]: `%${busca}%`
-                }
-            }
-
-        ];
-
-
-        const cpfBusca = busca.replace(
-            /\D/g,
-            ''
-        );
-
-
-        if (cpfBusca.length > 0) {
-
-            filtrosBusca.push({
-
-                cpf: {
-                    [Op.like]: `%${cpfBusca}%`
-                }
-
-            });
-
-        }
-
-
-        opcoesConsulta.where = {
-
-            [Op.or]: filtrosBusca
-
-        };
-
-    }
-
-
-    return Funcionario.findAll(
-        opcoesConsulta
-    );
-
-}
-
-
+// Aqui eu busco os dados completos de um único funcionário utilizando a sua chave primária.
 export async function buscarFuncionarioPorMatricula(matricula) {
-
-    return Funcionario.findByPk(
-        matricula
-    );
-
+    return Funcionario.findByPk(matricula);
 }
 
-
-export async function atualizarFuncionario(
-    funcionario,
-    dados
-) {
-
-    await funcionario.update(
-        dados
-    );
-
-
+// Nesta parte eu aplico as atualizações recebidas do controlador em um paciente que já existe.
+export async function atualizarFuncionario(funcionario, dados) {
+    await funcionario.update(dados);
     return funcionario;
-
 }
 
-
+// Mantém as referências históricas ao retirar o funcionário da lista ativa.
 export async function deletarFuncionario(funcionario) {
+    // A inativação mantém os registros usados nos relatórios históricos.
+    return funcionario.update({ ativo: false });
+}
 
-
-    await Alergia.destroy({
-
-        where: {
-
-            funcionario_matricula:
-                funcionario.matricula
-
-        }
-
+export async function buscarPaginaFuncionarios(filtros) {
+    const where = {};
+    if (filtros.situacao === 'ativos') where.ativo = true;
+    if (filtros.situacao === 'inativos') where.ativo = false;
+    for (const campo of ['setor', 'nucleo', 'supervisor', 'coordenador', 'gerente']) {
+        if (filtros[campo]) where[campo] = filtros[campo];
+    }
+    if (filtros.busca) {
+        const termo = '%' + filtros.busca + '%';
+        where[Op.or] = ['nome', 'matricula', 'cpf', 'cargo', 'setor', 'nucleo'].map((campo) => ({
+            [campo]: { [Op.iLike]: termo }
+        }));
+        const cpf = filtros.busca.replace(/\D/g, '');
+        if (cpf.length) where[Op.or].push({ cpf: { [Op.iLike]: '%' + cpf + '%' } });
+    }
+    const resultado = await Funcionario.findAndCountAll({
+        where,
+        limit: 25,
+        offset: (filtros.pagina - 1) * 25,
+        order: [
+            ['nome', 'ASC'],
+            ['matricula', 'ASC']
+        ]
     });
-
-
-    await Atendimento.destroy({
-
-        where: {
-
-            funcionario_matricula:
-                funcionario.matricula
-
-        }
-
-    });
-
-
-    await funcionario.destroy();
-
+    return {
+        registros: resultado.rows,
+        total: resultado.count,
+        pagina: filtros.pagina,
+        totalPaginas: Math.max(1, Math.ceil(resultado.count / 25))
+    };
 }

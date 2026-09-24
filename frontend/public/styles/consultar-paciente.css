@@ -1,0 +1,19 @@
+#form-busca {
+    flex-wrap: wrap;
+}
+.filtros-funcionarios {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+@media (max-width: 640px) {
+    .filtros-funcionarios {
+        grid-template-columns: 1fr;
+    }
+    #modal-cadastrar > div,
+    #modal-editar > div {
+        max-height: 90dvh;
+        overflow-y: auto;
+    }
+}

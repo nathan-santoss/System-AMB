@@ -3,11 +3,7 @@ function dataEhObjetoValido(data) {
         return false;
     }
 
-    if (
-        Number.isNaN(
-            data.getTime()
-        )
-    ) {
+    if (Number.isNaN(data.getTime())) {
         return false;
     }
 
@@ -20,84 +16,44 @@ function obterDataBase(data) {
     }
 
     if (!dataEhObjetoValido(data)) {
-        throw new TypeError(
-            'A data informada é inválida.'
-        );
+        throw new TypeError('A data informada é inválida.');
     }
 
-    return new Date(
-        data.getTime()
-    );
+    return new Date(data.getTime());
 }
 
 export function criarInicioDoDia(data) {
-    const inicio = obterDataBase(
-        data
-    );
+    const inicio = obterDataBase(data);
 
-    inicio.setHours(
-        0,
-        0,
-        0,
-        0
-    );
+    inicio.setHours(0, 0, 0, 0);
 
     return inicio;
 }
 
 export function criarFimDoDia(data) {
-    const fim = obterDataBase(
-        data
-    );
+    const fim = obterDataBase(data);
 
-    fim.setHours(
-        23,
-        59,
-        59,
-        999
-    );
+    fim.setHours(23, 59, 59, 999);
 
     return fim;
 }
 
 export function criarInicioDoMes(data) {
-    const inicio = obterDataBase(
-        data
-    );
+    const inicio = obterDataBase(data);
 
-    inicio.setDate(
-        1
-    );
+    inicio.setDate(1);
 
-    inicio.setHours(
-        0,
-        0,
-        0,
-        0
-    );
+    inicio.setHours(0, 0, 0, 0);
 
     return inicio;
 }
 
 export function criarFimDoMes(data) {
-    const fim = obterDataBase(
-        data
-    );
+    const fim = obterDataBase(data);
 
-    fim.setMonth(
-        fim.getMonth() + 1
-    );
+    fim.setMonth(fim.getMonth() + 1, 0);
 
-    fim.setDate(
-        0
-    );
-
-    fim.setHours(
-        23,
-        59,
-        59,
-        999
-    );
+    fim.setHours(23, 59, 59, 999);
 
     return fim;
 }
