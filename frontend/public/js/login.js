@@ -58,42 +58,6 @@ function senhaEhValida(senha) {
     return true;
 }
 
-async function lerRespostaJson(resposta) {
-    try {
-        return await resposta.json();
-    } catch (erro) {
-        return {};
-    }
-}
-
-function obterMensagemErro(dados, mensagemPadrao) {
-    if (dados) {
-        if (typeof dados.message === 'string') {
-            const mensagem = dados.message.trim();
-
-            if (mensagem.length > 0) {
-                return mensagem;
-            }
-        }
-
-        if (typeof dados.erro === 'string') {
-            const mensagem = dados.erro.trim();
-
-            if (mensagem.length > 0) {
-                return mensagem;
-            }
-        }
-
-        if (Array.isArray(dados.detalhes)) {
-            if (dados.detalhes.length > 0) {
-                return dados.detalhes.join(' ');
-            }
-        }
-    }
-
-    return mensagemPadrao;
-}
-
 function obterMensagemExcecao(erro, mensagemPadrao) {
     if (!erro) {
         return mensagemPadrao;
@@ -379,10 +343,12 @@ async function enviarLogin(email, senha) {
         })
     });
 
-    const dados = await lerRespostaJson(resposta);
+    const dados = await window.AmbFormatadores.lerRespostaJson(resposta);
 
     if (!resposta.ok) {
-        throw new Error(obterMensagemErro(dados, 'E-mail ou senha inválidos.'));
+        throw new Error(
+            window.AmbFormatadores.obterMensagemErro(dados, 'E-mail ou senha inválidos.')
+        );
     }
 
     if (!dados.usuario) {

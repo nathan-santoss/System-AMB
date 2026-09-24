@@ -3,14 +3,12 @@ let termoBuscaAtual = '';
 let paginaFuncionarios = 1;
 let temporizadorMensagem = null;
 
-// Aqui eu inicio os ícones para garantir a interface gráfica adequada.
 function atualizarIcones() {
     if (window.lucide) {
         window.lucide.createIcons();
     }
 }
 
-// Antes de fazer qualquer requisição eu valido se a sessão está mapeada no sistema.
 function authSessionEstaDisponivel() {
     if (!window.AuthSession) {
         return false;
@@ -23,7 +21,6 @@ function authSessionEstaDisponivel() {
     return true;
 }
 
-// Em seguida eu defino a lógica global para desconectar o usuário e mandá-lo para a tela de login.
 async function fazerLogout() {
     if (authSessionEstaDisponivel()) {
         await window.AuthSession.fazerLogout();
@@ -36,7 +33,6 @@ async function fazerLogout() {
 
 window.fazerLogout = fazerLogout;
 
-// Nesta parte eu intercepto códigos de erro HTTP relacionados à autenticação.
 async function respostaExigeNovoLogin(resposta) {
     if (!resposta) {
         return false;
@@ -52,80 +48,6 @@ async function respostaExigeNovoLogin(resposta) {
     return true;
 }
 
-// Aqui eu faço o parse seguro da resposta em JSON.
-async function lerRespostaJson(resposta) {
-    try {
-        return await resposta.json();
-    } catch (erro) {
-        return {};
-    }
-}
-
-// Agora eu centralizo a obtenção da mensagem de erro devolvida pelo backend.
-function obterMensagemErro(dados, mensagemPadrao) {
-    if (dados) {
-        if (typeof dados.erro === 'string') {
-            const mensagemErro = dados.erro.trim();
-            if (mensagemErro.length > 0) {
-                return mensagemErro;
-            }
-        }
-
-        if (typeof dados.message === 'string') {
-            const mensagem = dados.message.trim();
-            if (mensagem.length > 0) {
-                return mensagem;
-            }
-        }
-
-        if (Array.isArray(dados.detalhes)) {
-            if (dados.detalhes.length > 0) {
-                return dados.detalhes.join(' ');
-            }
-        }
-    }
-
-    return mensagemPadrao;
-}
-
-// Com isso, garanto que o texto inserido no HTML seja seguro contra ataques de XSS.
-function escapeHTML(valor) {
-    if (valor === null) {
-        return '';
-    }
-
-    if (valor === undefined) {
-        return '';
-    }
-
-    return String(valor)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-// Para as células da tabela, eu configuro um fallback textual.
-function obterTextoExibicao(valor) {
-    if (valor === null) {
-        return 'Não informado';
-    }
-
-    if (valor === undefined) {
-        return 'Não informado';
-    }
-
-    const texto = String(valor).trim();
-
-    if (texto.length === 0) {
-        return 'Não informado';
-    }
-
-    return texto;
-}
-
-// Aqui eu coleto o valor exato dos campos do formulário para preparar o envio.
 function obterValorFormulario(valor) {
     if (valor === null) {
         return '';
@@ -138,7 +60,6 @@ function obterValorFormulario(valor) {
     return String(valor);
 }
 
-// Nesta etapa eu limpo a formatação do CPF garantindo que apenas números trafeguem para a API.
 function somenteNumeros(valor) {
     if (typeof valor !== 'string') {
         return '';
@@ -147,7 +68,6 @@ function somenteNumeros(valor) {
     return valor.replace(/\D/g, '');
 }
 
-// Em seguida, crio a máscara visual do CPF para exibição ao usuário.
 function formatarCpf(valor) {
     const numeros = somenteNumeros(obterValorFormulario(valor)).slice(0, 11);
 
@@ -166,12 +86,10 @@ function formatarCpf(valor) {
     return numeros.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
 }
 
-// Conecto a máscara diretamente ao evento de digitação nos campos de CPF.
 function aplicarMascaraCpf(evento) {
     evento.target.value = formatarCpf(evento.target.value);
 }
 
-// Agora eu lido com a mensagem flutuante, ocultando-a da tela de forma segura.
 function esconderMensagem() {
     const elemento = document.getElementById('mensagem-flutuante');
 
@@ -188,7 +106,6 @@ function esconderMensagem() {
     }
 }
 
-// Aqui eu injeto a mensagem flutuante (toast) e configuro a cor e ícone baseados no tipo do alerta.
 function mostrarMensagem(mensagem, tipo) {
     const elemento = document.getElementById('mensagem-flutuante');
 
@@ -227,7 +144,7 @@ function mostrarMensagem(mensagem, tipo) {
     elemento.innerHTML = `
         <i data-lucide="${icone}" class="w-5 h-5 shrink-0 mt-0.5"></i>
         <div class="flex-1">
-            <p class="font-semibold">${escapeHTML(mensagem)}</p>
+            <p class="font-semibold">${window.AmbFormatadores.escapeHTML(mensagem)}</p>
         </div>
         <button type="button" id="botao-fechar-mensagem" class="opacity-80 hover:opacity-100 transition-opacity" aria-label="Fechar mensagem">
             <i data-lucide="x" class="w-4 h-4"></i>
@@ -248,7 +165,6 @@ function mostrarMensagem(mensagem, tipo) {
     temporizadorMensagem = window.setTimeout(esconderMensagem, 5000);
 }
 
-// Aqui eu manipulo o estado visual dos botões de ação para evitar duplos cliques.
 function definirBotaoCarregando(botao, carregando, textoNormal, textoCarregando) {
     if (!botao) {
         return;
@@ -259,7 +175,7 @@ function definirBotaoCarregando(botao, carregando, textoNormal, textoCarregando)
         botao.classList.add('opacity-70', 'cursor-not-allowed');
         botao.innerHTML = `
             <i data-lucide="loader-circle" class="w-5 h-5 animate-spin"></i>
-            <span>${escapeHTML(textoCarregando)}</span>
+            <span>${window.AmbFormatadores.escapeHTML(textoCarregando)}</span>
         `;
         atualizarIcones();
         return;
@@ -269,12 +185,11 @@ function definirBotaoCarregando(botao, carregando, textoNormal, textoCarregando)
     botao.classList.remove('opacity-70', 'cursor-not-allowed');
     botao.innerHTML = `
         <i data-lucide="save" class="w-5 h-5"></i>
-        <span>${escapeHTML(textoNormal)}</span>
+        <span>${window.AmbFormatadores.escapeHTML(textoNormal)}</span>
     `;
     atualizarIcones();
 }
 
-// Esta função trava a barra de rolagem do fundo quando um modal é aberto.
 function atualizarBloqueioRolagem() {
     const modalCadastro = document.getElementById('modal-cadastrar');
     const modalEditar = document.getElementById('modal-editar');
@@ -305,7 +220,6 @@ function atualizarBloqueioRolagem() {
     document.body.classList.remove('overflow-hidden');
 }
 
-// Os vínculos de liderança são independentes e podem ser removidos na edição.
 function atualizarCampoLideranca(controle) {
     const campo = document.getElementById(controle.dataset.lideranca);
     campo.disabled = !controle.checked;
@@ -333,7 +247,6 @@ function obterLiderancasFormulario(prefixo) {
     );
 }
 
-// Agora eu exibo a interface de cadastro zerando o formulário.
 function abrirModalCadastro() {
     const modal = document.getElementById('modal-cadastrar');
     const formulario = document.getElementById('form-cadastrar-paciente');
@@ -363,7 +276,6 @@ function abrirModalCadastro() {
     }
 }
 
-// Em seguida crio a lógica de fechamento da interface de cadastro.
 function fecharModalCadastro() {
     const modal = document.getElementById('modal-cadastrar');
 
@@ -380,7 +292,6 @@ function fecharModalCadastro() {
 window.abrirModalCadastro = abrirModalCadastro;
 window.fecharModalCadastro = fecharModalCadastro;
 
-// Neste momento eu preparo o modal de edição preenchendo todos os campos com os dados do banco.
 function abrirModalEditar(funcionario) {
     if (!funcionario) {
         mostrarMensagem('Não foi possível identificar o funcionário.', 'erro');
@@ -429,7 +340,6 @@ function abrirModalEditar(funcionario) {
     }
 }
 
-// Crio a função respectiva para fechar e limpar a janela de edição.
 function fecharModalEditar() {
     const modal = document.getElementById('modal-editar');
 
@@ -445,7 +355,6 @@ function fecharModalEditar() {
 
 window.fecharModalEditar = fecharModalEditar;
 
-// Agora eu indico visualmente na tabela que a busca aos dados está em andamento.
 function mostrarTabelaCarregando() {
     const tabela = document.getElementById('tabela-pacientes');
 
@@ -465,7 +374,6 @@ function mostrarTabelaCarregando() {
     atualizarIcones();
 }
 
-// Quando o banco não retorna nenhum registro, eu exibo um ícone de fallback amigável.
 function mostrarTabelaVazia() {
     const tabela = document.getElementById('tabela-pacientes');
 
@@ -486,7 +394,6 @@ function mostrarTabelaVazia() {
     atualizarIcones();
 }
 
-// Se ocorrer algum problema com o banco de dados, eu indico o erro para o usuário dentro da tabela.
 function mostrarErroTabela(mensagem) {
     const tabela = document.getElementById('tabela-pacientes');
 
@@ -498,7 +405,7 @@ function mostrarErroTabela(mensagem) {
         <tr>
             <td colspan="7" class="py-14 px-6 text-center text-red-500">
                 <i data-lucide="circle-alert" class="w-11 h-11 mx-auto mb-3 opacity-70"></i>
-                <p class="font-semibold">${escapeHTML(mensagem)}</p>
+                <p class="font-semibold">${window.AmbFormatadores.escapeHTML(mensagem)}</p>
             </td>
         </tr>
     `;
@@ -506,7 +413,6 @@ function mostrarErroTabela(mensagem) {
     atualizarIcones();
 }
 
-// Aqui eu mantenho atualizado o indicador de quantos funcionários estão listados na interface.
 function atualizarTextoTotal(quantidade) {
     const elemento = document.getElementById('texto-total-funcionarios');
 
@@ -527,15 +433,13 @@ function atualizarTextoTotal(quantidade) {
     elemento.textContent = quantidade + ' funcionários encontrados.';
 }
 
-// Esta função isola a lógica de construção das células HTML da tabela.
 function criarCelula(texto, classes) {
     const celula = document.createElement('td');
     celula.className = classes;
-    celula.textContent = obterTextoExibicao(texto);
+    celula.textContent = window.AmbFormatadores.obterTextoExibicao(texto);
     return celula;
 }
 
-// Crio um método dedicado para gerar os botões de ação (editar e excluir) na última coluna.
 function criarBotaoAcao(configuracao) {
     const botao = document.createElement('button');
     botao.type = 'button';
@@ -544,7 +448,7 @@ function criarBotaoAcao(configuracao) {
 
     botao.innerHTML = `
         <i data-lucide="${configuracao.icone}" class="w-4 h-4"></i>
-        <span>${escapeHTML(configuracao.texto)}</span>
+        <span>${window.AmbFormatadores.escapeHTML(configuracao.texto)}</span>
     `;
 
     botao.addEventListener('click', configuracao.acao);
@@ -552,7 +456,6 @@ function criarBotaoAcao(configuracao) {
     return botao;
 }
 
-// Neste momento eu elaboro o link de redirecionamento para o prontuário daquele paciente.
 function criarLinkProntuario(funcionario) {
     const matricula = obterValorFormulario(funcionario.matricula).trim();
 
@@ -570,7 +473,6 @@ function criarLinkProntuario(funcionario) {
     return link;
 }
 
-// Aqui eu concateno todas as informações num formato visual coerente para cada registro inserido na tabela.
 function criarLinhaFuncionario(funcionario) {
     const linha = document.createElement('tr');
     linha.className = 'hover:bg-slate-50 transition-colors';
@@ -656,7 +558,6 @@ function criarLinhaFuncionario(funcionario) {
     return linha;
 }
 
-// Antes de renderizar um usuário, eu verifico rigorosamente se ele possui o identificador base no objeto.
 function funcionarioPossuiMatricula(funcionario) {
     if (!funcionario) {
         return false;
@@ -683,7 +584,6 @@ function funcionarioPossuiMatricula(funcionario) {
     return true;
 }
 
-// Agora eu passo a lista da API para a tabela manipulando a renderização na página.
 function renderizarFuncionarios(funcionarios) {
     const tabela = document.getElementById('tabela-pacientes');
 
@@ -717,7 +617,6 @@ function renderizarFuncionarios(funcionarios) {
     atualizarIcones();
 }
 
-// Neste bloco eu realizo a requisição HTTP e obtenho os cadastros armazenados no banco do servidor.
 let versaoBuscaFuncionarios = 0;
 
 async function buscarFuncionarios(termo, manterPagina = false) {
@@ -743,12 +642,15 @@ async function buscarFuncionarios(termo, manterPagina = false) {
             return;
         }
 
-        const dados = await lerRespostaJson(resposta);
+        const dados = await window.AmbFormatadores.lerRespostaJson(resposta);
 
         if (versao !== versaoBuscaFuncionarios) return;
 
         if (!resposta.ok) {
-            const mensagem = obterMensagemErro(dados, 'Não foi possível carregar os funcionários.');
+            const mensagem = window.AmbFormatadores.obterMensagemErro(
+                dados,
+                'Não foi possível carregar os funcionários.'
+            );
             throw new Error(mensagem);
         }
 
@@ -767,7 +669,6 @@ async function buscarFuncionarios(termo, manterPagina = false) {
     }
 }
 
-// Concentro aqui a captura dos campos do formulário para preparar o corpo da requisição POST.
 function obterDadosCadastro() {
     return {
         matricula: document.getElementById('cadastro-matricula').value.trim(),
@@ -780,7 +681,6 @@ function obterDadosCadastro() {
     };
 }
 
-// Por segurança, avalio internamente os três campos cruciais antes de enviá-los e tomar tempo do servidor.
 function cpfEhValido(cpf) {
     if (typeof cpf !== 'string') {
         return false;
@@ -828,7 +728,6 @@ function validarDadosFuncionario(dados) {
     return null;
 }
 
-// Agora executo o processo de enviar o JSON do novo paciente e inserir o registro na tabela em tempo real.
 async function cadastrarFuncionario(evento) {
     evento.preventDefault();
 
@@ -856,10 +755,13 @@ async function cadastrarFuncionario(evento) {
             return;
         }
 
-        const dados = await lerRespostaJson(resposta);
+        const dados = await window.AmbFormatadores.lerRespostaJson(resposta);
 
         if (!resposta.ok) {
-            const mensagem = obterMensagemErro(dados, 'Não foi possível cadastrar o funcionário.');
+            const mensagem = window.AmbFormatadores.obterMensagemErro(
+                dados,
+                'Não foi possível cadastrar o funcionário.'
+            );
             throw new Error(mensagem);
         }
 
@@ -882,7 +784,6 @@ async function cadastrarFuncionario(evento) {
     }
 }
 
-// Aqui eu realizo o mesmo processo de extração para o formulário específico de edição.
 function obterDadosAtualizacao() {
     return {
         nome: document.getElementById('edit-nome').value.trim(),
@@ -894,7 +795,6 @@ function obterDadosAtualizacao() {
     };
 }
 
-// Eu envio um PATCH ao backend modificando pontualmente os campos fornecidos pelo usuário na interface.
 async function atualizarFuncionario(evento) {
     evento.preventDefault();
 
@@ -938,10 +838,13 @@ async function atualizarFuncionario(evento) {
             return;
         }
 
-        const dados = await lerRespostaJson(resposta);
+        const dados = await window.AmbFormatadores.lerRespostaJson(resposta);
 
         if (!resposta.ok) {
-            const mensagem = obterMensagemErro(dados, 'Não foi possível atualizar o funcionário.');
+            const mensagem = window.AmbFormatadores.obterMensagemErro(
+                dados,
+                'Não foi possível atualizar o funcionário.'
+            );
             throw new Error(mensagem);
         }
 
@@ -956,14 +859,13 @@ async function atualizarFuncionario(evento) {
     }
 }
 
-// Nesta lógica de deleção, primeiramente aplico um alert nativo evitando acidentes irreversíveis na operação de CRUD.
 async function deletarFuncionario(funcionario) {
     if (!funcionarioPossuiMatricula(funcionario)) {
         mostrarMensagem('O funcionário não possui uma matrícula válida.', 'erro');
         return;
     }
 
-    const nome = obterTextoExibicao(funcionario.nome);
+    const nome = window.AmbFormatadores.obterTextoExibicao(funcionario.nome);
     const matricula = String(funcionario.matricula).trim();
 
     const confirmado = window.confirm(
@@ -991,8 +893,11 @@ async function deletarFuncionario(funcionario) {
         }
 
         if (!resposta.ok) {
-            const dados = await lerRespostaJson(resposta);
-            const mensagem = obterMensagemErro(dados, 'Não foi possível inativar o funcionário.');
+            const dados = await window.AmbFormatadores.lerRespostaJson(resposta);
+            const mensagem = window.AmbFormatadores.obterMensagemErro(
+                dados,
+                'Não foi possível inativar o funcionário.'
+            );
             throw new Error(mensagem);
         }
 
@@ -1004,7 +909,6 @@ async function deletarFuncionario(funcionario) {
     }
 }
 
-// Aqui eu amarro os ouvintes do Javascript em cada input form, botão e tecla gerando interatividade total do sistema com a API.
 function configurarEventos() {
     document.getElementById('funcionarios-anterior').addEventListener('click', () => {
         paginaFuncionarios = Math.max(1, paginaFuncionarios - 1);
@@ -1108,7 +1012,6 @@ function configurarEventos() {
     });
 }
 
-// Por fim, executo a checagem de integridade e inicio a popular a DOM listando todos os funcionários salvos na aplicação.
 async function inicializarPaginaFuncionarios() {
     if (!authSessionEstaDisponivel()) {
         console.error('O arquivo auth-session.js não foi carregado.');

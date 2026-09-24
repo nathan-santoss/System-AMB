@@ -47,6 +47,19 @@ const Usuario = database.define(
             }
         },
 
+        perfil: {
+            type: DataTypes.STRING(20),
+            allowNull: false,
+            defaultValue: 'usuario',
+            validate: { isIn: [['admin', 'usuario']] }
+        },
+
+        ativo: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true
+        },
+
         senha: {
             type: DataTypes.STRING(255),
             allowNull: false,
