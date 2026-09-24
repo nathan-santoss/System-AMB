@@ -2,14 +2,12 @@ const BASE_URL = '/api';
 let matriculaAtual = null;
 let paginaHistorico = 1;
 
-// Aqui eu inicio os ícones da biblioteca Lucide garantindo o aspecto gráfico do projeto.
 function atualizarIcones() {
     if (window.lucide) {
         window.lucide.createIcons();
     }
 }
 
-// Agora eu certifico que a instância global de autenticação existe antes de permitir requisições.
 function authSessionEstaDisponivel() {
     if (!window.AuthSession) {
         return false;
@@ -26,45 +24,6 @@ function authSessionEstaDisponivel() {
     return true;
 }
 
-// Nesta parte eu declaro um ajudante focado em converter respostas do Fetch sem risco de interrupção abrupta.
-async function lerRespostaJson(resposta) {
-    try {
-        return await resposta.json();
-    } catch (erro) {
-        return {};
-    }
-}
-
-// Aqui eu concentro a extração amigável do erro enviado pelo backend independente da sua estrutura.
-function obterMensagemErro(dados, mensagemPadrao) {
-    if (dados) {
-        if (typeof dados.erro === 'string') {
-            const mensagemErro = dados.erro.trim();
-
-            if (mensagemErro.length > 0) {
-                return mensagemErro;
-            }
-        }
-
-        if (typeof dados.message === 'string') {
-            const mensagem = dados.message.trim();
-
-            if (mensagem.length > 0) {
-                return mensagem;
-            }
-        }
-
-        if (Array.isArray(dados.detalhes)) {
-            if (dados.detalhes.length > 0) {
-                return dados.detalhes.join(' ');
-            }
-        }
-    }
-
-    return mensagemPadrao;
-}
-
-// Neste ponto eu testo se o servidor recusa nossa sessão, e se for o caso orquestro a expulsão.
 async function respostaExigeNovoLogin(resposta) {
     if (!resposta) {
         return false;
@@ -86,26 +45,6 @@ async function respostaExigeNovoLogin(resposta) {
     return true;
 }
 
-// Em seguida eu implemento um validador textual simples para evitar "null" espalhado no visual.
-function obterTextoExibicao(valor, textoPadrao) {
-    if (valor === null) {
-        return textoPadrao;
-    }
-
-    if (valor === undefined) {
-        return textoPadrao;
-    }
-
-    const texto = String(valor).trim();
-
-    if (texto.length === 0) {
-        return textoPadrao;
-    }
-
-    return texto;
-}
-
-// Aqui eu busco valor seguro a partir de um campo input, sem margem para indefinições no formulário.
 function obterValorCampo(idCampo) {
     const campo = document.getElementById(idCampo);
 
@@ -120,7 +59,6 @@ function obterValorCampo(idCampo) {
     return campo.value.trim();
 }
 
-// Depois eu declaro um atalho para atribuir um texto duro num elemento específico da interface.
 function definirTextoElemento(idElemento, texto) {
     const elemento = document.getElementById(idElemento);
 
@@ -131,7 +69,6 @@ function definirTextoElemento(idElemento, texto) {
     elemento.textContent = texto;
 }
 
-// Com isso eu pesquiso o formulário de triagem respeitando possíveis divergências no HTML.
 function obterFormularioTriagem() {
     let formulario = document.getElementById('formTriagem');
 
@@ -143,7 +80,6 @@ function obterFormularioTriagem() {
     return formulario;
 }
 
-// Para evitar problemas eu utilizo a mesma abordagem defensiva para obter o modal de alergias.
 function obterModalAlergia() {
     let modal = document.getElementById('modal-backdrop');
 
@@ -155,7 +91,6 @@ function obterModalAlergia() {
     return modal;
 }
 
-// Agora eu garanto a busca pelo ID do campo de descrição de forma segura.
 function obterCampoDescricaoAlergia() {
     let campo = document.getElementById('descricao_alergia');
 
@@ -167,7 +102,6 @@ function obterCampoDescricaoAlergia() {
     return campo;
 }
 
-// Nesta parte eu substituo o conteúdo nativo de um botão por um indicador rodando caso demore na requisição.
 function definirBotaoCarregando(botao, carregando, textoCarregando) {
     if (!botao) {
         return;
@@ -205,28 +139,6 @@ function definirBotaoCarregando(botao, carregando, textoCarregando) {
     atualizarIcones();
 }
 
-// Aqui eu padronizo a conversão do timestamp da API para um texto legível em português.
-function formatarDataHora(valor) {
-    if (!valor) {
-        return 'Data não informada';
-    }
-
-    const data = new Date(valor);
-
-    if (Number.isNaN(data.getTime())) {
-        return 'Data inválida';
-    }
-
-    return data.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
-
-// Em seguida eu amarro as lógicas de estilos utilitários às métricas textuais de gravidade registradas no banco.
 function obterClasseGravidade(gravidade) {
     if (gravidade === 'Alta') {
         return 'text-red-700 bg-red-100';
@@ -243,7 +155,6 @@ function obterClasseGravidade(gravidade) {
     return 'text-slate-700 bg-slate-100';
 }
 
-// Agora eu crio a indicação visual de que a lista de alergias está sendo carregada do servidor.
 function mostrarAlergiasCarregando() {
     const lista = document.getElementById('lista-alergias');
 
@@ -270,7 +181,6 @@ function mostrarAlergiasCarregando() {
     atualizarIcones();
 }
 
-// Depois eu abro espaço para exibir mensagens literais na área de alergias, como sucesso ou erro.
 function mostrarMensagemAlergias(mensagem, classeTexto) {
     const lista = document.getElementById('lista-alergias');
 
@@ -287,7 +197,6 @@ function mostrarMensagemAlergias(mensagem, classeTexto) {
     lista.appendChild(item);
 }
 
-// Aqui eu renderizo uma pílula informativa individual conectada diretamente ao ícone de lixeira.
 function criarItemAlergia(alergia) {
     const item = document.createElement('li');
     item.className =
@@ -295,7 +204,10 @@ function criarItemAlergia(alergia) {
 
     const descricao = document.createElement('span');
     descricao.className = 'font-medium break-words';
-    descricao.textContent = obterTextoExibicao(alergia.descricao_alergia, 'Alergia não informada');
+    descricao.textContent = window.AmbFormatadores.obterTextoExibicao(
+        alergia.descricao_alergia,
+        'Alergia não informada'
+    );
 
     const botaoExcluir = document.createElement('button');
     botaoExcluir.type = 'button';
@@ -319,7 +231,6 @@ function criarItemAlergia(alergia) {
     return item;
 }
 
-// Neste ponto eu leio a lista de alergias extraída do molde do prontuário e injeto no HTML.
 function renderizarAlergias(alergias) {
     const lista = document.getElementById('lista-alergias');
 
@@ -350,7 +261,6 @@ function renderizarAlergias(alergias) {
     atualizarIcones();
 }
 
-// Aqui eu exibo na sessão correspondente da tela que o histórico de consultas está sendo recuperado.
 function mostrarHistoricoCarregando() {
     const container = document.getElementById('historico-atendimentos');
 
@@ -367,7 +277,6 @@ function mostrarHistoricoCarregando() {
     container.appendChild(mensagem);
 }
 
-// Em seguida eu defino a impressão textual caso ocorra um impedimento na exibição do histórico.
 function mostrarMensagemHistorico(mensagem, classeTexto) {
     const container = document.getElementById('historico-atendimentos');
 
@@ -384,7 +293,6 @@ function mostrarMensagemHistorico(mensagem, classeTexto) {
     container.appendChild(elemento);
 }
 
-// Depois eu injeto e renderizo de forma visual cada item do histórico, formatando a queixa e a ação.
 function criarItemHistorico(atendimento) {
     const item = document.createElement('article');
     item.className = 'border-l-4 border-azulEscuro bg-gray-50 rounded-r-xl p-4 mb-4';
@@ -394,24 +302,34 @@ function criarItemHistorico(atendimento) {
 
     const data = document.createElement('p');
     data.className = 'text-xs text-gray-500 font-medium';
-    data.textContent = formatarDataHora(atendimento.data_hora_entrada);
+    data.textContent = window.AmbFormatadores.formatarDataHora(
+        atendimento.data_hora_entrada,
+        'Data não informada'
+    );
 
     const gravidade = document.createElement('span');
     gravidade.className =
         'text-xs font-bold px-2.5 py-1 rounded-full ' + obterClasseGravidade(atendimento.gravidade);
-    gravidade.textContent = obterTextoExibicao(atendimento.gravidade, 'Não informada');
+    gravidade.textContent = window.AmbFormatadores.obterTextoExibicao(
+        atendimento.gravidade,
+        'Não informada'
+    );
 
     cabecalho.appendChild(data);
     cabecalho.appendChild(gravidade);
 
     const queixa = document.createElement('p');
     queixa.className = 'text-sm text-gray-800 font-medium';
-    queixa.textContent = obterTextoExibicao(atendimento.queixa_principal, 'Queixa não informada');
+    queixa.textContent = window.AmbFormatadores.obterTextoExibicao(
+        atendimento.queixa_principal,
+        'Queixa não informada'
+    );
 
     const acao = document.createElement('p');
     acao.className = 'text-xs text-gray-500 mt-2';
     acao.textContent =
-        'Ação tomada: ' + obterTextoExibicao(atendimento.acao_tomada, 'Não informada');
+        'Ação tomada: ' +
+        window.AmbFormatadores.obterTextoExibicao(atendimento.acao_tomada, 'Não informada');
 
     item.appendChild(cabecalho);
     item.appendChild(queixa);
@@ -421,7 +339,12 @@ function criarItemHistorico(atendimento) {
     situacao.className = 'text-xs text-gray-600 mt-2';
     situacao.textContent = 'Em aberto';
     if (atendimento.data_hora_saida) {
-        situacao.textContent = 'Finalizado em: ' + formatarDataHora(atendimento.data_hora_saida);
+        situacao.textContent =
+            'Finalizado em: ' +
+            window.AmbFormatadores.formatarDataHora(
+                atendimento.data_hora_saida,
+                'Data não informada'
+            );
     }
     item.appendChild(situacao);
 
@@ -456,10 +379,13 @@ function criarItemHistorico(atendimento) {
                     { method: 'PATCH' }
                 );
                 if (await respostaExigeNovoLogin(resposta)) return;
-                const dados = await lerRespostaJson(resposta);
+                const dados = await window.AmbFormatadores.lerRespostaJson(resposta);
                 if (!resposta.ok)
                     throw new Error(
-                        obterMensagemErro(dados, 'Não foi possível finalizar o atendimento.')
+                        window.AmbFormatadores.obterMensagemErro(
+                            dados,
+                            'Não foi possível finalizar o atendimento.'
+                        )
                     );
                 await carregarDadosPaciente(matriculaAtual);
             } catch (erro) {
@@ -474,7 +400,6 @@ function criarItemHistorico(atendimento) {
     return item;
 }
 
-// Com isso eu leio os atendimentos do molde e os ordeno para exibição imediata no painel.
 function renderizarHistoricoAtendimentos(atendimentos) {
     const container = document.getElementById('historico-atendimentos');
 
@@ -510,7 +435,6 @@ function renderizarHistoricoAtendimentos(atendimentos) {
     });
 }
 
-// Neste momento eu resgato o MOLDE completo do paciente, centralizando todas as informações em uma única rota.
 async function carregarDadosPaciente(matricula) {
     mostrarAlergiasCarregando();
     mostrarHistoricoCarregando();
@@ -534,10 +458,13 @@ async function carregarDadosPaciente(matricula) {
             return false;
         }
 
-        const dados = await lerRespostaJson(resposta);
+        const dados = await window.AmbFormatadores.lerRespostaJson(resposta);
 
         if (!resposta.ok) {
-            const mensagem = obterMensagemErro(dados, 'Funcionário não encontrado.');
+            const mensagem = window.AmbFormatadores.obterMensagemErro(
+                dados,
+                'Funcionário não encontrado.'
+            );
             throw new Error(mensagem);
         }
 
@@ -561,17 +488,24 @@ async function carregarDadosPaciente(matricula) {
         // Em seguida eu preencho os blocos do cabeçalho da ficha com os dados pessoais do funcionário.
         definirTextoElemento(
             'info-nome',
-            obterTextoExibicao(funcionario.nome, 'Nome não informado')
+            window.AmbFormatadores.obterTextoExibicao(funcionario.nome, 'Nome não informado')
         );
 
         definirTextoElemento(
             'info-matricula',
-            'Matrícula: ' + obterTextoExibicao(funcionario.matricula, matricula)
+            'Matrícula: ' +
+                window.AmbFormatadores.obterTextoExibicao(funcionario.matricula, matricula)
         );
 
-        definirTextoElemento('info-setor', obterTextoExibicao(funcionario.setor, 'Não informado'));
+        definirTextoElemento(
+            'info-setor',
+            window.AmbFormatadores.obterTextoExibicao(funcionario.setor, 'Não informado')
+        );
 
-        definirTextoElemento('info-cargo', obterTextoExibicao(funcionario.cargo, 'Não informado'));
+        definirTextoElemento(
+            'info-cargo',
+            window.AmbFormatadores.obterTextoExibicao(funcionario.cargo, 'Não informado')
+        );
 
         // Depois eu chamo as funções responsáveis por renderizar as listas baseadas nos dados do pacote único recebido.
         renderizarAlergias(alergias);
@@ -599,7 +533,6 @@ async function carregarDadosPaciente(matricula) {
     }
 }
 
-// Em seguida eu exibo a janela flutuante modal para criar um novo registro no alerta médico.
 function abrirModalAlergia() {
     const modal = obterModalAlergia();
 
@@ -622,7 +555,6 @@ function abrirModalAlergia() {
     atualizarIcones();
 }
 
-// Para evitar travamentos eu trato o fechamento devolvendo a capacidade de rolar a página da ficha.
 function fecharModalAlergia() {
     const modal = obterModalAlergia();
 
@@ -645,11 +577,9 @@ function fecharModalAlergia() {
     }
 }
 
-// Exponho tais funções explicitamente no objeto window para garantir acesso aos eventos inline do HTML.
 window.abrirModalAlergia = abrirModalAlergia;
 window.fecharModalAlergia = fecharModalAlergia;
 
-// Nesta etapa eu capturo o evento original de envio e cadastro no banco a string descrevendo o alerta de saúde.
 async function cadastrarAlergia(evento) {
     evento.preventDefault();
 
@@ -706,10 +636,13 @@ async function cadastrarAlergia(evento) {
             return;
         }
 
-        const dados = await lerRespostaJson(resposta);
+        const dados = await window.AmbFormatadores.lerRespostaJson(resposta);
 
         if (!resposta.ok) {
-            const mensagem = obterMensagemErro(dados, 'Não foi possível cadastrar a alergia.');
+            const mensagem = window.AmbFormatadores.obterMensagemErro(
+                dados,
+                'Não foi possível cadastrar a alergia.'
+            );
             throw new Error(mensagem);
         }
 
@@ -726,7 +659,6 @@ async function cadastrarAlergia(evento) {
     }
 }
 
-// Aqui eu crio o fluxo responsável por contatar a API e varrer do banco de dados o registro da alergia em questão.
 async function excluirAlergia(idAlergia) {
     const id = Number(idAlergia);
 
@@ -761,8 +693,11 @@ async function excluirAlergia(idAlergia) {
         }
 
         if (!resposta.ok) {
-            const dados = await lerRespostaJson(resposta);
-            const mensagem = obterMensagemErro(dados, 'Não foi possível remover a alergia.');
+            const dados = await window.AmbFormatadores.lerRespostaJson(resposta);
+            const mensagem = window.AmbFormatadores.obterMensagemErro(
+                dados,
+                'Não foi possível remover a alergia.'
+            );
             throw new Error(mensagem);
         }
 
@@ -775,10 +710,8 @@ async function excluirAlergia(idAlergia) {
     }
 }
 
-// Por segurança eu amarro também essa ação de exclusão no contexto raiz.
 window.excluirAlergia = excluirAlergia;
 
-// Neste momento eu troco qualquer forma mal digitada de separador decimal permitindo que o sistema interprete.
 async function exportarExcel() {
     const botao = document.getElementById('exportar-excel');
     definirBotaoCarregando(botao, true, 'Gerando Excel...');
@@ -790,8 +723,8 @@ async function exportarExcel() {
         if (await respostaExigeNovoLogin(resposta)) return;
         if (!resposta.ok) {
             throw new Error(
-                obterMensagemErro(
-                    await lerRespostaJson(resposta),
+                window.AmbFormatadores.obterMensagemErro(
+                    await window.AmbFormatadores.lerRespostaJson(resposta),
                     'Não foi possível exportar o relatório.'
                 )
             );
@@ -811,7 +744,6 @@ async function exportarExcel() {
     }
 }
 
-// Nesta parte eu articulo todos os engates das funções com suas respectivas reações oriundas da interface do usuário.
 function configurarEventos() {
     document.getElementById('historico-anterior').onclick = () => {
         paginaHistorico--;
@@ -845,7 +777,6 @@ function configurarEventos() {
     });
 }
 
-// Por fim eu gerencio o momento de inicialização e extração de chaves da URL no momento em que a DOM está engatilhada.
 async function inicializarFichaPaciente() {
     atualizarIcones();
 
@@ -890,5 +821,4 @@ async function inicializarFichaPaciente() {
     atualizarIcones();
 }
 
-// Aqui eu confirmo o gatilho da renderização completa e encadeio o processo central.
 document.addEventListener('DOMContentLoaded', inicializarFichaPaciente);

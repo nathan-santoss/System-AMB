@@ -285,18 +285,6 @@ tbody tr:last-child {
 }
 
 /*
- * Sidebar
- */
-
-#sidebar-principal {
-    will-change: transform;
-}
-
-#sidebar-backdrop {
-    animation: aparecerModalFundo 180ms ease-out;
-}
-
-/*
  * Mensagens flutuantes
  */
 
@@ -336,12 +324,6 @@ tbody tr:last-child {
         overflow-y: auto;
         border-bottom-right-radius: 0;
         border-bottom-left-radius: 0;
-    }
-}
-
-@media (min-width: 768px) {
-    #sidebar-principal {
-        transform: translateX(0);
     }
 }
 

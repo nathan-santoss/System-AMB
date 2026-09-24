@@ -1,4 +1,5 @@
 import { DataTypes } from 'sequelize';
+import { migrarUsuarios } from './migracaoUsuarios.js';
 
 export async function aplicarMigracoes(database) {
     const Migracao = database.models.Migracao;
@@ -86,4 +87,5 @@ export async function aplicarMigracoes(database) {
         // A versão só fica concluída se todas as alterações forem confirmadas.
         await migracao.update({ concluida: true }, { transaction });
     });
+    await migrarUsuarios(database);
 }

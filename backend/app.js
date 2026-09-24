@@ -17,6 +17,9 @@ import alergiaRoutes from './src/routes/alergiaRoutes.js';
 import atendimentoRoutes from './src/routes/atendimentoRoutes.js';
 import relatorioRoutes from './src/routes/relatorioRoutes.js';
 
+import usuarioRoutes from './src/routes/usuarioRoutes.js';
+import { verificarPagina, exigirAdmin } from './src/middlewares/authMiddleware.js';
+
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -60,25 +63,22 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
-app.get('/dashboard', (req, res) => {
-    res.render('dashboard');
-});
-
-app.get('/consultar-paciente', (req, res) => {
-    res.render('consultar-paciente');
-});
-
-app.get('/ficha-paciente', (req, res) => {
-    res.render('ficha-paciente');
-});
-
-for (const pagina of ['novo-atendimento', 'atendimentos', 'relatorios']) {
-    app.get('/' + pagina, (req, res) => res.render(pagina));
+for (const pagina of [
+    'dashboard',
+    'consultar-paciente',
+    'ficha-paciente',
+    'novo-atendimento',
+    'atendimentos',
+    'relatorios'
+]) {
+    app.get('/' + pagina, verificarPagina, (req, res) => res.render(pagina));
 }
+app.get('/usuarios', verificarPagina, exigirAdmin, (req, res) => res.render('usuarios'));
 
 // APIs
 
 app.use('/api/auth', authRoutes);
+app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/relatorios', relatorioRoutes);
 
 app.use('/api/funcionarios', funcionarioRoutes);

@@ -1,50 +1,12 @@
+import {
+    CUSTO_BCRYPT,
+    normalizarEmail,
+    emailEhValido,
+    senhaEhValida
+} from '../utils/credenciais.js';
 import bcrypt from 'bcryptjs';
 
 import Usuario from '../models/usuarios.js';
-
-const CUSTO_BCRYPT = 12;
-
-function normalizarEmail(email) {
-    if (typeof email !== 'string') {
-        return '';
-    }
-
-    return email.trim().toLowerCase();
-}
-
-function emailEhValido(email) {
-    if (typeof email !== 'string') {
-        return false;
-    }
-
-    if (email.length < 3) {
-        return false;
-    }
-
-    if (email.length > 150) {
-        return false;
-    }
-
-    const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    return formatoEmail.test(email);
-}
-
-function senhaEhValida(senha) {
-    if (typeof senha !== 'string') {
-        return false;
-    }
-
-    if (senha.length < 12) {
-        return false;
-    }
-
-    if (Buffer.byteLength(senha, 'utf8') > 72) {
-        return false;
-    }
-
-    return true;
-}
 
 function valorFoiInformado(valor) {
     if (typeof valor !== 'string') {
@@ -96,7 +58,7 @@ async function buscarUsuarioPorEmail(email) {
         where: {
             email
         },
-        attributes: ['id_usuario', 'email', 'senha']
+        attributes: ['id_usuario', 'email', 'senha', 'perfil']
     });
 }
 
@@ -113,7 +75,8 @@ async function criarUsuarioInicial(credenciais) {
 
     return Usuario.create({
         email: credenciais.email,
-        senha: senhaHash
+        senha: senhaHash,
+        perfil: 'admin'
     });
 }
 
@@ -129,6 +92,7 @@ export async function criarUsuarioMaster() {
     const usuarioExistente = await buscarUsuarioPorEmail(credenciais.email);
 
     if (usuarioExistente) {
+        if (usuarioExistente.perfil !== 'admin') await usuarioExistente.update({ perfil: 'admin' });
         console.log('O usuário inicial já existe. A senha não foi alterada.');
 
         return usuarioExistente;

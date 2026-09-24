@@ -1,3 +1,11 @@
+import { corpoEhObjetoValido } from '../utils/validadores.js';
+import {
+    CUSTO_BCRYPT,
+    normalizarEmail,
+    emailEhValido,
+    senhaLoginEhValida,
+    apresentarUsuario
+} from '../utils/credenciais.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -7,68 +15,9 @@ import { criarSessao, apresentarSessao } from '../services/sessaoService.js';
 
 const DURACAO_SESSAO_MS = 12 * 60 * 60 * 1000;
 const DURACAO_SESSAO_JWT = '12h';
-const CUSTO_BCRYPT = 12;
 
 const EMISSOR_TOKEN = 'system-amb';
 const PUBLICO_TOKEN = 'system-amb-web';
-
-function corpoEhObjetoValido(corpo) {
-    if (!corpo) {
-        return false;
-    }
-
-    if (typeof corpo !== 'object') {
-        return false;
-    }
-
-    if (Array.isArray(corpo)) {
-        return false;
-    }
-
-    return true;
-}
-
-function normalizarEmail(email) {
-    if (typeof email !== 'string') {
-        return '';
-    }
-
-    return email.trim().toLowerCase();
-}
-
-function emailEhValido(email) {
-    if (typeof email !== 'string') {
-        return false;
-    }
-
-    if (email.length < 3) {
-        return false;
-    }
-
-    if (email.length > 150) {
-        return false;
-    }
-
-    const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    return formatoEmail.test(email);
-}
-
-function senhaLoginEhValida(senha) {
-    if (typeof senha !== 'string') {
-        return false;
-    }
-
-    if (senha.length === 0) {
-        return false;
-    }
-
-    if (Buffer.byteLength(senha, 'utf8') > 72) {
-        return false;
-    }
-
-    return true;
-}
 
 function ambienteEhProducao() {
     return process.env.NODE_ENV === 'production';
@@ -166,10 +115,10 @@ export async function login(req, res) {
             where: {
                 email
             },
-            attributes: ['id_usuario', 'email', 'senha']
+            attributes: ['id_usuario', 'email', 'senha', 'perfil', 'ativo']
         });
 
-        if (!usuario) {
+        if (!usuario || !usuario.ativo) {
             return res.status(401).json({
                 message: 'E-mail ou senha inválidos.'
             });
@@ -199,10 +148,7 @@ export async function login(req, res) {
         return res.status(200).json({
             message: 'Login realizado com sucesso.',
             sessao: apresentarSessao(sessao),
-            usuario: {
-                id_usuario: usuario.id_usuario,
-                email: usuario.email
-            }
+            usuario: apresentarUsuario(usuario)
         });
     } catch (erro) {
         console.error('Erro ao realizar login:', erro);

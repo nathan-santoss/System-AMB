@@ -14,24 +14,9 @@ function obterBotaoAbrirSidebar() {
 
 function atualizarEstadoAcessibilidadeSidebar(aberto) {
     const botaoAbrir = obterBotaoAbrirSidebar();
-
     const backdrop = obterBackdropSidebar();
-
-    if (botaoAbrir) {
-        if (aberto) {
-            botaoAbrir.setAttribute('aria-expanded', 'true');
-        } else {
-            botaoAbrir.setAttribute('aria-expanded', 'false');
-        }
-    }
-
-    if (backdrop) {
-        if (aberto) {
-            backdrop.setAttribute('aria-hidden', 'false');
-        } else {
-            backdrop.setAttribute('aria-hidden', 'true');
-        }
-    }
+    if (botaoAbrir) botaoAbrir.setAttribute('aria-expanded', String(aberto));
+    if (backdrop) backdrop.setAttribute('aria-hidden', String(!aberto));
 }
 
 function abrirSidebar() {
@@ -139,24 +124,10 @@ async function executarLogoutSidebar() {
 }
 
 function itemMenuEstaAtivo(tipoMenu, caminhoAtual) {
-    if (['relatorios', 'atendimentos', 'novo-atendimento'].includes(tipoMenu)) {
-        return caminhoAtual === '/' + tipoMenu;
-    }
-    if (tipoMenu === 'dashboard') {
-        return caminhoAtual === '/dashboard';
-    }
-
     if (tipoMenu === 'funcionarios') {
-        if (caminhoAtual === '/consultar-paciente') {
-            return true;
-        }
-
-        if (caminhoAtual === '/ficha-paciente') {
-            return true;
-        }
+        return ['/consultar-paciente', '/ficha-paciente'].includes(caminhoAtual);
     }
-
-    return false;
+    return caminhoAtual === '/' + tipoMenu;
 }
 
 function destacarMenuAtual() {
